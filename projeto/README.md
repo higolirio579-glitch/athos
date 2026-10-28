@@ -19,3 +19,9 @@ App de treino, dieta, corrida e rede social. Este diretório gera o **APK Androi
 3. Para atualizar o site: copie `web/index.html` para a raiz do repositório e faça commit.
 
 Use sempre a **mesma** `ficha.jks`: só assim o APK novo instala por cima do antigo.
+
+## Publicar uma atualização (aviso dentro do app)
+1. Aumente `android:versionCode` (e `versionName`) em `android/AndroidManifest.xml`.
+2. Gere o APK com `build_apk.sh` (mesma chave `ficha.jks` — sem ela o Android recusa a atualização).
+3. Copie o `ATHOS.apk` para a raiz do repositório e atualize `versao.json` com o novo `code`, `nome` e `notas`.
+4. Faça o push. Quem tem o app vê "Nova versão do ATHOS" ao abrir.

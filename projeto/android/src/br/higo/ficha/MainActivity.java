@@ -45,6 +45,7 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCb;
     private String pendingSave, pendingPerm;
     private boolean dark;
+    private volatile boolean updBusy;
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -70,7 +71,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.4 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.7 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -398,6 +399,100 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void runClear() { RunService.activeFile(MainActivity.this).delete(); }
+
+        /* ----- atualização do app ----- */
+        @JavascriptInterface
+        public int appVersion() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; } catch (Exception e) { return 0; }
+        }
+
+        @JavascriptInterface
+        public void updateDownload(final String url) {
+            if (updBusy) return;
+            updBusy = true;
+            new Thread(new Runnable() {
+                public void run() {
+                    File out = ApkProvider.file(MainActivity.this);
+                    File tmp = new File(out.getPath() + ".part");
+                    try {
+                        String u = url;
+                        HttpURLConnection c = null;
+                        for (int hop = 0; hop < 5; hop++) {
+                            c = (HttpURLConnection) new URL(u).openConnection();
+                            c.setInstanceFollowRedirects(false);
+                            c.setConnectTimeout(20000);
+                            c.setReadTimeout(60000);
+                            int st = c.getResponseCode();
+                            if (st >= 300 && st < 400 && c.getHeaderField("Location") != null) {
+                                u = new URL(new URL(u), c.getHeaderField("Location")).toString();
+                                c.disconnect();
+                                continue;
+                            }
+                            if (st != 200) throw new IOException("HTTP " + st);
+                            break;
+                        }
+                        long total = c.getContentLength();
+                        InputStream in = c.getInputStream();
+                        FileOutputStream os = new FileOutputStream(tmp);
+                        byte[] b = new byte[32768];
+                        long got = 0;
+                        int n, last = -1;
+                        while ((n = in.read(b)) > 0) {
+                            os.write(b, 0, n);
+                            got += n;
+                            int pct = total > 0 ? (int) (got * 100 / total) : -1;
+                            if (pct != last) { last = pct; js("window.androidUpd&&window.androidUpd('progress'," + pct + ")"); }
+                        }
+                        os.getFD().sync();
+                        os.close();
+                        in.close();
+                        if (got < 100000) throw new IOException("arquivo incompleto");
+                        out.delete();
+                        if (!tmp.renameTo(out)) throw new IOException("falha ao salvar");
+                        js("window.androidUpd&&window.androidUpd('done',100)");
+                    } catch (Exception e) {
+                        tmp.delete();
+                        js("window.androidUpd&&window.androidUpd('error'," + JSONObject.quote(String.valueOf(e.getMessage())) + ")");
+                    } finally {
+                        updBusy = false;
+                    }
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
+        public String updateInstall() {
+            if (!ApkProvider.file(MainActivity.this).exists()) return "missing";
+            if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        try {
+                            startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
+                        } catch (Exception e) { }
+                    }
+                });
+                return "need_permission";
+            }
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setDataAndType(ApkProvider.uri(), "application/vnd.android.package-archive");
+                        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(i);
+                    } catch (Exception e) {
+                        web.evaluateJavascript("window.androidUpd&&window.androidUpd('error','instalador indisponível')", null);
+                    }
+                }
+            });
+            return "ok";
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web != null) web.evaluateJavascript("window.androidResume&&window.androidResume()", null);
     }
 
     String getRecovered() {
