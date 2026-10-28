@@ -614,7 +614,7 @@ function vTreino(){
   html+=`<div class="btns"><button class="btn primary" data-act="newTemplate">+ Novo treino</button><button class="btn" data-act="start">Treino livre</button><button class="btn" data-act="checkin">Check-in</button></div>`;
   if(SAMPLE)html+=`<div class="btns"><button class="btn soft" data-act="aiWorkout">Montar treinos com IA</button>${SAMPLE_IMG?'<button class="btn soft" data-act="importPhoto">Importar ficha por foto</button>':''}</div>`;
   html+=runCard();
-  if(AIHOST&&!SAMPLE)html+=`<p class="hint">Ative a IA grátis no Perfil para montar treinos e importar a ficha da academia por foto.</p>`;
+  if(AIHOST&&!SAMPLE)html+=`<p class="hint">Entre na aba Social para usar a IA grátis (montar treinos e importar a ficha por foto).</p>`;
   html+=`<h2 style="margin-top:6px">Meus treinos</h2>`;
   if(!p.templates.length)html+=`<div class="empty"><b>Nenhum treino salvo ainda</b><span>Crie do zero ou adicione um dos modelos abaixo e ajuste do seu jeito.</span></div>`;
   for(const t of p.templates){const last=sessList().find(s=>s.templateId===t.id);const gr=[...new Set(t.exercises.map(e=>e.group))].slice(0,4).join(' · ');
@@ -639,7 +639,7 @@ function vDieta(){
   html+=waterCard(date);
   html+=`<div class="card"><div class="card-h"><span class="eyebrow">Plano alimentar</span></div>`;
   if(p.plan){const tot=p.plan.refeicoes.reduce((a,r)=>a+mealTotals(r.items).kcal,0);html+=`<p>${p.plan.refeicoes.length} refeições · cerca de ${fmtN(tot)} kcal por dia</p><div class="btns"><button class="btn" data-act="viewPlan">Ver plano</button>${SAMPLE?'<button class="btn soft" data-act="aiPlan">Gerar outro</button>':''}</div>`}
-  else html+=SAMPLE?`<p class="hint">A IA monta um cardápio de um dia dentro das suas metas, com comida brasileira do dia a dia.</p><button class="btn soft" data-act="aiPlan">Gerar plano com IA</button>`:`<p class="hint">${AIHOST?'Ative a IA grátis no Perfil para gerar planos alimentares.':'Libere o uso do Claude nesta página para gerar planos alimentares.'}</p>`;
+  else html+=SAMPLE?`<p class="hint">A IA monta um cardápio de um dia dentro das suas metas, com comida brasileira do dia a dia.</p><button class="btn soft" data-act="aiPlan">Gerar plano com IA</button>`:`<p class="hint">${AIHOST?'Entre na aba Social para usar a IA grátis e gerar planos alimentares.':'Libere o uso do Claude nesta página para gerar planos alimentares.'}</p>`;
   html+=`</div>`;
   return html;
 }
@@ -728,6 +728,8 @@ function aiMsg(e){const c=e&&e.code;switch(c){
   case'images_unavailable':SAMPLE_IMG=false;schedule();return'Envio de fotos não está disponível aqui.';
   case'rate_limited':return AIHOST?'Limite grátis da IA atingido por agora. Tente mais tarde ou conecte a segunda IA no Perfil.':'Seu limite de uso do Claude foi atingido. Tente mais tarde.';
   case'bad_key':return'A chave da IA não funcionou. Confira em Perfil.';
+  case'user_limit':return'Você já usou seus 20 usos de IA de hoje. Amanhã tem mais! Para usar além disso, conecte sua própria chave no Perfil.';
+  case'server_not_configured':return'A IA do ATHOS ainda não está configurada no servidor.';
   case'offline':return'Sem conexão com a internet.';
   case'image_rejected':return'Essa imagem não foi aceita. Tente outra foto (JPG ou PNG).';
   case'invalid_json':case'empty_completion':return'Não consegui entender a resposta. Tente de novo.';
@@ -1074,7 +1076,9 @@ window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(VIEW
 
 /* ---------- IA grátis no app Android: Gemini (principal) + Groq (reserva) ---------- */
 const AIHOST=!!(NATIVE||window.WEBAPP);
-const aiNote=()=>AIHOST?'Usa sua cota grátis de IA (Gemini ou Groq) e precisa de internet.':'Usa um pouco do seu limite de uso do Claude.';
+const aiNote=()=>!AIHOST?'Usa um pouco do seu limite de uso do Claude.':(gemOn()||groqOn())?'Usa sua própria chave de IA e precisa de internet.':`Usa 1 dos seus ${SRV_LIMIT} usos de IA de hoje e precisa de internet.`;
+const SRV_LIMIT=20;
+const srvOn=()=>{try{return!!(SOC.sb&&SOC.user)}catch(e){return false}};
 let AI=(AIHOST&&lsGet('ficha.ai'))||{};
 const HTTP={};let httpN=0;
 window.androidHttpDone=(id,status,text)=>{const r=HTTP[id];if(r){delete HTTP[id];r({status,text})}};
@@ -1162,7 +1166,18 @@ async function groqSetup(key){
   return{key,text,vision,checked:Date.now()};
 }
 
-/* ----- roteador: tenta Gemini, cai pro Groq ----- */
+/* ----- IA do ATHOS (servidor, sem chave) ----- */
+async function callServer(turns,b64s,json,quick){
+  let res;try{res=await SOC.sb.functions.invoke('ai',{body:{turns,images:b64s,json:!!json,quick:!!quick}})}catch(e){throw{code:'offline'}}
+  const{data,error}=res;
+  if(error){let code='upstream_error';try{const ctx=error.context;if(ctx&&ctx.json){const j=await ctx.json();code=j.code||code}else if(/fetch|network/i.test(error.message||''))code='offline'}catch(e){}
+    if(code==='user_limit'){AI.srvLeft=0;lsSet('ficha.ai',AI)}
+    throw{code:code==='not_logged'?'not_granted':code}}
+  if(!data||typeof data.text!=='string')throw{code:'upstream_error'};
+  AI.srvLeft=data.remaining;AI.srvDay=today();lsSet('ficha.ai',AI);AI.used='IA do ATHOS · '+(data.used||'');return data.text;
+}
+async function srvRemaining(){try{const r=await sbq(SOC.sb.from('ai_usage').select('n').eq('user_id',SOC.user.id).eq('day',today()));AI.srvLeft=SRV_LIMIT-((r[0]&&r[0].n)||0);AI.srvDay=today();lsSet('ficha.ai',AI);render()}catch(e){}}
+/* ----- roteador: chave própria (Gemini, Groq) e depois a IA do ATHOS ----- */
 async function imgToB64(file){
   const url=URL.createObjectURL(file);
   try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
@@ -1176,27 +1191,32 @@ async function aiCall(input,opts,json){
   let imgs=opts.images;imgs=imgs?(imgs instanceof Blob?[imgs]:[...imgs]):[];
   const b64s=[];for(const im of imgs)b64s.push(await imgToB64(im));
   const quick=opts.modelTier==='quick'&&!b64s.length;
-  const provs=[];if(gemOn())provs.push('gemini');if(groqOn()&&(!b64s.length||AI.groq.vision))provs.push('groq');
+  const provs=[];if(gemOn())provs.push('gemini');if(groqOn()&&(!b64s.length||AI.groq.vision))provs.push('groq');if(srvOn())provs.push('server');
   if(!provs.length)throw{code:b64s.length?'images_unavailable':'not_granted'};
   const errs=[];
   for(const p of provs){
-    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):await callGroq(turns,b64s,json)}
+    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):p==='groq'?await callGroq(turns,b64s,json):await callServer(turns,b64s,json,quick)}
     catch(e){if(e.code==='offline'||e.code==='refused'||e.code==='image_rejected')throw e;errs.push(e)}
   }
+  if(errs.some(e=>e.code==='user_limit')&&errs.every(e=>e.code==='user_limit'||e.code==='rate_limited'))throw{code:'user_limit'};
   if(errs.every(e=>e.code==='rate_limited'))throw{code:'rate_limited'};
   throw errs.find(e=>e.code==='bad_key')||errs[errs.length-1];
 }
 function parseLoose(t){t=stripThink(t);try{return JSON.parse(t)}catch(e){}const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw{code:'invalid_json',text:t}}
 function aiSample(){const f=async(input,opts)=>({text:await aiCall(input,opts,false),truncated:false});f.json=async(input,opts)=>parseLoose(await aiCall(input,opts,true));f.limits=async()=>({maxPromptBytes:262144,images:{maxCount:6,maxInputBytes:20e6,mediaTypes:['image/jpeg','image/png','image/webp']}});return f}
-const aiOn=()=>gemOn()||groqOn();
-function aiActivate(){SAMPLE=aiOn()?aiSample():null;SAMPLE_IMG=!!(gemOn()||(groqOn()&&AI.groq.vision));MAXIMG=SAMPLE_IMG?6:1}
+const aiOn=()=>gemOn()||groqOn()||srvOn();
+function aiActivate(){SAMPLE=aiOn()?aiSample():null;SAMPLE_IMG=!!(gemOn()||(groqOn()&&AI.groq.vision)||srvOn());MAXIMG=SAMPLE_IMG?6:1}
 function saveAI(){lsSet('ficha.ai',AI);aiActivate();render()}
 
 function aiCard(){
   const g=gemOn(),q=groqOn();
   const chip=(on,txt)=>`<span class="chip ${on?'ok':''}">${on?txt:'Desligada'}</span>`;
-  return`<div class="card"><div class="card-h"><h3>Inteligência artificial</h3>${chip(g||q,'Ativa')}</div>
-  <p class="hint">Liga a foto do prato, a descrição de refeições, a montagem de treinos, a ficha por fotos e o plano alimentar. Você pode ligar duas IAs grátis: o app usa o Gemini primeiro e passa para o Groq sozinho quando o limite do dia acabar.</p>
+  const s=srvOn();if(s&&AI.srvDay!==today())srvRemaining();const left=AI.srvDay===today()&&AI.srvLeft!=null?AI.srvLeft:SRV_LIMIT;
+  return`<div class="card"><div class="card-h"><h3>Inteligência artificial</h3>${chip(g||q||s,'Ativa')}</div>
+  <p class="hint">Liga a foto do prato, a descrição de refeições, a montagem de treinos, a ficha por fotos e o plano alimentar.</p>
+  <div class="picked"><div class="row between"><b>IA do ATHOS</b>${s?`<span class="chip ok">${left} de ${SRV_LIMIT} hoje</span>`:'<span class="chip">Desligada</span>'}</div>
+  <p class="small">${s?`Grátis e sem chave: cada pessoa tem ${SRV_LIMIT} usos por dia, que renovam à meia-noite.`:`Entre na aba Social para usar a IA grátis, sem chave (${SRV_LIMIT} usos por dia).`}</p>${s?'':'<button class="btn primary" data-tab="social">Entrar na rede</button>'}</div>
+  <details><summary class="small" style="cursor:pointer;font-weight:600">Usar minha própria chave (opcional, para ter mais usos)</summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
   <div class="picked" style="background:var(--surface);border-color:var(--line)"><div class="row between"><b>1. Gemini (Google)</b>${chip(g,'Ativa')}</div>
   ${g?`<p class="small muted">Modelo: ${esc(gemOrder(false)[0])} · lê fotos</p><div class="btns"><button class="btn sm danger" data-act="aiRemove">Remover chave</button></div>`
   :`<p class="small">Crie a chave em <a href="https://aistudio.google.com/apikey" style="color:var(--accent);font-weight:600">aistudio.google.com/apikey</a> (conta Google) e toque em “Create API key”.</p>
@@ -1205,7 +1225,7 @@ function aiCard(){
   ${q?`<p class="small muted">${AI.groq.vision?'Fotos: '+esc(AI.groq.vision)+' (até 3 por vez; mais fotos são lidas em partes)':'Este modelo não leu a foto de teste: fotos ficam só com o Gemini.'}${AI.groq.text?'<br>Texto: '+esc(AI.groq.text):''}</p><div class="btns"><button class="btn sm danger" data-act="groqRemove">Remover chave</button></div>`
   :`<p class="small">Crie a chave em <a href="https://console.groq.com/keys" style="color:var(--accent);font-weight:600">console.groq.com/keys</a> (entre com Google ou e-mail) e toque em “Create API Key”.</p>
   <label class="fld"><span>Chave do Groq</span><input id="groqKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="gsk_…"></label><button class="btn primary" data-act="groqSave">Conectar Groq</button>`}</div>
-  ${g||q?'<button class="btn" data-act="aiTest">Testar IA</button>':''}
+  ${g||q?'<button class="btn" data-act="aiTest">Testar minha chave</button>':''}</div></details>
   <p class="hint">Nos planos grátis, cada serviço limita os pedidos por dia, e o Google pode usar o que você envia para melhorar os produtos dele. As chaves ficam guardadas só neste aparelho e não vão no backup.</p></div>`;
 }
 Object.assign(ACT,{
@@ -1430,7 +1450,7 @@ const pName=id=>(SOC.prof[id]&&SOC.prof[id].name)||'Atleta';
 function sbInit(){
   if(!window.supabase||!window.supabase.createClient)return;
   SOC.sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-  SOC.sb.auth.onAuthStateChange((ev,sess)=>{const u=sess?sess.user:null;const changed=(u&&u.id)!==(SOC.user&&SOC.user.id);SOC.user=u;if(changed){if(u)socBoot();else socReset()}schedule()});
+  SOC.sb.auth.onAuthStateChange((ev,sess)=>{const u=sess?sess.user:null;const changed=(u&&u.id)!==(SOC.user&&SOC.user.id);SOC.user=u;try{aiActivate()}catch(e){}if(changed){if(u)socBoot();else socReset()}schedule()});
 }
 function socReset(){Object.assign(SOC,{me:null,feed:null,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),convs:null,unread:0,clubs:null,myClubs:new Set(),people:null,rank:null});if(SOC.inbox){try{SOC.sb.removeChannel(SOC.inbox)}catch(e){}SOC.inbox=null}drawDot()}
 async function socBoot(){
