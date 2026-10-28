@@ -51,10 +51,10 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
         dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        int bg = dark ? 0xFF0D1015 : 0xFFECEEF2;
+        int bg = dark ? 0xFF000000 : 0xFFEEEFF1;
         Window w = getWindow();
         w.setStatusBarColor(bg);
-        w.setNavigationBarColor(dark ? 0xFF161A21 : 0xFFFFFFFF);
+        w.setNavigationBarColor(bg);
         View decor = w.getDecorView();
         int flags = decor.getSystemUiVisibility();
         if (!dark) {
@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.7 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.8 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override

@@ -1,6 +1,6 @@
 {
-  "code": 9,
-  "nome": "1.7",
+  "code": 10,
+  "nome": "1.8",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": ["Aviso de atualização dentro do app: as próximas versões chegam sozinhas"]
+  "notas": ["Visual novo: preto e dourado, como o ícone do ATHOS", "Anel de calorias e macros na tela Hoje", "Barra de abas flutuante e sequência de dias no topo"]
 }

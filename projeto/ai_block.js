@@ -144,11 +144,11 @@ function aiCard(){
   <details><summary class="small" style="cursor:pointer;font-weight:600">Usar minha própria chave (opcional, para ter mais usos)</summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
   <div class="picked" style="background:var(--surface);border-color:var(--line)"><div class="row between"><b>1. Gemini (Google)</b>${chip(g,'Ativa')}</div>
   ${g?`<p class="small muted">Modelo: ${esc(gemOrder(false)[0])} · lê fotos</p><div class="btns"><button class="btn sm danger" data-act="aiRemove">Remover chave</button></div>`
-  :`<p class="small">Crie a chave em <a href="https://aistudio.google.com/apikey" style="color:var(--accent);font-weight:600">aistudio.google.com/apikey</a> (conta Google) e toque em “Create API key”.</p>
+  :`<p class="small">Crie a chave em <a href="https://aistudio.google.com/apikey" style="color:var(--accent-tx);font-weight:600">aistudio.google.com/apikey</a> (conta Google) e toque em “Create API key”.</p>
   <label class="fld"><span>Chave do Gemini</span><input id="aiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…"></label><button class="btn primary" data-act="aiSave">Conectar Gemini</button>`}</div>
   <div class="picked" style="background:var(--surface);border-color:var(--line)"><div class="row between"><b>2. Groq (reserva)</b>${chip(q,AI.groq&&AI.groq.vision?'Ativa · lê fotos':'Ativa · só texto')}</div>
   ${q?`<p class="small muted">${AI.groq.vision?'Fotos: '+esc(AI.groq.vision)+' (até 3 por vez; mais fotos são lidas em partes)':'Este modelo não leu a foto de teste: fotos ficam só com o Gemini.'}${AI.groq.text?'<br>Texto: '+esc(AI.groq.text):''}</p><div class="btns"><button class="btn sm danger" data-act="groqRemove">Remover chave</button></div>`
-  :`<p class="small">Crie a chave em <a href="https://console.groq.com/keys" style="color:var(--accent);font-weight:600">console.groq.com/keys</a> (entre com Google ou e-mail) e toque em “Create API Key”.</p>
+  :`<p class="small">Crie a chave em <a href="https://console.groq.com/keys" style="color:var(--accent-tx);font-weight:600">console.groq.com/keys</a> (entre com Google ou e-mail) e toque em “Create API Key”.</p>
   <label class="fld"><span>Chave do Groq</span><input id="groqKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="gsk_…"></label><button class="btn primary" data-act="groqSave">Conectar Groq</button>`}</div>
   ${g||q?'<button class="btn" data-act="aiTest">Testar minha chave</button>':''}</div></details>
   <p class="hint">Nos planos grátis, cada serviço limita os pedidos por dia, e o Google pode usar o que você envia para melhorar os produtos dele. As chaves ficam guardadas só neste aparelho e não vão no backup.</p></div>`;

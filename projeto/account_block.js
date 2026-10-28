@@ -10,9 +10,9 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #authGate h2{font-size:26px}
 #authGate .fld input{font-size:17px;padding:12px 13px;border-radius:12px}
 #authGate .pw{position:relative}#authGate .pw input{padding-right:64px}
-#authGate .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--accent);font-weight:700;font-size:13.5px;padding:8px}
+#authGate .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--accent-tx);font-weight:700;font-size:13.5px;padding:8px}
 #authGate .btn.primary{min-height:52px;font-size:16.5px;border-radius:14px}
-#authGate .link{border:0;background:none;color:var(--accent);font-weight:700;padding:6px;font-size:15px}
+#authGate .link{border:0;background:none;color:var(--accent-tx);font-weight:700;padding:6px;font-size:15px}
 #authGate .alt{text-align:center;color:var(--muted);font-size:15px}
 #authGate .err{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red);border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px}
 #authGate .ok{background:color-mix(in srgb,var(--green) 13%,transparent);color:var(--green);border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px}

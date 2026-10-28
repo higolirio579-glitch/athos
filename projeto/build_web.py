@@ -9,7 +9,7 @@ r('<link rel="stylesheet" href="leaflet/leaflet.css"><script src="leaflet/leafle
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">'
   '<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">'
   '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="ATHOS">'
-  '<meta name="theme-color" content="#ECEEF2" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0D1015" media="(prefers-color-scheme: dark)"><script>window.WEBAPP=true</script>')
+  '<meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"><script>window.WEBAPP=true</script>')
 s=re.sub(r'@font-face\{font-family:"Barlow(?: Condensed)?";[^}]*\}\n','',s)
 assert 'fonts/barlow' not in s
 open('web/index.html','w',encoding='utf8').write(s)

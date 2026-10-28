@@ -6,28 +6,31 @@
 <style>
 /* Layout: app de uma tela — cabeçalho fixo, conteúdo rolável, barra de abas embaixo. Macros usam as cores das anilhas olímpicas (vermelho 25 kg, amarelo 15 kg, verde 10 kg, azul 20 kg). */
 :root{
-  --bg:#ECEEF2; --surface:#FFFFFF; --surface2:#E1E5EC; --line:#D3D8E1;
-  --fg:#12151A; --muted:#5A6271;
-  --accent:#1F4FDE; --accent-ink:#FFFFFF; --accent-soft:#DDE6FD;
-  --red:#C9372C; --yellow:#B98200; --green:#1B8A50; --warn:#B0560B;
-  --done:#E3F3EA; --scrim:rgb(12 15 22 / .46);
+  --bg:#EEEFF1; --surface:#FFFFFF; --surface2:#E7E8EB; --line:#DDDFE3; --cardline:transparent;
+  --fg:#111214; --muted:#636975;
+  --accent:#DDA623; --accent-ink:#000000; --accent-soft:#F7EDD2; --accent-tx:#8A6100;
+  --water:#2F7FE0; --ink:#000000; --ink2:#1E1F23;
+  --red:#C9372C; --yellow:#C08A00; --green:#1B8A50; --warn:#B0560B;
+  --done:#E3F3EA; --scrim:rgb(0 0 0 / .5);
   --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --r:14px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0D1015; --surface:#161A21; --surface2:#20252E; --line:#2B313C;
-  --fg:#EDF0F5; --muted:#99A2B1;
-  --accent:#5D85FF; --accent-ink:#0B1020; --accent-soft:#1C2849;
+  --bg:#000000; --surface:#121315; --surface2:#1D1F23; --line:#26282D; --cardline:#1F2125;
+  --fg:#F2F2F0; --muted:#9298A3;
+  --accent:#E9B640; --accent-ink:#000000; --accent-soft:#2B2310; --accent-tx:#F0C45E;
+  --water:#5AA2FF; --ink:#141416; --ink2:#232428;
   --red:#FF6656; --yellow:#F0BC2E; --green:#40C983; --warn:#F09A4A;
-  --done:#14291E; --scrim:rgb(0 0 0 / .6);
+  --done:#12261B; --scrim:rgb(0 0 0 / .66);
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0D1015; --surface:#161A21; --surface2:#20252E; --line:#2B313C;
-  --fg:#EDF0F5; --muted:#99A2B1;
-  --accent:#5D85FF; --accent-ink:#0B1020; --accent-soft:#1C2849;
+  --bg:#000000; --surface:#121315; --surface2:#1D1F23; --line:#26282D; --cardline:#1F2125;
+  --fg:#F2F2F0; --muted:#9298A3;
+  --accent:#E9B640; --accent-ink:#000000; --accent-soft:#2B2310; --accent-tx:#F0C45E;
+  --water:#5AA2FF; --ink:#141416; --ink2:#232428;
   --red:#FF6656; --yellow:#F0BC2E; --green:#40C983; --warn:#F09A4A;
-  --done:#14291E; --scrim:rgb(0 0 0 / .6);
+  --done:#12261B; --scrim:rgb(0 0 0 / .66);
   color-scheme:dark}
 
 html,body{height:100%}
@@ -131,10 +134,10 @@ textarea{min-height:84px;resize:vertical}
 .bar i{display:block;height:100%;background:var(--c,var(--accent));border-radius:inherit;transition:width .4s ease}
 .bar.over i{background:var(--warn)}
 .kbar{height:14px}
-.p{--c:var(--red)} .c{--c:var(--yellow)} .f{--c:var(--green)} .w{--c:var(--accent)}
+.p{--c:var(--red)} .c{--c:var(--yellow)} .f{--c:var(--green)} .w{--c:var(--water)}
 .cups{display:grid;grid-template-columns:repeat(auto-fill,minmax(22px,1fr));gap:5px}
 .cups i{height:26px;border-radius:5px 5px 7px 7px;background:var(--surface2)}
-.cups i.on{background:var(--accent)}
+.cups i.on{background:var(--water)}
 
 /* Treinos */
 .tpl{display:flex;flex-direction:column;gap:10px}
@@ -225,7 +228,7 @@ textarea{min-height:84px;resize:vertical}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .thumb .icon-btn{position:absolute;top:6px;right:6px;width:30px;height:30px;font-size:13px;background:var(--surface)}
 .thumb .pg{position:absolute;left:6px;bottom:6px;background:var(--surface);border-radius:7px;padding:1px 7px;font-weight:700;font-size:12px}
-button.thumb.add{border:1.5px dashed var(--line);background:transparent;color:var(--accent);font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+button.thumb.add{border:1.5px dashed var(--line);background:transparent;color:var(--accent-tx);font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 button.thumb.add span{font-size:30px;line-height:1}
 .route{height:220px;border-radius:12px;overflow:hidden;background:var(--surface2);position:relative}
 .route>svg{width:100%;height:100%;display:block}
@@ -236,6 +239,86 @@ button.thumb.add span{font-size:30px;line-height:1}
 .splits .bar i{display:block;height:8px;border-radius:9px;background:var(--accent)}
 .splits tr.best td{font-weight:700}
 @media (max-width:370px){.big{font-size:50px}.set,.set-h{grid-template-columns:18px minmax(0,1fr) 54px 48px 48px 36px;gap:4px}}
+/* ===== ATHOS 2.0 — identidade do ícone: preto, dourado e branco ===== */
+body{font-size:15.5px}
+.top{background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.top .wrap{padding-block:12px 10px}
+.brand{font-size:22px;letter-spacing:.24em;gap:11px}
+.brand img{border-radius:11px}
+.sync{font-size:12px}
+h1{font-size:40px;font-weight:800;text-transform:uppercase;letter-spacing:.015em;line-height:.95}
+.view>h2,.view>div>h2{font-size:25px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;margin-top:10px!important}
+h3{font-size:20px;font-weight:700}
+.eyebrow{font:600 13.5px var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
+.view{gap:12px;padding-block:6px 24px}
+.card{border:1px solid var(--cardline);border-radius:20px;padding:18px;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.empty{border-radius:20px;border-color:color-mix(in srgb,var(--muted) 35%,transparent);background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.btn{border-radius:13px;background:var(--surface2);border-color:transparent;font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.soft{background:var(--accent-soft);color:var(--accent-tx)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.danger{background:transparent}
+.btn.sm{border-radius:10px}
+.chip{background:var(--surface2)}
+button.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg{border-radius:13px}
+.seg button[aria-pressed="true"]{border-radius:10px}
+input,select,textarea{border-radius:12px;background:var(--surface)}
+.card input,.card select,.card textarea{background:var(--bg)}
+:focus-visible{outline-color:var(--accent-tx)}
+.li{padding:12px 0}
+.icon-btn{background:var(--surface2)}
+.sheet{border-radius:26px 26px 0 0}
+.sheet-h h2{font-size:24px}
+.stat .num{font-size:28px}
+
+/* Cartão principal (calorias) */
+.khero{background:var(--ink);color:#fff;border-color:transparent;padding:20px 18px 18px;gap:16px;box-shadow:0 14px 30px -18px rgb(0 0 0 / .6);
+  --muted:#A3A8B2;--surface2:#2A2B30;--line:#2A2B30}
+:root:not([data-theme="light"]) .khero{border-color:color-mix(in srgb,var(--accent) 22%,transparent)}
+.hero-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.hero-top b{font:700 15px var(--body)}
+.hero-main{display:grid;grid-template-columns:132px 1fr;gap:18px;align-items:center}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:11}
+.ring .trk{stroke:#2A2B30}
+.ring .val{stroke:var(--accent);stroke-linecap:round;transition:stroke-dasharray .6s ease}
+.ring.over .val{stroke:var(--warn)}
+.ring-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-c .num{font-size:34px;line-height:.9}
+.ring-c small{color:var(--muted);font-size:12.5px;font-weight:600}
+.hero-side{display:flex;flex-direction:column;gap:12px}
+.hero-side .stat .num{font-size:26px}
+.hero-side .stat small{font-size:12.5px}
+.mac3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:14px;border-top:1px solid #2A2B30}
+.m3{display:flex;flex-direction:column;gap:6px;min-width:0}
+.m3 .lb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.m3 .plate{width:12px;height:12px;background:radial-gradient(circle,var(--ink) 0 2px,var(--c) 2.5px)}
+.m3 .v{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.m3 .v b{font:700 20px var(--display);color:#fff}
+.m3 .bar{height:6px}
+
+/* Sequência no cabeçalho do dia */
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-top:6px}
+.streakb{flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--cardline);border-radius:16px;padding:8px 12px 8px 10px;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.streakb svg{width:22px;height:22px;fill:var(--accent)}
+.streakb .num{font-size:24px;line-height:1}
+.streakb small{display:block;color:var(--muted);font-size:11.5px;font-weight:600;line-height:1.1}
+.streakb.off svg{fill:var(--line)}
+.cups~.btns .btn.soft{background:color-mix(in srgb,var(--water) 14%,transparent);color:var(--water)}
+
+/* Barra de abas flutuante */
+.tabbar{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;
+  background:var(--ink);border:1px solid var(--ink2);border-radius:24px;padding:6px;box-shadow:0 12px 32px -10px rgb(0 0 0 / .45)}
+.tabbar nav{gap:2px}
+.tab{color:#8E939C;border-radius:18px;padding:8px 0 6px;font-size:11px;gap:2px;transition:background .2s,color .2s}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="page"]{color:#000;background:var(--accent)}
+.activebar{bottom:calc(88px + env(safe-area-inset-bottom,0px));border-radius:16px;background:var(--fg);color:var(--bg)}
+main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+@media (max-width:370px){h1{font-size:34px}.hero-main{grid-template-columns:116px 1fr;gap:14px}.ring{width:116px;height:116px}.ring-c .num{font-size:29px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -582,20 +665,23 @@ function waterCard(date,compact){
   <div class="btns"><button class="btn sm" data-act="water" data-ml="-250" data-date="${date}" aria-label="Tirar 250 ml">−</button><button class="btn sm soft" data-act="water" data-ml="250" data-date="${date}">+ 250 ml</button><button class="btn sm soft" data-act="water" data-ml="500" data-date="${date}">+ 500 ml</button></div></div>`;
 }
 function kcalCard(date){
-  const t=dayTotals(date),g=goals();const rem=Math.round(g.kcal-t.kcal);
-  return`<div class="card"><div class="card-h"><span class="eyebrow">${rem>=0?'Restam':'Acima da meta'}</span><span class="small muted">meta ${fmtN(g.kcal)} kcal</span></div>
-  <div class="row between" style="align-items:flex-end"><div><span class="num big">${fmtN(Math.abs(rem))}</span> <span class="num" style="font-size:20px">kcal</span></div><div class="stat" style="text-align:right"><span class="num">${fmtN(t.kcal)}</span><small>consumidas</small></div></div>
-  <div class="bar kbar w${t.kcal>g.kcal?' over':''}"><i style="width:${pct(t.kcal,g.kcal)}%"></i></div>
-  ${macroRow('p','Proteína',t.p,g.p)}${macroRow('c','Carboidrato',t.c,g.c)}${macroRow('f','Gordura',t.f,g.f)}</div>`;
+  const t=dayTotals(date),g=goals();const rem=Math.round(g.kcal-t.kcal),over=t.kcal>g.kcal;
+  const C=2*Math.PI*52,fr=Math.min(1,g.kcal?t.kcal/g.kcal:0);
+  const m3=(cls,label,v,gg)=>`<div class="m3 ${cls}"><span class="lb"><span class="plate"></span>${label}</span><span class="v"><b>${fmtN(v)}</b> / ${fmtN(gg)} g</span><div class="bar${v>gg*1.05?' over':''}"><i style="width:${pct(v,gg)}%"></i></div></div>`;
+  return`<div class="card khero"><div class="hero-top"><b>Calorias${date===today()?' de hoje':''}</b><span class="small muted">meta ${fmtN(g.kcal)} kcal</span></div>
+  <div class="hero-main"><div class="ring${over?' over':''}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52"/><circle class="val" cx="60" cy="60" r="52" stroke-dasharray="${(C*fr).toFixed(1)} ${C.toFixed(1)}"${fr>0?'':' style="opacity:0"'}/></svg><div class="ring-c"><span class="num">${fmtN(Math.abs(rem))}</span><small>${over?'kcal acima':'kcal restam'}</small></div></div>
+  <div class="hero-side"><div class="stat"><span class="num">${fmtN(t.kcal)}</span><small>consumidas</small></div><div class="stat"><span class="num">${fmtN(Math.round(fr*100))}%</span><small>da meta</small></div></div></div>
+  <div class="mac3">${m3('p','Proteína',t.p,g.p)}${m3('c','Carbo',t.c,g.c)}${m3('f','Gordura',t.f,g.f)}</div></div>`;
 }
 function vHoje(){
   const t=today(),st=streak(),h=new Date().getHours(),p=S.profile;
   const greet=h<5?'Boa noite':h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
   const status=st.on?`<span class="chip ok">Dia registrado</span>`:h>=20?`<span class="chip warn">Faltam ${24-h}h para manter a sequência</span>`:`<span class="chip">Registre um treino ou refeição hoje</span>`;
   const sess=sessionsOn(t);const lw=weightsList().slice(-1)[0];
-  let html=`<div class="row between" style="padding-top:4px"><div><p class="eyebrow">${esc(dlabel(t,{weekday:'long',day:'numeric',month:'long'}))}</p><h1>${greet}, ${esc(p.name||'você')}</h1></div></div>`;
+  const dl=dlabel(t,{weekday:'long',day:'numeric',month:'long'});
+  let html=`<div class="hello"><div style="min-width:0"><p class="eyebrow">${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}</p><h1>${greet}${p.name?', '+esc(p.name.split(' ')[0]):''}</h1></div><div class="streakb${st.n?'':' off'}" title="Dias seguidos com treino ou refeição"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.6 3.2-1.1 5-2.6 6.6C7.9 10.2 6.5 11.8 6.5 14.5A5.5 5.5 0 0 0 12 20a5.5 5.5 0 0 0 5.5-5.5c0-2.3-1-4-2.2-5.3-.2 1.6-1 2.6-2.1 3 .6-3.2-.1-6.6-1.2-10.2z"/></svg><span><span class="num">${st.n}</span><small>${st.n===1?'dia seguido':'dias seguidos'}</small></span></div></div>`;
+  if(!st.on)html+=`<p class="hint" style="margin-top:-4px">${h>=20?`Faltam ${24-h}h para manter a sequência.`:'Registre um treino ou refeição hoje para somar na sequência.'}</p>`;
   if(!p.age||!p.height||!curWeight())html+=`<div class="card" style="border-color:var(--accent)"><h3>Configure suas metas</h3><p class="hint">Com idade, altura e peso eu calculo calorias, macros e água para o seu objetivo.</p><button class="btn primary" data-act="profileSheet">Preencher dados</button></div>`;
-  html+=`<div class="card"><div class="row between"><div><p class="eyebrow">Sequência</p><p><span class="num big">${st.n}</span> <span class="num" style="font-size:20px">${st.n===1?'dia':'dias'}</span></p></div>${status}</div></div>`;
   html+=kcalCard(t);
   html+=`<div class="card"><div class="card-h"><span class="eyebrow">Treino de hoje</span>${sess.length?'<span class="chip ok">Feito</span>':''}</div>`;
   if(S.active)html+=`<button class="btn primary block" data-act="openActive">Voltar ao treino em andamento</button>`;
