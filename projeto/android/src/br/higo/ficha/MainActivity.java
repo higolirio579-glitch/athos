@@ -2,6 +2,9 @@ package br.higo.ficha;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.SharedPreferences;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
@@ -38,7 +41,7 @@ import java.util.ArrayList;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3;
+    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3, REQ_NOTIF = 4;
     private static final Charset UTF8 = Charset.forName("UTF-8");
     static final String HOST = "appassets.androidplatform.net";
     private WebView web;
@@ -46,6 +49,8 @@ public class MainActivity extends Activity {
     private String pendingSave, pendingPerm;
     private boolean dark;
     private volatile boolean updBusy;
+    static volatile boolean visible;
+    private String pendingOpen;
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -71,7 +76,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.8 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.9 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -120,6 +125,22 @@ public class MainActivity extends Activity {
         });
         setContentView(web);
         web.loadUrl("https://" + HOST + "/index.html");
+        Notif.channels(this);
+        Notif.schedule(this);
+        pendingOpen = getIntent() != null ? getIntent().getStringExtra("open") : null;
+    }
+
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        String o = i.getStringExtra("open");
+        if (o != null) js("window.androidOpen&&window.androidOpen(" + JSONObject.quote(o) + ")");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        visible = false;
     }
 
     static String mime(String p) {
@@ -190,6 +211,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        if (req == REQ_NOTIF) { js("window.androidNotifPerm&&window.androidNotifPerm(" + Notif.allowed(this) + ")"); return; }
         if (req == REQ_PERM && pendingPerm != null) {
             js("window.androidPermDone&&window.androidPermDone(" + JSONObject.quote(pendingPerm) + "," + permState() + ")");
             pendingPerm = null;
@@ -400,6 +422,73 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void runClear() { RunService.activeFile(MainActivity.this).delete(); }
 
+        /* ----- notificações ----- */
+        @JavascriptInterface
+        public boolean notifAllowed() { return Notif.allowed(MainActivity.this); }
+
+        @JavascriptInterface
+        public void notifPermission() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= 33 && !granted("android.permission.POST_NOTIFICATIONS")) {
+                        requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
+                    } else if (!Notif.allowed(MainActivity.this)) {
+                        try {
+                            Intent i = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
+                            i.putExtra("android.provider.extra.APP_PACKAGE", getPackageName());
+                            startActivity(i);
+                        } catch (Exception e) { }
+                        js("window.androidNotifPerm&&window.androidNotifPerm(false)");
+                    } else js("window.androidNotifPerm&&window.androidNotifPerm(true)");
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void notifState(String json) {
+            try {
+                JSONObject o = new JSONObject(json);
+                boolean soc = o.optJSONObject("prefs") == null || o.optJSONObject("prefs").optBoolean("social", true);
+                Notif.prefs(MainActivity.this).edit().putString("state", json).putBoolean("soc_on", soc && o.optBoolean("logged", false)).apply();
+            } catch (Exception e) { }
+        }
+
+        @JavascriptInterface
+        public String notifKey() { return Notif.key(MainActivity.this); }
+
+        @JavascriptInterface
+        public void notifResetKey() { Notif.prefs(MainActivity.this).edit().remove("dev_key").putLong("soc_after", 0).putBoolean("soc_on", false).apply(); }
+
+        @JavascriptInterface
+        public void notifSetAfter(double id) {
+            SharedPreferences sp = Notif.prefs(MainActivity.this);
+            if ((long) id > sp.getLong("soc_after", 0)) sp.edit().putLong("soc_after", (long) id).apply();
+        }
+
+        @JavascriptInterface
+        public String takeOpen() { String o = pendingOpen; pendingOpen = null; return o; }
+
+        @JavascriptInterface
+        public void restAlarm(double endMs, boolean on) {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            PendingIntent pi = restPi();
+            am.cancel(pi);
+            Notif.cancel(MainActivity.this, 7001);
+            if (!on) return;
+            long t = (long) endMs;
+            try {
+                if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, t, pi);
+                else am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, t, pi);
+            } catch (Exception e) {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, t, pi);
+            }
+        }
+
+        @JavascriptInterface
+        public void restCancel() {
+            ((AlarmManager) getSystemService(ALARM_SERVICE)).cancel(restPi());
+        }
+
         /* ----- atualização do app ----- */
         @JavascriptInterface
         public int appVersion() {
@@ -492,7 +581,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        visible = true;
         if (web != null) web.evaluateJavascript("window.androidResume&&window.androidResume()", null);
+    }
+
+    PendingIntent restPi() {
+        return PendingIntent.getBroadcast(this, 7001, new Intent(this, RestReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     String getRecovered() {

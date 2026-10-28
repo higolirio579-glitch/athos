@@ -225,7 +225,7 @@ public class RunService extends Service implements LocationListener, SensorEvent
         oi.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(this, 0, oi, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH) : new Notification.Builder(this);
-        b.setSmallIcon(android.R.drawable.ic_menu_mylocation)
+        b.setSmallIcon(R.drawable.ic_stat)
             .setContentTitle((paused ? "Pausado · " : "Gravando · ") + label())
             .setContentText(String.format(BR, "%.2f km · %s", dist / 1000, clock(moving)))
             .setOngoing(true)
