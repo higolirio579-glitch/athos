@@ -316,9 +316,18 @@ input,select,textarea{border-radius:12px;background:var(--surface)}
 .tab[aria-current="page"]{color:var(--accent)}
 .tab[aria-current="page"] svg{transform:translateY(-1px)}
 .tab[aria-current="page"]::after{width:18px}
-.tabbar,.activebar{transition:transform .28s cubic-bezier(.3,.7,.2,1),opacity .28s}
-body.tb-hide .tabbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}
-body.tb-hide .activebar{transform:translateY(74px)}
+.tabbar{display:flex;align-items:stretch;gap:2px}
+.tabbar nav{flex:1;min-width:0}
+.tbmenu{flex:none;width:44px;border:0;background:none;color:#8B9099;display:grid;place-items:center;border-radius:16px;margin-right:2px}
+.tbmenu svg,.tbfab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.tbmenu:active{background:var(--ink2)}
+.tbfab{position:fixed;z-index:20;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;
+  border:1px solid var(--ink2);background:var(--ink);color:var(--accent);display:grid;place-items:center;box-shadow:0 12px 28px -8px rgb(0 0 0 / .5);
+  transform:scale(.4);opacity:0;pointer-events:none}
+.tabbar,.tbfab,.activebar{transition:transform .3s cubic-bezier(.3,.7,.2,1),opacity .25s}
+body.tb-min .tabbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}
+body.tb-min .tbfab{transform:none;opacity:1;pointer-events:auto}
+body.tb-min .activebar{transform:translateY(68px);right:calc(84px + env(safe-area-inset-right,0px))}
 .activebar{bottom:calc(88px + env(safe-area-inset-bottom,0px));border-radius:16px;background:var(--fg);color:var(--bg)}
 main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
@@ -337,7 +346,7 @@ main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
   <span>Treino em andamento</span><span class="num" id="abTime">00:00</span>
 </button>
 
-<div class="tabbar"><nav aria-label="Seções">
+<div class="tabbar"><button class="tbmenu" id="tbClose" aria-label="Recolher menu" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><nav aria-label="Seções">
   <button class="tab" data-tab="hoje"><svg viewBox="0 0 24 24"><path d="M3.5 15a8.5 8.5 0 1 1 17 0"/><path d="M12 15l4.5-4.5"/><path d="M8 19h8"/></svg>Hoje</button>
   <button class="tab" data-tab="treino"><svg viewBox="0 0 24 24"><path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/></svg>Treino</button>
   <button class="tab" data-tab="dieta"><svg viewBox="0 0 24 24"><path d="M6 3v7a2.5 2.5 0 0 0 5 0V3M8.5 12.5V21M17.5 21V3c-2.2 1-3.5 4-3.5 7.5 0 2 1 3 3.5 3"/></svg>Dieta</button>
@@ -345,6 +354,7 @@ main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
   <button class="tab" data-tab="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Perfil</button>
 </nav></div>
 
+<button class="tbfab" id="tbFab" aria-label="Abrir menu" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <section id="session" hidden></section>
 <div id="sheets"></div>
 <input type="file" id="photoIn" accept="image/*" hidden>
@@ -799,17 +809,14 @@ function render(){
   $('#activebar').hidden=!S.active||!$('#session').hidden;
   const sel=$('#exSel');if(sel)sel.onchange=()=>{S.ui.exSel=sel.value;render()};
 }
-function go(tab){document.body.classList.remove('tb-hide');S.tab=tab;try{history.replaceState(null,'','#'+tab)}catch(e){location.hash=tab}render();window.scrollTo(0,0)}
+function go(tab){S.tab=tab;try{history.replaceState(null,'','#'+tab)}catch(e){location.hash=tab}render();window.scrollTo(0,0)}
 
-/* ---------- barra de abas recolhível ---------- */
-(function(){let lastY=window.scrollY,acc=0,tick=false;
-  const upd=()=>{tick=false;const y=window.scrollY,dy=y-lastY;lastY=y;
-    const atEnd=window.innerHeight+y>=document.documentElement.scrollHeight-4;
-    if(y<40||atEnd){acc=0;document.body.classList.remove('tb-hide');return}
-    acc=(dy>0)===(acc>0)?acc+dy:dy;
-    if(acc>28)document.body.classList.add('tb-hide');else if(acc<-18)document.body.classList.remove('tb-hide')};
-  window.addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});
-})();
+/* ---------- barra de abas recolhível (☰) ---------- */
+function tbSet(min){document.body.classList.toggle('tb-min',min);try{localStorage.setItem('athos.tbmin',min?'1':'0')}catch(e){}
+  const f=$('#tbFab');if(f)f.setAttribute('aria-expanded',String(!min));const c=$('#tbClose');if(c)c.setAttribute('aria-expanded',String(!min))}
+try{if(localStorage.getItem('athos.tbmin')==='1')document.body.classList.add('tb-min')}catch(e){}
+$('#tbClose').addEventListener('click',()=>tbSet(true));
+$('#tbFab').addEventListener('click',()=>tbSet(false));
 /* ---------- sheets ---------- */
 const sheets=[];
 function openSheet(title,html,mount){
