@@ -1,0 +1,6 @@
+ficha.jks
+*.jks
+sdk/
+android/build/
+android/gen/
+ATHOS.apk
