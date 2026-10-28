@@ -190,11 +190,39 @@ function socPostMenu(id){const p=findPost(id);if(!p)return;const mine=p.user_id=
 /* ----- postar ----- */
 function hav(a,b){const R=6371000,toR=Math.PI/180,dLa=(b[0]-a[0])*toR,dLo=(b[1]-a[1])*toR;const x=Math.sin(dLa/2)**2+Math.cos(a[0]*toR)*Math.cos(b[0]*toR)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
 function trimRoute(pts,m){if(!pts||pts.length<2)return null;if(!m)return pts;const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+hav(pts[i-1],pts[i]));const tot=cum[cum.length-1];const out=pts.filter((_,i)=>cum[i]>=m&&cum[i]<=tot-m);return out.length>1?out:null}
-async function shrinkPhoto(file){const url=URL.createObjectURL(file);try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
-  const s=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-  return await new Promise(r=>c.toBlob(r,'image/jpeg',0.8))}finally{URL.revokeObjectURL(url)}}
-async function uploadPhoto(file,folder){const blob=await shrinkPhoto(file);if(!blob)throw new Error('foto inválida');const path=`${SOC.user.id}/${folder||'p'}-${Date.now()}.jpg`;
-  await sbq(SOC.sb.storage.from('fotos').upload(path,blob,{contentType:'image/jpeg',upsert:false}));return SOC.sb.storage.from('fotos').getPublicUrl(path).data.publicUrl}
+/* abre a foto já reduzida (evita estourar a memória com fotos grandes de câmera) */
+async function decodePhoto(file,max){
+  if(window.createImageBitmap){
+    try{const probe=await createImageBitmap(file);const w=probe.width,h=probe.height;
+      const k=Math.min(1,max/Math.max(w,h));if(k>=1)return probe;probe.close&&probe.close();
+      return await createImageBitmap(file,{resizeWidth:Math.round(w*k),resizeHeight:Math.round(h*k),resizeQuality:'high'})}catch(e){}
+  }
+  const url=URL.createObjectURL(file);
+  try{return await new Promise((ok,no)=>{const i=new Image();i.decoding='async';i.onload=()=>ok(i);i.onerror=()=>no(new Error('decode'));i.src=url})}
+  finally{setTimeout(()=>URL.revokeObjectURL(url),1000)}
+}
+async function shrinkPhoto(file,opt){opt=opt||{};const max=opt.square?512:1280;
+  let img;try{img=await decodePhoto(file,opt.square?1024:max)}catch(e){throw new Error('foto_ilegivel')}
+  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;if(!W||!H)throw new Error('foto_ilegivel');
+  const c=document.createElement('canvas'),g=c.getContext('2d');
+  if(opt.square){const side=Math.min(W,H),out=Math.min(max,side);c.width=c.height=out;g.drawImage(img,(W-side)/2,(H-side)/2,side,side,0,0,out,out)}
+  else{const k=Math.min(1,max/Math.max(W,H));c.width=Math.round(W*k);c.height=Math.round(H*k);g.drawImage(img,0,0,c.width,c.height)}
+  try{img.close&&img.close()}catch(e){}
+  let q=0.85,blob=null;
+  for(let t=0;t<4;t++){blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(!blob)break;if(blob.size<1500000)break;q-=0.15}
+  c.width=c.height=0;
+  if(!blob)throw new Error('foto_ilegivel');return blob}
+function photoErr(e){const m=String((e&&e.message)||e||'');
+  if(m==='foto_ilegivel')return'Não consegui abrir essa foto. Tente outra, de preferência JPG ou PNG.';
+  if(/exceeded|too large|payload/i.test(m))return'A foto ficou grande demais. Tente outra.';
+  if(/row-level security|JWT|not authorized|Unauthorized|403/i.test(m))return'Sua sessão expirou. Saia da conta e entre de novo.';
+  return sbErr(e)}
+async function uploadPhoto(file,folder,opt){const blob=await shrinkPhoto(file,opt);const path=`${SOC.user.id}/${folder||'p'}-${Date.now()}.jpg`;
+  let last=null;
+  for(let t=0;t<2;t++){try{await sbq(SOC.sb.storage.from('fotos').upload(path,blob,{contentType:'image/jpeg',upsert:false,cacheControl:'31536000'}));last=null;break}catch(e){if(t&&/exists|Duplicate/i.test(String(e&&e.message))){last=null;break}last=e;if(/row-level|JWT|exceeded|too large/i.test(String(e&&e.message)))break;await new Promise(r=>setTimeout(r,1200))}}
+  if(last)throw last;
+  return SOC.sb.storage.from('fotos').getPublicUrl(path).data.publicUrl}
+function photoPath(url){const k='/object/public/fotos/';const i=String(url||'').indexOf(k);return i<0?null:decodeURIComponent(url.slice(i+k.length).split('?')[0])}
 function sessToPost(s){
   if(s.run){const r=s.run;return{kind:'run',title:s.name,stats:{type:r.type,dist:r.dist,moving:r.moving,steps:r.stepsEst?null:r.steps,elev:r.elev,kcal:r.kcal,best1k:r.best1k},route:r.pts}}
   const x=sessStats(s);if(s.checkin)return{kind:'workout',title:s.name,stats:{checkin:true,dur:Math.round(x.dur/60000)}};
@@ -223,7 +251,7 @@ function socNewPost(preId){
           if(photo)row.photo_url=await uploadPhoto(photo,'post');
           const p=(await sbq(SOC.sb.from('posts').insert(row).select()))[0];
           if(s){s.posted=p.id;store.mark(s.id)}SOC.likeN[p.id]=0;SOC.cmtN[p.id]=0;SOC.feed=[p,...(SOC.feed||[])];SOC.sub='feed';closeSheet(el);go('social');toast('Postado!')}
-        catch(err){x.disabled=false;x.textContent='Postar';toast(sbErr(err))}}};
+        catch(err){x.disabled=false;x.textContent='Postar';toast(photoErr(err))}}};
   });
 }
 
@@ -283,12 +311,25 @@ function socClubSheet(id){const c=(SOC.clubs||[]).find(x=>x.id===id);if(!c)retur
   })}
 
 /* ----- meu perfil ----- */
-function socEditMe(){const m=SOC.me||{};let photo=null;
-  openSheet('Editar perfil',`<div class="row">${avatar(m,'lg')}<button class="btn" data-s="photo">Trocar foto</button></div><label class="fld"><span>Nome</span><input id="emN" maxlength="60" value="${esc(m.name||'')}"></label><label class="fld"><span>Cidade</span><input id="emC" maxlength="60" value="${esc(m.city||'')}"></label><label class="fld"><span>Bio</span><textarea id="emB" maxlength="280">${esc(m.bio||'')}</textarea></label><button class="btn primary block" data-s="save">Salvar</button>`,(b,el)=>{
+function socEditMe(){const m=SOC.me||{};let up=null;
+  openSheet('Editar perfil',`<div class="row" style="flex-wrap:nowrap"><span id="emAv">${avatar(m,'lg')}</span><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><button class="btn" data-s="photo">Trocar foto</button><small class="muted" id="emSt" aria-live="polite"></small></div></div><label class="fld"><span>Nome</span><input id="emN" maxlength="60" value="${esc(m.name||'')}"></label><label class="fld"><span>Cidade</span><input id="emC" maxlength="60" value="${esc(m.city||'')}"></label><label class="fld"><span>Bio</span><textarea id="emB" maxlength="280">${esc(m.bio||'')}</textarea></label><button class="btn primary block" data-s="save">Salvar</button>`,(b,el)=>{
+    const st=b.querySelector('#emSt'),pb=b.querySelector('[data-s=photo]');
+    const setAv=src=>{const a=b.querySelector('#emAv .av');if(a)a.innerHTML=`<img src="${esc(src)}" alt="">`};
+    async function sendPhoto(file){
+      const old=SOC.me&&SOC.me.avatar_url,prev=URL.createObjectURL(file);setAv(prev);
+      pb.disabled=true;pb.textContent='Enviando…';st.textContent='Enviando a foto…';st.style.color='';
+      try{const url=await uploadPhoto(file,'avatar',{square:true});
+        const row=(await sbq(SOC.sb.from('profiles').update({avatar_url:url}).eq('id',SOC.user.id).select()))[0];
+        if(!row)throw new Error('Não consegui salvar a foto no perfil.');
+        SOC.me=row;SOC.prof[SOC.user.id]=row;st.textContent='Foto atualizada';toast('Foto de perfil atualizada');render();
+        const op=photoPath(old);if(op&&op.startsWith(SOC.user.id+'/'))SOC.sb.storage.from('fotos').remove([op]).catch(()=>{});
+      }catch(err){if(old)setAv(old);else{const a=b.querySelector('#emAv');if(a)a.innerHTML=avatar(SOC.me||m,'lg')}st.textContent=photoErr(err);st.style.color='var(--red)';throw err}
+      finally{pb.disabled=false;pb.textContent='Trocar foto';setTimeout(()=>URL.revokeObjectURL(prev),4000)}}
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
-      if(x.dataset.s==='photo'){photo=await pickPhoto();if(photo){x.textContent='Foto escolhida'}return}
+      if(x.dataset.s==='photo'){const f=await pickPhoto();if(!f)return;up=sendPhoto(f);up.catch(()=>{});return}
       if(x.dataset.s==='save'){x.disabled=true;x.textContent='Salvando…';
-        try{const upd={name:b.querySelector('#emN').value.trim()||'Atleta',city:b.querySelector('#emC').value.trim()||null,bio:b.querySelector('#emB').value.trim()||null};if(photo)upd.avatar_url=await uploadPhoto(photo,'avatar');
+        try{if(up){try{await up}catch(_){} }
+          const upd={name:b.querySelector('#emN').value.trim()||'Atleta',city:b.querySelector('#emC').value.trim()||null,bio:b.querySelector('#emB').value.trim()||null};
           SOC.me=(await sbq(SOC.sb.from('profiles').update(upd).eq('id',SOC.user.id).select()))[0];SOC.prof[SOC.user.id]=SOC.me;closeSheet(el);render();toast('Perfil salvo')}
         catch(err){x.disabled=false;x.textContent='Salvar';toast(sbErr(err))}}};
   })}
