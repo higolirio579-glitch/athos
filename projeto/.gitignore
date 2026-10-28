@@ -4,3 +4,4 @@ sdk/
 android/build/
 android/gen/
 ATHOS.apk
+*.idsig
