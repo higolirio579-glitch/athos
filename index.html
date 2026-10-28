@@ -792,9 +792,6 @@ function vPerfil(){
   html+=`<div class="card"><h3>Descanso entre séries</h3><div class="chips">${[45,60,90,120,180].map(s=>`<button class="chip" data-act="restDef" data-s="${s}" aria-pressed="${p.rest===s}">${s<60?s+' s':(s/60).toLocaleString('pt-BR')+' min'}</button>`).join('')}</div></div>`;
   if((p.customFoods||[]).length)html+=`<div class="card"><h3>Meus alimentos</h3><div class="list">${p.customFoods.map((f,i)=>`<div class="li"><span class="t"><b>${esc(f.name)}</b><small>${fmtN(f.kcal)} kcal por 100 g · P ${fmtD(f.p)} · C ${fmtD(f.c)} · G ${fmtD(f.f)}</small></span><button class="btn sm danger" data-act="delCustomFood" data-i="${i}">Apagar</button></div>`).join('')}</div></div>`;
   if(AIHOST)html+=aiCard();
-  html+=`<div class="card"><h3>Seus dados</h3><p class="hint">${store.mode==='db'?'Tudo fica salvo na sua conta do Claude: abre em qualquer aparelho com os mesmos treinos, cargas, peso e refeições.':window.WEBAPP?'Seus dados ficam salvos na sua conta ATHOS e sincronizam sozinhos entre aparelhos. O backup em arquivo é opcional.':NATIVE?'Seus dados ficam salvos na sua conta ATHOS e sincronizam sozinhos entre aparelhos. O backup em arquivo é opcional.':'Os dados estão salvos só neste navegador. Abra pelo app do Claude, logado, para salvar na sua conta — e exporte um backup de vez em quando.'}</p>
-   <div class="btns">${DOWNLOADS||NATIVE||window.WEBAPP?'<button class="btn" data-act="export">Exportar backup</button>':''}<button class="btn" data-act="import">Importar backup</button></div>
-   <button class="btn danger" data-act="wipe">Apagar todos os dados</button></div>`;
   html+=`<p class="hint" style="text-align:center">Estimativas de calorias e macros são aproximadas e não substituem nutricionista ou médico.</p>`;
   return html;
 }
