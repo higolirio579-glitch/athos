@@ -316,6 +316,9 @@ input,select,textarea{border-radius:12px;background:var(--surface)}
 .tab[aria-current="page"]{color:var(--accent)}
 .tab[aria-current="page"] svg{transform:translateY(-1px)}
 .tab[aria-current="page"]::after{width:18px}
+.tabbar,.activebar{transition:transform .28s cubic-bezier(.3,.7,.2,1),opacity .28s}
+body.tb-hide .tabbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}
+body.tb-hide .activebar{transform:translateY(74px)}
 .activebar{bottom:calc(88px + env(safe-area-inset-bottom,0px));border-radius:16px;background:var(--fg);color:var(--bg)}
 main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
@@ -796,8 +799,17 @@ function render(){
   $('#activebar').hidden=!S.active||!$('#session').hidden;
   const sel=$('#exSel');if(sel)sel.onchange=()=>{S.ui.exSel=sel.value;render()};
 }
-function go(tab){S.tab=tab;try{history.replaceState(null,'','#'+tab)}catch(e){location.hash=tab}render();window.scrollTo(0,0)}
+function go(tab){document.body.classList.remove('tb-hide');S.tab=tab;try{history.replaceState(null,'','#'+tab)}catch(e){location.hash=tab}render();window.scrollTo(0,0)}
 
+/* ---------- barra de abas recolhível ---------- */
+(function(){let lastY=window.scrollY,acc=0,tick=false;
+  const upd=()=>{tick=false;const y=window.scrollY,dy=y-lastY;lastY=y;
+    const atEnd=window.innerHeight+y>=document.documentElement.scrollHeight-4;
+    if(y<40||atEnd){acc=0;document.body.classList.remove('tb-hide');return}
+    acc=(dy>0)===(acc>0)?acc+dy:dy;
+    if(acc>28)document.body.classList.add('tb-hide');else if(acc<-18)document.body.classList.remove('tb-hide')};
+  window.addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});
+})();
 /* ---------- sheets ---------- */
 const sheets=[];
 function openSheet(title,html,mount){
