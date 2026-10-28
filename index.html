@@ -1125,11 +1125,11 @@ const groqOn=()=>!!(AI.groq&&AI.groq.key&&(AI.groq.text||AI.groq.vision));
 const GROQ_VISION=['qwen/qwen3.8-27b','meta-llama/llama-4-scout-17b-16e-instruct','meta-llama/llama-4-maverick-17b-128e-instruct'];
 const GROQ_TEXT=['openai/gpt-oss-120b','qwen/qwen3.8-27b','llama-3.3-70b-versatile','openai/gpt-oss-20b'];
 const groqHdr=key=>({'Authorization':'Bearer '+key});
-async function groqRaw(key,model,messages,json,maxTok){
+async function groqRaw(key,model,messages,json,maxTok,probe){
   const body={model,messages,temperature:0.4,max_completion_tokens:maxTok||4096};if(json)body.response_format={type:'json_object'};
   let r=await nativeHttp(GROQ+'/chat/completions',body,groqHdr(key));
   if(r.status===400&&json&&/response_format|json/i.test(r.text)){delete body.response_format;r=await nativeHttp(GROQ+'/chat/completions',body,groqHdr(key))}
-  if(r.status===200){let j;try{j=JSON.parse(r.text)}catch(e){throw{code:'upstream_error'}}const t=stripThink(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content);if(!t)throw{code:'empty_completion'};return t}
+  if(r.status===200){let j;try{j=JSON.parse(r.text)}catch(e){throw{code:'upstream_error'}}const t=stripThink(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content);if(!t){if(probe)return'ok';throw{code:'empty_completion'}}return t}
   if(r.status<0)throw{code:'offline'};if(r.status===401||r.status===403)throw{code:'bad_key'};if(r.status===429)throw{code:'rate_limited'};
   if(r.status===400&&/image|vision|content type|multimodal/i.test(r.text))throw{code:'images_unavailable'};
   throw{code:'upstream_error',status:r.status};
@@ -1156,10 +1156,10 @@ async function groqSetup(key){
   if(r.status<0)throw{code:'offline'};if(r.status===401||r.status===403)throw{code:'bad_key'};if(r.status!==200)throw{code:'upstream_error'};
   const ids=new Set(((JSON.parse(r.text).data)||[]).map(m=>m.id));
   const text=GROQ_TEXT.find(m=>ids.has(m))||null;let vision=null;
-  if(text)await groqRaw(key,text,[{role:'user',content:'Responda apenas: ok'}],false,20);
+  if(text)await groqRaw(key,text,[{role:'user',content:'Responda apenas: ok'}],false,800,true);
   const tiny=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='#d22';x.fillRect(0,0,64,64);return c.toDataURL('image/jpeg',.8).split(',')[1]})();
   for(const m of GROQ_VISION.filter(m=>ids.has(m))){
-    try{await groqRaw(key,m,groqMsgs([{role:'user',content:'Qual é a cor desta imagem? Responda com uma palavra.'}],[tiny]),false,30);vision=m;break}
+    try{await groqRaw(key,m,groqMsgs([{role:'user',content:'Qual é a cor desta imagem? Responda com uma palavra.'}],[tiny]),false,800,true);vision=m;break}
     catch(e){if(e.code==='bad_key'||e.code==='offline')throw e}
   }
   if(!text&&!vision)throw{code:'no_models'};
@@ -1242,7 +1242,7 @@ Object.assign(ACT,{
   groqRemove:()=>confirmSheet('Remover a chave do Groq deste celular?','Remover',()=>{delete AI.groq;saveAI()}),
   aiTest:async el=>{el.disabled=true;el.textContent='Testando…';const res=[];
     if(gemOn()){try{const ms=await gemModels(AI.key);if(ms.length){AI.models=ms;AI.checked=Date.now()}await callGemini([{role:'user',content:'Responda apenas: ok'}],[],false,true);res.push('Gemini ok')}catch(e){res.push('Gemini: '+(e.code==='rate_limited'?'limite do dia atingido':e.code==='bad_key'?'chave inválida':'falhou'))}}
-    if(groqOn()){try{await groqRaw(AI.groq.key,AI.groq.text||AI.groq.vision,[{role:'user',content:'Responda apenas: ok'}],false,20);res.push('Groq ok')}catch(e){res.push('Groq: '+(e.code==='rate_limited'?'limite atingido':e.code==='bad_key'?'chave inválida':'falhou'))}}
+    if(groqOn()){try{await groqRaw(AI.groq.key,AI.groq.text||AI.groq.vision,[{role:'user',content:'Responda apenas: ok'}],false,800,true);res.push('Groq ok')}catch(e){res.push('Groq: '+(e.code==='rate_limited'?'limite atingido':e.code==='bad_key'?'chave inválida':'falhou'))}}
     lsSet('ficha.ai',AI);toast(res.join(' · ')||'Nenhuma IA conectada');render()}
 });
 if(AIHOST){aiActivate();if(gemOn()&&Date.now()-(AI.checked||0)>7*864e5)gemModels(AI.key).then(ms=>{if(ms.length){AI.models=ms;AI.checked=Date.now();lsSet('ficha.ai',AI)}}).catch(()=>{})}
