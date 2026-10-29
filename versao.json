@@ -1,6 +1,8 @@
 {
-  "code": 29,
-  "nome": "2.0",
+  "code": 30,
+  "nome": "2.1",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": ["Visual novo nas telas Hoje, Dieta, Evolução, Perfil e Social", "Leitor de código de barras na Dieta", "Sugestão de carga em cada exercício", "Medidas e fotos de antes e depois", "Card para os stories do Instagram e WhatsApp", "Status online dos amigos", "Tutorial novo ensinando tudo"]
+  "notas": [
+    "Ícone novo do ATHOS: o capacete espartano dourado"
+  ]
 }
