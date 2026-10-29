@@ -54,6 +54,7 @@ function nLine(n){const who=`<b>${esc(pName(n.actor_id))}</b>`;
   if(n.kind==='like')return`${who} curtiu seu post`;
   if(n.kind==='comment')return`${who} comentou: <span class="q">“${esc(n.body||'')}”</span>`;
   if(n.kind==='follow')return`${who} começou a seguir você`;
+  if(n.kind==='pr')return`🏆 ${who} bateu um recorde${n.body?`: <span class="q">${esc(n.body)}</span>`:''}`;
   return`${who} mandou uma mensagem: <span class="q">${esc(n.body||'')}</span>`}
 function nOpen(){
   openSheet('Notificações',`<div id="ntL">${thinking('Carregando…')}</div>`,async(b,el)=>{
@@ -108,7 +109,7 @@ function nCard(){if(!NATIVE||!NATIVE.notifState)return'';const n=nPrefs();let ok
   ${sw('social','Rede social','Curtidas, comentários, seguidores e mensagens')}
   ${sw('rest','Fim do descanso','Vibra quando o descanso acaba, mesmo com a tela bloqueada')}</div>
   <p class="hint">Os lembretes podem chegar alguns minutos depois do horário, conforme a economia de bateria do celular.</p></div>`}
-{const _vp=VIEWS.perfil;VIEWS.perfil=function(){const h=_vp.apply(this,arguments);const c=nCard();if(!c)return h;const i=h.indexOf('<div class="card"><h3>Descanso entre séries</h3>');return i<0?h+c:h.slice(0,i)+c+h.slice(i)}}
+/* o cartão aparece em Configurações */
 Object.assign(ACT,{notifAsk:()=>NATIVE&&NATIVE.notifPermission(),
   notifDay:el=>{const n=nPrefs(),d=el.dataset.d;n.trainDays=n.trainDays.includes(d)?n.trainDays.replace(d,''):[...n.trainDays+d].sort().join('');nSave();render()}});
 document.addEventListener('change',e=>{const t=e.target;

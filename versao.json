@@ -1,6 +1,6 @@
 {
-  "code": 19,
-  "nome": "1.9.3",
+  "code": 25,
+  "nome": "1.9.4",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": ["Foto de perfil corrigida: agora envia na hora e não falha com fotos grandes", "Fotos dos posts mais rápidas e confiáveis", "Demonstração e dicas de execução dos exercícios"]
+  "notas": ["Desafios do mês com ranking e medalhas", "Nível e XP: suba de Bronze até Lenda", "Recordes no feed com aviso para quem te segue", "Música no treino: controle o YouTube Music e o Spotify, com mini player flutuante", "Nova tela de Configurações (⚙) com tema claro, escuro ou automático"]
 }

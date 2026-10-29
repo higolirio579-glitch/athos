@@ -77,5 +77,5 @@ const tourTick=setInterval(()=>{
   if(!seen&&!S.profile.tourDone&&!sheets.length&&!S.active)tourStart();
 },1000);
 /* botão para rever no Perfil */
-{const _vp=VIEWS.perfil;VIEWS.perfil=function(){const h=_vp.apply(this,arguments);return h+`<button class="btn block" data-act="tourAgain" style="margin-top:-2px">Ver o tutorial de novo</button>`}}
+/* o botão aparece em Configurações */
 ACT.tourAgain=()=>tourStart();

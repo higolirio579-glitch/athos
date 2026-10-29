@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.9.3 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.9.4 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -487,6 +487,80 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void restCancel() {
             ((AlarmManager) getSystemService(ALARM_SERVICE)).cancel(restPi());
+        }
+
+        /* ----- aparência e versão ----- */
+        @JavascriptInterface
+        public String appVersionName() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return ""; }
+        }
+
+        @JavascriptInterface
+        public void setBars(final boolean d) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    int bg = d ? 0xFF000000 : 0xFFEEEFF1;
+                    Window w = getWindow();
+                    w.setStatusBarColor(bg);
+                    w.setNavigationBarColor(bg);
+                    web.setBackgroundColor(bg);
+                    View decor = w.getDecorView();
+                    int f = decor.getSystemUiVisibility();
+                    if (d) {
+                        f &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        if (Build.VERSION.SDK_INT >= 26) f &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    } else {
+                        f |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        if (Build.VERSION.SDK_INT >= 26) f |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    }
+                    decor.setSystemUiVisibility(f);
+                }
+            });
+        }
+
+        /* ----- música (YouTube Music, Spotify...) ----- */
+        @JavascriptInterface
+        public String musicState() { return Music.state(MainActivity.this); }
+
+        @JavascriptInterface
+        public void musicKey(final String which) {
+            runOnUiThread(new Runnable() { public void run() { try { Music.key(MainActivity.this, which); } catch (Exception e) { } } });
+        }
+
+        @JavascriptInterface
+        public void musicPerm() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        Intent i;
+                        if (Build.VERSION.SDK_INT >= 30) {
+                            i = new Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS");
+                            i.putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME", new android.content.ComponentName(MainActivity.this, MediaListener.class).flattenToString());
+                        } else i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                        startActivity(i);
+                    } catch (Exception e) {
+                        try { startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")); } catch (Exception e2) { }
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void appSettings() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); } catch (Exception e) { }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openUrl(final String url) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { }
+                }
+            });
         }
 
         /* ----- atualização do app ----- */

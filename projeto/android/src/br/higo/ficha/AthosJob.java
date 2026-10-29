@@ -121,6 +121,7 @@ public class AthosJob extends JobService {
             String kind = n.optString("kind"), who = n.optString("actor", "Alguém"), txt = n.isNull("body") ? "" : n.optString("body");
             if ("like".equals(kind)) { likes++; lastLiker = who; }
             else if ("comment".equals(kind)) Notif.post(c, 7200 + (int) (id % 500), Notif.CH_SOC, who + " comentou", txt, "social");
+            else if ("pr".equals(kind)) Notif.post(c, 7600 + (int) (id % 100), Notif.CH_SOC, who + " bateu um recorde!", txt.isEmpty() ? "Veja o treino no ATHOS." : txt, "social");
             else if ("follow".equals(kind)) Notif.post(c, 7800 + (int) (id % 100), Notif.CH_SOC, "Novo seguidor", who + " começou a seguir você.", "social");
             else if ("message".equals(kind)) {
                 String conv = n.optString("conversation_id", "");

@@ -2,16 +2,16 @@
 const UPD={url:'https://higolirio579-glitch.github.io/athos/versao.json',checked:0,info:null,skip:0,state:'idle',pct:0,el:null};
 function updMine(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 async function updCheck(force){
-  if(!NATIVE||!NATIVE.updateDownload)return;
-  if(!force&&Date.now()-UPD.checked<6*3600e3)return;
+  if(!NATIVE||!NATIVE.updateDownload)return'web';
+  if(!force&&Date.now()-UPD.checked<6*3600e3)return'skip';
   UPD.checked=Date.now();
   try{
-    const r=await fetch(UPD.url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const r=await fetch(UPD.url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return'error';
     const v=await r.json();const mine=updMine();
-    if(!v||!(v.code>mine)||!v.apk)return;
-    UPD.info=v;if(UPD.skip===v.code&&!force)return;
-    updShow();
-  }catch(e){}
+    if(!v||!(v.code>mine)||!v.apk)return'none';
+    UPD.info=v;if(UPD.skip===v.code&&!force)return'new';
+    updShow();return'new';
+  }catch(e){return'error'}
 }
 function updBody(){
   const v=UPD.info||{};const notes=(v.notas||[]).map(n=>`<li>${esc(n)}</li>`).join('');

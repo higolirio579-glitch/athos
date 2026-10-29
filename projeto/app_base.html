@@ -929,6 +929,10 @@ const WK_JSON='Responda SOMENTE com JSON no formato {"treinos":[{"nome":"Treino 
 function aiToItems(r){const arr=(r&&(r.itens||r.items))||[];return arr.map(x=>{const g=num(x.gramas??x.grams);const it={id:newId('f'),name:String(x.nome||x.name||'Alimento').slice(0,80),grams:g||null,kcal:r1(num(x.kcal)),p:r1(num(x.proteina??x.p)),c:r1(num(x.carbo??x.c)),f:r1(num(x.gordura??x.f))};if(g>0)it.per={kcal:it.kcal*100/g,p:it.p*100/g,c:it.c*100/g,f:it.f*100/g};return it}).filter(it=>it.name)}
 function aiToTemplates(r){return((r&&r.treinos)||[]).map(t=>({id:newId('t'),name:String(t.nome||'Treino').slice(0,80),exercises:(t.exercicios||[]).map(e=>{const m=matchEx(e.nome||'');return{name:m.name,group:m.group,type:m.type,sets:Math.max(1,Math.min(10,parseInt(e.series)||3)),reps:String(e.reps||'8-12').slice(0,12)}})})).filter(t=>t.exercises.length)}
 function pickPhotos(multi){return new Promise(res=>{const inp=$('#photoIn');inp.value='';inp.multiple=!!multi;inp.onchange=()=>res(inp.files?[...inp.files]:[]);inp.click()})}
+/* links de playlist aceitos: YouTube Music, YouTube e Spotify */
+function musicLink(v){v=String(v||'').trim();const m=v.match(/(https?:\/\/)?((music|www|m)\.)?(youtube\.com|youtu\.be|open\.spotify\.com|spotify\.link)\/[^\s]*/i);if(m)return(m[1]?'':'https://')+m[0];if(/^spotify:[a-z]+:[A-Za-z0-9]+$/.test(v))return v;return null}
+function musicApp(u){return/spotify/i.test(u)?'Spotify':'YouTube Music'}
+let musicCard=a=>a&&a.music?`<a class="btn soft block" href="${esc(a.music)}" target="_blank" rel="noopener">▶ Tocar a playlist do treino no ${musicApp(a.music)}</a>`:'';
 function pickPhoto(){return pickPhotos(false).then(a=>a[0]||null)}
 
 /* ---------- alimentos ---------- */
@@ -1015,17 +1019,18 @@ function templateSheet(tid,draft){
   const t=draft||(orig?clone(orig):{id:newId('t'),name:'',exercises:[]});
   openSheet(orig?'Editar treino':'Novo treino','',(b,el)=>{
     const draw=()=>{b.innerHTML=`<label class="fld"><span>Nome</span><input id="tName" value="${esc(t.name)}" placeholder="Ex.: Treino A — Peito e tríceps"></label>
+      <label class="fld"><span>Playlist do treino (opcional)</span><input id="tMusic" value="${esc(t.music||'')}" placeholder="Cole o link do YouTube Music ou do Spotify" inputmode="url" autocomplete="off"></label>
       <div style="display:flex;flex-direction:column;gap:6px">${t.exercises.map((x,i)=>`<div class="tex"><div style="min-width:0;display:flex;flex-direction:column"><b>${esc(x.name)}</b><small>${esc(x.group||'')}</small><button class="demo-b" data-demo="${esc(x.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg> Como fazer</button></div><label><input inputmode="numeric" data-i="${i}" data-f="sets" value="${x.sets}" aria-label="Séries"><span class="mini-l">séries</span></label><label><input data-i="${i}" data-f="reps" value="${esc(x.reps)}" aria-label="${x.type==='t'?'Minutos':'Repetições'}"><span class="mini-l">${x.type==='t'?'min':'reps'}</span></label><div class="act"><button data-s="up" data-i="${i}" aria-label="Subir" ${i?'':'disabled'}>↑</button><button data-s="del" data-i="${i}" aria-label="Remover">✕</button></div></div>`).join('')||'<p class="hint">Nenhum exercício ainda.</p>'}</div>
       <button class="btn ghost block" data-s="add">+ Adicionar exercício</button>
       <div class="btns">${orig?'<button class="btn danger" data-s="delT">Excluir treino</button>':''}<button class="btn primary" data-s="save">Salvar treino</button></div>`};
     draw();
-    b.oninput=e=>{const i=e.target.dataset.i;if(e.target.id==='tName')t.name=e.target.value;else if(i!=null){const f=e.target.dataset.f;t.exercises[i][f]=f==='sets'?Math.max(1,Math.min(10,parseInt(e.target.value)||1)):e.target.value}};
+    b.oninput=e=>{const i=e.target.dataset.i;if(e.target.id==='tName')t.name=e.target.value;else if(e.target.id==='tMusic')t.music=e.target.value.trim();else if(i!=null){const f=e.target.dataset.f;t.exercises[i][f]=f==='sets'?Math.max(1,Math.min(10,parseInt(e.target.value)||1)):e.target.value}};
     b.onclick=e=>{const s=e.target.closest('[data-s]');if(!s)return;const i=+s.dataset.i;
       switch(s.dataset.s){
         case'up':if(i>0){[t.exercises[i-1],t.exercises[i]]=[t.exercises[i],t.exercises[i-1]];draw()}break;
         case'del':t.exercises.splice(i,1);draw();break;
         case'add':pickExercise(ex=>{t.exercises.push({name:ex.name,group:ex.group,type:ex.type,sets:3,reps:ex.type==='t'?'20':'8-12'});draw()});break;
-        case'save':{if(!t.name.trim()){toast('Dê um nome ao treino');return}if(!t.exercises.length){toast('Adicione pelo menos um exercício');return}
+        case'save':{if(!t.name.trim()){toast('Dê um nome ao treino');return}if(t.music&&!musicLink(t.music)){toast('Esse link não parece ser do YouTube Music ou do Spotify');return}if(t.music)t.music=musicLink(t.music);if(!t.exercises.length){toast('Adicione pelo menos um exercício');return}
           const list=S.profile.templates;const k=list.findIndex(x=>x.id===t.id);if(k>=0)list[k]=t;else list.push(t);store.mark('profile');closeSheet(el);render();toast('Treino salvo');break}
         case'delT':confirmSheet(`Excluir “${t.name}”? O histórico de treinos feitos continua.`,'Excluir',()=>{S.profile.templates=S.profile.templates.filter(x=>x.id!==t.id);store.mark('profile');closeSheet(el);render()});break;
       }};
@@ -1079,7 +1084,7 @@ function mkEx(x){const n=Math.max(1,parseInt(x.sets)||3);return{name:x.name,grou
 function startSession(tid){
   if(S.active){openActive();toast('Já existe um treino em andamento');return}
   const t=tid?S.profile.templates.find(x=>x.id===tid):null;
-  S.active={id:newId('s'),name:t?t.name:'Treino livre',templateId:t?t.id:null,start:Date.now(),exercises:(t?t.exercises:[]).map(mkEx)};
+  S.active={id:newId('s'),name:t?t.name:'Treino livre',templateId:t?t.id:null,music:t&&t.music||null,start:Date.now(),exercises:(t?t.exercises:[]).map(mkEx)};
   saveActive();openActive();
 }
 function openActive(){if(!S.active)return;const s=$('#session');s.hidden=false;document.body.classList.add('locked');rSession();$('#activebar').hidden=true;getWake()}
@@ -1096,7 +1101,7 @@ function exCard(x,i){
 function rSession(){
   const a=S.active,el=$('#session');if(!a)return;const sc=el.scrollTop;
   el.innerHTML=`<header class="s-h"><div class="wrap"><button class="icon-btn" data-act="minActive" aria-label="Minimizar treino">⌄</button><div class="ttl"><p class="eyebrow">Treino em andamento</p><h2>${esc(a.name)}</h2></div><span class="clock" id="elapsed">${fmtDur(Date.now()-a.start)}</span><button class="btn primary sm" data-act="finish">Finalizar</button></div></header>
-  <div class="wrap s-body">${a.exercises.map(exCard).join('')||'<div class="empty"><b>Treino livre</b><span>Adicione os exercícios conforme for fazendo.</span></div>'}
+  <div class="wrap s-body">${musicCard(a)}${a.exercises.map(exCard).join('')||'<div class="empty"><b>Treino livre</b><span>Adicione os exercícios conforme for fazendo.</span></div>'}
    <button class="btn ghost block" data-act="sAddEx">+ Adicionar exercício</button>
    <p class="hint">RIR = repetições que ainda sobravam no tanque (0 = falha). Toque em ✓ para concluir a série e iniciar o descanso.</p>
    <button class="btn danger block" data-act="discard">Descartar treino</button></div>

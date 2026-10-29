@@ -175,9 +175,9 @@ function deleteAccount(){openSheet('Excluir minha conta',`<p>Isso apaga <b>para 
     try{const r=await SOC.sb.rpc('delete_my_account');if(r.error)throw r.error;closeSheet(el);wipeLocal();await SOC.sb.auth.signOut();toast('Conta excluída')}catch(e){toast(accErr(e))}}})}
 Object.assign(ACT,{socLogout:()=>confirmSheet('Sair da conta neste aparelho? Seus dados continuam salvos na conta.','Sair',accountLogout),accDelete:deleteAccount,accSync:()=>{pullAll(true);schedulePush(0);toast('Sincronizando…')}});
 
-{const _vp=VIEWS.perfil;VIEWS.perfil=function(){let h=_vp();if(!SOC.user)return h;const n=Object.keys(SYNC.meta.pend).length;
-  return h+`<div class="card"><h3>Sua conta</h3><p class="small muted">${esc(SOC.user.email||'')}</p><p class="hint">${n?`${n} alteração${n>1?'ões':''} esperando internet para ir para a nuvem.`:'Tudo salvo na nuvem. Entre com este e-mail em outro celular e seus treinos, refeições e corridas aparecem lá.'}</p>
-  <div class="btns"><button class="btn" data-act="accSync">Sincronizar agora</button><button class="btn" data-act="socLogout">Sair da conta</button></div><button class="btn danger" data-act="accDelete">Excluir minha conta</button></div>`}}
+function accCard(){if(!SOC.user)return'';const n=Object.keys(SYNC.meta.pend).length;
+  return`<div class="card"><h3>Sua conta</h3><p class="small muted">${esc(SOC.user.email||'')}</p><p class="hint">${n?`${n} alteração${n>1?'ões':''} esperando internet para ir para a nuvem.`:'Tudo salvo na nuvem. Entre com este e-mail em outro celular e seus treinos, refeições e corridas aparecem lá.'}</p>
+  <div class="btns"><button class="btn" data-act="accSync">Sincronizar agora</button><button class="btn" data-act="socLogout">Sair da conta</button></div><button class="btn danger" data-act="accDelete">Excluir minha conta</button></div>`}
 /* ----- início ----- */
 function boot(){
   if(!SOC.sb){if(window.supabase&&window.supabase.createClient)sbInit();if(!SOC.sb){ACC.view='offline';drawGate();return}}
