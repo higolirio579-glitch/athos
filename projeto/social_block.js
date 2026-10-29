@@ -57,7 +57,7 @@ function sbErr(e){const m=String((e&&(e.message||e.error_description))||e||'');
   if(/Invalid login/i.test(m))return'E-mail ou senha incorretos.';if(/already registered|already exists/i.test(m))return'Já existe uma conta com esse e-mail. Use “Entrar”.';
   if(/Password should be/i.test(m))return'A senha precisa ter pelo menos 6 caracteres.';if(/valid email|invalid format/i.test(m))return'Esse e-mail não parece válido.';
   if(/rate limit/i.test(m))return'Muitas tentativas. Espere alguns minutos.';if(/Failed to fetch|NetworkError|network/i.test(m))return'Sem conexão com a internet.';
-  if(/bloqueado/i.test(m))return'Não é possível falar com essa pessoa.';if(/username/i.test(m))return'Nome de usuário inválido ou já em uso (3 a 24 letras minúsculas, números, _ ou .).';
+  if(/bloqueado/i.test(m))return'Não é possível falar com essa pessoa.';if(/so_seguindo/i.test(m))return'Essa pessoa só recebe mensagens de quem ela segue.';if(/row-level security/i.test(m))return'Você não tem permissão para fazer isso.';if(/username/i.test(m))return'Nome de usuário inválido ou já em uso (3 a 24 letras minúsculas, números, _ ou .).';
   return'Algo deu errado: '+m.slice(0,120)}
 const avColor=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%360;return`hsl(${h} 45% 45%)`};
 function avatar(p,cls=''){p=p||{};const n=(p.name||'?').trim();const ini=n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -72,7 +72,7 @@ function sbInit(){
   SOC.sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   SOC.sb.auth.onAuthStateChange((ev,sess)=>{const u=sess?sess.user:null;const changed=(u&&u.id)!==(SOC.user&&SOC.user.id);SOC.user=u;try{aiActivate()}catch(e){}if(changed){if(u)socBoot();else socReset()}schedule()});
 }
-function socReset(){Object.assign(SOC,{me:null,feed:null,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),convs:null,unread:0,clubs:null,myClubs:new Set(),people:null,rank:null});if(SOC.inbox){try{SOC.sb.removeChannel(SOC.inbox)}catch(e){}SOC.inbox=null}drawDot()}
+function socReset(){Object.assign(SOC,{requested:new Set(),reqIn:0,me:null,feed:null,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),convs:null,unread:0,clubs:null,myClubs:new Set(),people:null,rank:null});if(SOC.inbox){try{SOC.sb.removeChannel(SOC.inbox)}catch(e){}SOC.inbox=null}drawDot()}
 async function socBoot(){
   try{const uid=SOC.user.id;
     let me=(await sbq(SOC.sb.from('profiles').select('*').eq('id',uid)))[0];
@@ -80,6 +80,7 @@ async function socBoot(){
     SOC.me=me;SOC.prof[uid]=me;
     SOC.following=new Set((await sbq(SOC.sb.from('follows').select('following').eq('follower',uid))).map(r=>r.following));
     const {count}=await SOC.sb.from('follows').select('*',{count:'exact',head:true}).eq('following',uid);SOC.followers=count||0;
+    try{const rq=await SOC.sb.from('follow_requests').select('requester,target').or(`requester.eq.${uid},target.eq.${uid}`);SOC.requested=new Set((rq.data||[]).filter(r=>r.requester===uid).map(r=>r.target));SOC.reqIn=(rq.data||[]).filter(r=>r.target===uid).length}catch(e){SOC.requested=new Set();SOC.reqIn=0}
     schedule();loadFeed();loadConvs();
     if(!SOC.inbox)SOC.inbox=SOC.sb.channel('inbox').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},onNewMessage).subscribe();
   }catch(e){SOC.err=sbErr(e);schedule()}
@@ -155,11 +156,11 @@ function socMsgsHtml(){
 }
 function socClubsHtml(){
   if(!SOC.clubs){once('clubs',loadClubs);return thinking('Carregando clubes…')}
-  return`<button class="btn primary" data-act="socNewClub">+ Criar clube</button>${SOC.clubs.length?`<div class="card"><div class="list">${SOC.clubs.map(c=>`<button class="li" data-act="socClub" data-id="${c.id}"><span class="t"><b>${esc(c.name)}</b><small>${c.n} membro${c.n===1?'':'s'}${SOC.myClubs.has(c.id)?' · você participa':''}</small></span><span class="muted">›</span></button>`).join('')}</div></div>`:`<div class="empty"><b>Nenhum clube ainda</b><span>Crie um clube para a sua academia ou grupo de corrida. Cada clube tem chat e ranking semanal.</span></div>`}`;
+  return`<button class="btn primary" data-act="socNewClub">+ Criar clube</button>${SOC.clubs.length?`<div class="card"><div class="list">${SOC.clubs.map(c=>`<button class="li" data-act="socClub" data-id="${c.id}"><span class="t"><b>${esc(c.name)}</b><small>${c.n} membro${c.n===1?'':'s'}${c.owner===SOC.user.id?' · você criou':SOC.myClubs.has(c.id)?' · você participa':SOC.clubReq&&SOC.clubReq.has(c.id)?' · pedido enviado':''}</small></span>${c.owner===SOC.user.id&&c.pend&&c.pend.length?`<span class="chip" style="background:var(--accent);color:#000">${c.pend.length} pedido${c.pend.length>1?'s':''}</span>`:'<span class="muted">›</span>'}</button>`).join('')}</div></div>`:`<div class="empty"><b>Nenhum clube ainda</b><span>Crie um clube para a sua academia ou grupo de corrida. Cada clube tem chat e ranking semanal.</span></div>`}`;
 }
 function socPeopleHtml(){
   if(!SOC.people)once('people',()=>socSearch(SOC.pq));
-  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}${p.id!==SOC.user.id&&presTxt(p)?' · '+presHtml(p,true):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`;
+  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}${p.id!==SOC.user.id&&presTxt(p)?' · '+presHtml(p,true):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${folLabel(p.id,true)}</button>`}</div>`;
   let h=`<input id="socQ" type="search" placeholder="Buscar pelo nome ou pelo ID" value="${esc(SOC.pq)}" aria-label="Buscar pessoas pelo nome ou ID" autocomplete="off">`;
   if(!P)return h+thinking('Buscando…');
   if(P.mode==='curto')return h+`<p class="hint">Digite pelo menos 2 letras do nome ou o ID de 7 números.</p>`;
@@ -178,7 +179,7 @@ function socMeHtml(){const m=SOC.me||{};
 }
 function rankHtml(r){if(!r)return thinking('Calculando…');if(!r.length)return'<p class="hint">Ninguém postou atividades nesta semana ainda.</p>';
   return`<div class="list">${r.map((x,i)=>`<div class="li"><span class="row" style="flex-wrap:nowrap;min-width:0"><b class="num" style="width:22px">${i+1}</b>${avatar(SOC.prof[x.user_id],'sm')}<span class="t"><b>${esc(pName(x.user_id))}</b><small>${x.atividades} corrida(s) · ${x.treinos} treino(s)</small></span></span><b class="num" style="font-size:19px">${fmtD(+x.km)} km</b></div>`).join('')}</div>`}
-async function loadRank(club){try{const r=await sbq(SOC.sb.rpc('weekly_ranking',club?{p_club:club}:{}));await loadProfiles(r.map(x=>x.user_id));if(club)return r;SOC.rank=r;schedule()}catch(e){if(club)throw e;SOC.rank=[];schedule()}}
+async function loadRank(club){try{const r=(await sbq(SOC.sb.rpc('weekly_ranking',club?{p_club:club}:{})))||[];await loadProfiles(r.map(x=>x.user_id));if(club)return r;SOC.rank=r;schedule()}catch(e){if(club)throw e;SOC.rank=[];schedule()}}
 
 /* ----- pessoas e perfis ----- */
 let pqT=null;
@@ -189,22 +190,26 @@ async function socSearch(qs){SOC.pq=qs;const t=String(qs||'').trim();
   catch(e){SOC.people={mode:'busca',list:[]};SOC.err=sbErr(e)}schedule()}
 const fmtId=v=>v?String(v).replace(/^(\d{3})(\d{4})$/,'$1 $2'):'';
 document.addEventListener('input',e=>{if(e.target.id==='socQ'){const v=e.target.value;clearTimeout(pqT);pqT=setTimeout(()=>socSearch(v),350)}});
-async function socToggleFollow(id){const on=SOC.following.has(id);
+function folLabel(id,short){return SOC.following.has(id)?(short?'Seguindo':'Deixar de seguir'):SOC.requested&&SOC.requested.has(id)?'Pedido enviado':'Seguir'}
+async function socToggleFollow(id){const on=SOC.following.has(id);SOC.requested=SOC.requested||new Set();
+  const p=SOC.prof[id]||{};
+  if(!on&&SOC.requested.has(id)){try{await sbq(SOC.sb.from('follow_requests').delete().eq('requester',SOC.user.id).eq('target',id));SOC.requested.delete(id);toast('Pedido cancelado');render()}catch(e){toast(sbErr(e))}return}
+  if(!on&&p.is_private){try{await sbq(SOC.sb.from('follow_requests').insert({requester:SOC.user.id,target:id}));SOC.requested.add(id);toast('Pedido enviado. Quando aceitarem, você passa a seguir.');render()}catch(e){toast(sbErr(e))}return}
   try{if(on){await sbq(SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',id));SOC.following.delete(id)}else{await sbq(SOC.sb.from('follows').insert({follower:SOC.user.id,following:id}));SOC.following.add(id)}SOC.rank=null;render()}
   catch(e){toast(sbErr(e))}}
 async function socProfileSheet(id){
   await loadProfiles([id]).catch(()=>{});const p=SOC.prof[id]||{id,name:'Atleta'};const mine=id===SOC.user.id;
   openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</p>${mine?'':presHtml(p)}</div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
-   ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)?'':'primary'}" data-s="follow">${SOC.following.has(id)?'Deixar de seguir':'Seguir'}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
+   ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)||(SOC.requested&&SOC.requested.has(id))?'':'primary'}" data-s="follow">${folLabel(id)}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
    <div id="pPosts">${thinking('Carregando posts…')}</div>${mine?'':'<div class="btns"><button class="btn sm danger" data-s="block">Bloquear</button><button class="btn sm" data-s="report">Denunciar perfil</button></div>'}`,async(b,el)=>{
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
-      if(x.dataset.s==='follow'){await socToggleFollow(id);x.textContent=SOC.following.has(id)?'Deixar de seguir':'Seguir';x.classList.toggle('primary',!SOC.following.has(id))}
+      if(x.dataset.s==='follow'){await socToggleFollow(id);x.textContent=folLabel(id);x.classList.toggle('primary',!SOC.following.has(id)&&!(SOC.requested&&SOC.requested.has(id)))}
       if(x.dataset.s==='dm'){try{const conv=await sbq(SOC.sb.rpc('start_dm',{other:id}));closeSheet(el);await loadConvs();socChatSheet(conv)}catch(err){toast(sbErr(err))}}
       if(x.dataset.s==='block')confirmSheet(`Bloquear ${p.name}? Vocês deixam de se ver e de conversar.`,'Bloquear',async()=>{try{await sbq(SOC.sb.from('blocks').insert({blocker:SOC.user.id,blocked:id}));await SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',id);SOC.following.delete(id);closeSheet(el);loadFeed();toast('Pessoa bloqueada')}catch(err){toast(sbErr(err))}});
       if(x.dataset.s==='report')socReport({user_id:id});
     };
     try{const posts=await sbq(SOC.sb.from('posts').select('*').eq('user_id',id).order('created_at',{ascending:false}).limit(20));await countsFor(posts);for(const q of posts)socPostCache[q.id]=q;
-      const box=b.querySelector('#pPosts');if(box)box.innerHTML=posts.length?posts.map(q=>postCard(q)).join(''):'<p class="hint">Nenhum post que você possa ver.</p>'}
+      const box=b.querySelector('#pPosts');if(box)box.innerHTML=posts.length?posts.map(q=>postCard(q)).join(''):(p.is_private&&!mine&&!SOC.following.has(id)?'<div class="empty"><b>🔒 Perfil privado</b><span>Siga e espere a pessoa aceitar para ver os treinos e corridas.</span></div>':'<p class="hint">Nenhum post que você possa ver.</p>')}
     catch(err){const box=b.querySelector('#pPosts');if(box)box.innerHTML=`<p class="hint">${esc(sbErr(err))}</p>`}
   });
 }
@@ -309,14 +314,14 @@ function socNewPost(preId){
 /* ----- mensagens ----- */
 async function loadConvs(){
   if(!SOC.user)return;
-  try{const mem=await sbq(SOC.sb.from('conversation_members').select('conversation_id,user_id,last_read'));
+  try{const mem=await sbq(SOC.sb.from('conversation_members').select('*'));
     const ids=[...new Set(mem.map(m=>m.conversation_id))];if(!ids.length){SOC.convs=[];SOC.unread=0;drawDot();schedule();return}
     const convs=await sbq(SOC.sb.from('conversations').select('*').in('id',ids).order('last_at',{ascending:false}));
     const msgs=await sbq(SOC.sb.from('messages').select('*').in('conversation_id',ids).order('created_at',{ascending:false}).limit(300));
     const others=mem.filter(m=>m.user_id!==SOC.user.id);await loadProfiles(others.map(m=>m.user_id));
     let tot=0;SOC.convs=convs.map(c=>{const mine=mem.find(m=>m.conversation_id===c.id&&m.user_id===SOC.user.id);const other=(others.find(m=>m.conversation_id===c.id)||{}).user_id;const cm=msgs.filter(m=>m.conversation_id===c.id);
       const unread=cm.filter(m=>m.user_id!==SOC.user.id&&mine&&new Date(m.created_at)>new Date(mine.last_read)).length;tot+=unread;
-      return{...c,other,title:c.is_group?(c.name||'Grupo'):pName(other),last:cm[0]||null,unread,lastRead:mine&&mine.last_read}});
+      const om=others.find(m=>m.conversation_id===c.id);return{...c,other,title:c.is_group?(c.name||'Grupo'):pName(other),last:cm[0]||null,unread,lastRead:mine&&mine.last_read,muted:!!(mine&&mine.muted),otherRead:om&&om.last_read}});
     SOC.unread=tot;drawDot();schedule()}
   catch(e){SOC.convs=SOC.convs||[];SOC.err=sbErr(e);schedule()}
 }
@@ -343,18 +348,31 @@ function socChatSheet(convId){
 
 /* ----- clubes ----- */
 async function loadClubs(){try{const clubs=await sbq(SOC.sb.from('clubs').select('*').order('created_at',{ascending:false}).limit(100));const mem=await sbq(SOC.sb.from('club_members').select('club_id,user_id'));
-  SOC.myClubs=new Set(mem.filter(m=>m.user_id===SOC.user.id).map(m=>m.club_id));SOC.clubs=clubs.map(c=>({...c,n:mem.filter(m=>m.club_id===c.id).length})).sort((a,b)=>(SOC.myClubs.has(b.id)-SOC.myClubs.has(a.id))||b.n-a.n)}
+  let rq=[];try{rq=await sbq(SOC.sb.from('club_requests').select('club_id,user_id,created_at'))}catch(e){}
+  SOC.clubReq=new Set(rq.filter(r=>r.user_id===SOC.user.id).map(r=>r.club_id));SOC.clubPend=rq.filter(r=>r.user_id!==SOC.user.id);
+  SOC.myClubs=new Set(mem.filter(m=>m.user_id===SOC.user.id).map(m=>m.club_id));SOC.clubs=clubs.map(c=>({...c,n:mem.filter(m=>m.club_id===c.id).length,mem:mem.filter(m=>m.club_id===c.id).map(m=>m.user_id),pend:rq.filter(r=>r.club_id===c.id&&r.user_id!==SOC.user.id)})).sort((a,b)=>(SOC.myClubs.has(b.id)-SOC.myClubs.has(a.id))||b.n-a.n)}
   catch(e){SOC.clubs=[];SOC.err=sbErr(e)}schedule()}
 function socNewClub(){openSheet('Criar clube',`<label class="fld"><span>Nome</span><input id="ncN" maxlength="60" placeholder="Ex.: Academia Força Total"></label><label class="fld"><span>Descrição</span><textarea id="ncD" maxlength="500" placeholder="Quem pode entrar, horários de treino, objetivo do grupo…"></textarea></label><button class="btn primary block" data-s="ok">Criar</button>`,(b,el)=>{
   b.querySelector('[data-s=ok]').onclick=async()=>{const name=b.querySelector('#ncN').value.trim();if(name.length<2){toast('Dê um nome ao clube');return}
     try{const c=(await sbq(SOC.sb.from('clubs').insert({name,description:b.querySelector('#ncD').value.trim()||null,owner:SOC.user.id}).select()))[0];closeSheet(el);SOC.clubs=null;await loadClubs();loadConvs();socClubSheet(c.id)}catch(e){toast(sbErr(e))}}})}
 function socClubSheet(id){const c=(SOC.clubs||[]).find(x=>x.id===id);if(!c)return;const inC=SOC.myClubs.has(id),own=c.owner===SOC.user.id;
   openSheet(c.name,`${c.description?`<p>${esc(c.description)}</p>`:''}<p class="small muted">${c.n} membro${c.n===1?'':'s'}</p>
-   <div class="btns">${inC?'<button class="btn primary" data-s="chat">Abrir chat do clube</button>':'<button class="btn primary" data-s="join">Entrar no clube</button>'}${inC&&!own?'<button class="btn" data-s="leave">Sair</button>':''}${own?'<button class="btn danger" data-s="del">Apagar clube</button>':''}</div>
+   <div class="btns">${inC?'<button class="btn primary" data-s="chat">Abrir chat do clube</button>':SOC.clubReq&&SOC.clubReq.has(id)?'<button class="btn" data-s="unreq">Pedido enviado · cancelar</button>':'<button class="btn primary" data-s="join">Pedir para entrar</button>'}${inC&&!own?'<button class="btn" data-s="leave">Sair</button>':''}${own?'<button class="btn danger" data-s="del">Apagar clube</button>':''}</div>
+   ${!inC?'<p class="hint">O criador do clube precisa aceitar seu pedido para você entrar no chat e no ranking.</p>':''}
+   ${own?`<div class="card"><h3>Pedidos para entrar${c.pend&&c.pend.length?` (${c.pend.length})`:''}</h3><div id="cpd">${(c.pend||[]).length?'':'<p class="hint">Nenhum pedido agora. Quem quiser entrar vai aparecer aqui.</p>'}</div></div>
+     <div class="card"><h3>Membros (${c.n})</h3><div id="cmb"></div></div>`:''}
    <div class="card"><h3>Ranking da semana</h3><div id="crk">${thinking('Calculando…')}</div></div>`,async(b,el)=>{
+    if(own){const ids=[...(c.pend||[]).map(r=>r.user_id),...(c.mem||[])];loadProfiles(ids).catch(()=>{}).then(()=>{
+      const pd=b.querySelector('#cpd');if(pd&&(c.pend||[]).length)pd.innerHTML=c.pend.map(r=>{const p=SOC.prof[r.user_id]||{id:r.user_id,name:'Atleta'};return`<div class="li" style="gap:8px"><span class="row" style="flex:1;min-width:0;flex-wrap:nowrap">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b><small>${p.public_id?'ID '+esc(fmtId(p.public_id))+' · ':''}${ago(r.created_at)}</small></span></span><button class="btn sm primary" data-s="cok" data-u="${r.user_id}">Aceitar</button><button class="btn sm" data-s="cno" data-u="${r.user_id}">Recusar</button></div>`}).join('');
+      const mb=b.querySelector('#cmb');if(mb)mb.innerHTML=(c.mem||[]).map(u=>{const p=SOC.prof[u]||{id:u,name:'Atleta'};return`<div class="li" style="gap:8px"><span class="row" style="flex:1;min-width:0;flex-wrap:nowrap">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b>${u===SOC.user.id?'<small>Criador</small>':''}</span></span>${u===SOC.user.id?'':`<button class="btn sm" data-s="ckick" data-u="${u}">Remover</button>`}</div>`}).join('')})}
     loadRank(id).then(r=>{const x=b.querySelector('#crk');if(x)x.innerHTML=rankHtml(r)}).catch(e=>{const x=b.querySelector('#crk');if(x)x.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`});
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
-      try{if(x.dataset.s==='join'){await sbq(SOC.sb.from('club_members').insert({club_id:id,user_id:SOC.user.id}));closeSheet(el);await loadClubs();await loadConvs();toast('Você entrou no clube');socClubSheet(id)}
+      const again=async m=>{closeSheet(el);SOC.clubs=null;await loadClubs();if(m)toast(m);socClubSheet(id)};
+      try{if(x.dataset.s==='join'){await sbq(SOC.sb.from('club_requests').insert({club_id:id,user_id:SOC.user.id}));await again('Pedido enviado. O criador do clube vai aceitar ou recusar.')}
+        if(x.dataset.s==='unreq'){await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',SOC.user.id));await again('Pedido cancelado')}
+        if(x.dataset.s==='cok'){x.disabled=true;await sbq(SOC.sb.rpc('approve_club_member',{p_club:id,p_user:x.dataset.u}));await again('Pessoa aceita no clube');loadConvs()}
+        if(x.dataset.s==='cno'){x.disabled=true;await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',x.dataset.u));await again('Pedido recusado')}
+        if(x.dataset.s==='ckick'){const u=x.dataset.u,nm=(SOC.prof[u]||{}).name||'essa pessoa';confirmSheet(`Remover ${nm} do clube?`,'Remover',async()=>{try{await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',u));await again('Removido do clube')}catch(err){toast(sbErr(err))}})}
         if(x.dataset.s==='leave'){await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',SOC.user.id));closeSheet(el);loadClubs();loadConvs()}
         if(x.dataset.s==='chat'){const cv=await sbq(SOC.sb.from('conversations').select('id').eq('club_id',id));if(!cv.length){toast('Chat ainda não disponível');return}closeSheet(el);await loadConvs();socChatSheet(cv[0].id)}
         if(x.dataset.s==='del')confirmSheet(`Apagar o clube “${c.name}” e o chat dele?`,'Apagar',async()=>{try{await sbq(SOC.sb.from('clubs').delete().eq('id',id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs()}catch(err){toast(sbErr(err))}})}

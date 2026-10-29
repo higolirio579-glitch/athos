@@ -23,6 +23,7 @@ public class AthosJob extends JobService {
             public void run() {
                 try { reminders(AthosJob.this); } catch (Exception e) { }
                 try { social(AthosJob.this); } catch (Exception e) { }
+                try { photoWarn(AthosJob.this); } catch (Exception e) { }
                 jobFinished(params, false);
             }
         }).start();
@@ -89,6 +90,19 @@ public class AthosJob extends JobService {
             Notif.post(c, 7104, Notif.CH_REM, "Não perca sua sequência", "Sua sequência de " + streak + (streak == 1 ? " dia" : " dias") + " acaba hoje. Registre um treino ou refeição.", "hoje");
     }
 
+    /** 23 dias sem abrir o app e com fotos na nuvem: avisa que elas somem no 30º dia. */
+    static void photoWarn(Context c) {
+        SharedPreferences p = Notif.prefs(c);
+        long last = p.getLong("last_open", 0);
+        if (last == 0 || p.getInt("pp_cloud", 0) <= 0 || p.getBoolean("pp_warned", false)) return;
+        long days = (System.currentTimeMillis() - last) / 86400000L;
+        if (days < 23 || days >= 30) return;
+        p.edit().putBoolean("pp_warned", true).apply();
+        long left = 30 - days;
+        Notif.post(c, 7105, Notif.CH_REM, "Suas fotos de evolução vão sumir",
+            "Faz " + days + " dias que você não abre o ATHOS. Em " + left + (left == 1 ? " dia" : " dias") + " as fotos da sua nuvem serão apagadas. Abra o app para mantê-las.", "evolucao");
+    }
+
     static void social(Context c) throws Exception {
         SharedPreferences p = Notif.prefs(c);
         String key = p.getString("dev_key", null);
@@ -122,6 +136,10 @@ public class AthosJob extends JobService {
             if ("like".equals(kind)) { likes++; lastLiker = who; }
             else if ("comment".equals(kind)) Notif.post(c, 7200 + (int) (id % 500), Notif.CH_SOC, who + " comentou", txt, "social");
             else if ("pr".equals(kind)) Notif.post(c, 7600 + (int) (id % 100), Notif.CH_SOC, who + " bateu um recorde!", txt.isEmpty() ? "Veja o treino no ATHOS." : txt, "social");
+            else if ("club_request".equals(kind)) Notif.post(c, 7650 + (int) (id % 50), Notif.CH_SOC, "Pedido para entrar no clube", who + " quer entrar no clube " + txt + ". Toque para aceitar ou recusar.", "clubes");
+            else if ("club_ok".equals(kind)) Notif.post(c, 7690 + (int) (id % 10), Notif.CH_SOC, "Você entrou no clube!", who + " aceitou você no clube " + txt + ".", "clubes");
+            else if ("request".equals(kind)) Notif.post(c, 7700 + (int) (id % 100), Notif.CH_SOC, "Pedido para seguir", who + " quer seguir você. Toque para aceitar ou recusar.", "pedidos");
+            else if ("accepted".equals(kind)) Notif.post(c, 7750 + (int) (id % 50), Notif.CH_SOC, "Pedido aceito", who + " aceitou seu pedido. Agora você vê os treinos.", "social");
             else if ("follow".equals(kind)) Notif.post(c, 7800 + (int) (id % 100), Notif.CH_SOC, "Novo seguidor", who + " começou a seguir você.", "social");
             else if ("message".equals(kind)) {
                 String conv = n.optString("conversation_id", "");

@@ -1,8 +1,14 @@
 {
-  "code": 30,
-  "nome": "2.1",
+  "code": 31,
+  "nome": "2.2",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Ícone novo do ATHOS: o capacete espartano dourado"
+    "Chat novo: reações, responder, visto, compartilhar treino",
+    "Clubes com mural, ranking, meta da semana e pedido para entrar",
+    "Perfil privado e quem pode te mandar mensagem",
+    "Fotos de evolução na nuvem (pasta privada)",
+    "Termos de uso e Política de privacidade",
+    "Desafios e XP conferidos pelo servidor",
+    "Tutorial com as novidades"
   ]
 }

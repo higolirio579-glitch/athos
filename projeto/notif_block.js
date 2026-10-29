@@ -54,6 +54,10 @@ function nLine(n){const who=`<b>${esc(pName(n.actor_id))}</b>`;
   if(n.kind==='like')return`${who} curtiu seu post`;
   if(n.kind==='comment')return`${who} comentou: <span class="q">“${esc(n.body||'')}”</span>`;
   if(n.kind==='follow')return`${who} começou a seguir você`;
+  if(n.kind==='request')return`${who} pediu para seguir você`;
+  if(n.kind==='club_request')return`${who} pediu para entrar no clube <b>${esc(n.body||'')}</b>`;
+  if(n.kind==='club_ok')return`${who} aceitou você no clube <b>${esc(n.body||'')}</b>`;
+  if(n.kind==='accepted')return`${who} aceitou seu pedido para seguir`;
   if(n.kind==='pr')return`🏆 ${who} bateu um recorde${n.body?`: <span class="q">${esc(n.body)}</span>`:''}`;
   return`${who} mandou uma mensagem: <span class="q">${esc(n.body||'')}</span>`}
 function nOpen(){
@@ -61,16 +65,18 @@ function nOpen(){
     const box=b.querySelector('#ntL');
     try{const list=await sbq(SOC.sb.from('notifications').select('*').eq('user_id',SOC.user.id).order('id',{ascending:false}).limit(60));
       await loadProfiles(list.map(n=>n.actor_id).filter(Boolean));
-      box.innerHTML=list.length?`<div>${list.map(n=>`<button class="nt${n.read?'':' new'}" data-k="${n.kind}" data-post="${n.post_id||''}" data-conv="${n.conversation_id||''}" data-actor="${n.actor_id||''}">${avatar(SOC.prof[n.actor_id],'sm')}<span class="tx">${nLine(n)}<small>${ago(n.created_at)}</small></span></button>`).join('')}</div>`
+      box.innerHTML=list.length?`<div>${list.map(n=>`<button class="nt${n.read?'':' new'}" data-k="${n.kind}" data-post="${n.post_id||''}" data-conv="${n.conversation_id||''}" data-actor="${n.actor_id||''}" data-club="${n.club_id||''}">${avatar(SOC.prof[n.actor_id],'sm')}<span class="tx">${nLine(n)}<small>${ago(n.created_at)}</small></span></button>`).join('')}</div>`
         :`<div class="empty"><b>Nada por aqui ainda</b><span>Quando curtirem, comentarem, seguirem você ou mandarem mensagem, aparece aqui.</span></div>`;
       if(list.some(n=>!n.read)){await SOC.sb.from('notifications').update({read:true}).eq('user_id',SOC.user.id).eq('read',false);NT.unread=0;nBell()}
       if(list[0]&&NATIVE&&NATIVE.notifSetAfter)try{NATIVE.notifSetAfter(list[0].id)}catch(e){}
     }catch(e){box.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`}
-    box.addEventListener('click',e=>{const it=e.target.closest('.nt');if(!it)return;closeSheet(el);nGoto(it.dataset.k,it.dataset.post,it.dataset.conv,it.dataset.actor)});
+    box.addEventListener('click',e=>{const it=e.target.closest('.nt');if(!it)return;closeSheet(el);nGoto(it.dataset.k,it.dataset.post,it.dataset.conv,it.dataset.actor,it.dataset.club)});
   })}
-async function nGoto(kind,post,conv,actor){
+async function nGoto(kind,post,conv,actor,club){
+  if((kind==='club_request'||kind==='club_ok')&&club){go('social');SOC.sub='clubes';SOC.clubs=null;await loadClubs();if(kind==='club_ok')loadConvs();socClubSheet(club);return}
   if(kind==='message'&&conv){go('social');socChatSheet(conv);return}
-  if(kind==='follow'&&actor){go('social');socProfileSheet(actor);return}
+  if(kind==='request'){go('social');reqSheet();return}
+  if((kind==='follow'||kind==='accepted')&&actor){if(kind==='accepted'){SOC.following.add(actor);SOC.requested&&SOC.requested.delete(actor)}go('social');socProfileSheet(actor);return}
   if(post){go('social');if(!findPost(post)){try{const p=await sbq(SOC.sb.from('posts').select('*').eq('id',post).single());socPostCache[post]=p;await loadProfiles([p.user_id])}catch(e){toast('Esse post não está mais disponível');return}}socOpenPost(post)}
 }
 window.androidOpen=function(o){if(!o)return;

@@ -45,19 +45,24 @@ function cfgAbout(){const v=NATIVE&&NATIVE.appVersionName?NATIVE.appVersionName(
   return`<div class="card"><div class="cfg-row"><span class="t"><b>ATHOS ${esc(v||'')}</b><small>${NATIVE?'App para Android':'Versão web: atualiza sozinha'}</small></span>${NATIVE&&NATIVE.updateDownload?`<button class="btn sm" data-act="cfgUpdate">Procurar atualização</button>`:''}</div></div>`}
 function cfgHtml(){let h='<div class="cfg view" style="padding:0;gap:12px">';
   if(SOC&&SOC.user&&typeof accCard==='function')h+=`<p class="cfg-h">Conta</p>${accCard()}`;
-  if(SOC&&SOC.user)h+=`<p class="cfg-h">Privacidade</p><div class="card"><label class="swr" style="padding:0"><span class="t"><b>Mostrar quando estou online</b><small>Seus amigos veem "Online" ou "visto há 3 h". Desligado, ninguém vê.</small></span><input type="checkbox" class="sw" data-cfg="online" ${SOC.me&&SOC.me.show_online===false?'':'checked'}></label></div>`;
+  if(SOC&&SOC.user){const me=SOC.me||{};const dm=me.dm_policy||'all';
+    h+=`<p class="cfg-h">Privacidade</p><div class="card">
+     <label class="swr" style="padding:0"><span class="t"><b>Perfil privado</b><small>Só quem você aceitar vê seus treinos e corridas. Quem já segue você continua seguindo.</small></span><input type="checkbox" class="sw" data-cfg="private" ${me.is_private?'checked':''}></label>
+     ${me.is_private||SOC.reqIn?`<button class="btn block" data-act="reqSheet" style="margin-top:4px">Pedidos para seguir${SOC.reqIn?` (${SOC.reqIn})`:''}</button>`:''}
+     <div style="border-top:1px solid var(--line);margin-top:4px;padding-top:12px"><b>Quem pode me mandar mensagem</b><div class="seg" role="group" aria-label="Quem pode me mandar mensagem" style="margin-top:8px"><button data-act="cfgDm" data-k="all" aria-pressed="${dm==='all'}">Todo mundo</button><button data-act="cfgDm" data-k="following" aria-pressed="${dm==='following'}">Só quem eu sigo</button></div></div>
+     <label class="swr" style="border-top:1px solid var(--line);margin-top:4px;padding:12px 0 0"><span class="t"><b>Mostrar quando estou online</b><small>Seus amigos veem "Online" ou "visto há 3 h". Desligado, ninguém vê.</small></span><input type="checkbox" class="sw" data-cfg="online" ${me.show_online===false?'':'checked'}></label></div>`}
   const nc=typeof nCard==='function'?nCard():'';if(nc)h+=`<p class="cfg-h">Notificações</p>${nc.replace('<h3>Notificações</h3>','')}`;
   const mu=cfgMusic();if(mu)h+=`<p class="cfg-h">Música</p>${mu}`;
   h+=`<p class="cfg-h">Treino</p>${cfgTraining()}`;
   h+=`<p class="cfg-h">Aparência</p>${cfgLook()}`;
   if(typeof AIHOST!=='undefined'&&AIHOST&&typeof aiCard==='function')h+=`<p class="cfg-h">Inteligência artificial</p>${aiCard()}`;
-  h+=`<p class="cfg-h">Ajuda</p><div class="card"><button class="btn block" data-act="cfgTour">Ver o tutorial de novo</button></div>`;
+  h+=`<p class="cfg-h">Ajuda</p><div class="card"><button class="btn block" data-act="cfgTour">Ver o tutorial de novo</button><button class="btn block" data-act="newsAgain" style="margin-top:8px">Ver as novidades da versão</button><button class="btn block" data-act="legalOpen" data-k="termos" style="margin-top:8px">Termos de uso</button><button class="btn block" data-act="legalOpen" data-k="privacidade" style="margin-top:8px">Política de privacidade</button></div>`;
   h+=`<p class="cfg-h">Sobre</p>${cfgAbout()}<p class="hint" style="text-align:center">Estimativas de calorias e macros são aproximadas e não substituem nutricionista ou médico.</p></div>`;
   return h}
 function cfgDraw(){if(!CFG.el||!CFG.el.isConnected)return;const b=CFG.el.querySelector('.sheet-b');if(!b)return;const y=b.scrollTop;b.innerHTML=cfgHtml();b.scrollTop=y}
 function cfgOpen(){CFG.el=openSheet('Configurações',cfgHtml(),(b,el)=>{el.querySelector('.sheet').style.maxHeight='96%'})}
 {const _r=render;render=function(){_r.apply(this,arguments);cfgDraw()}}
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='online'){presSet(t.checked);return}if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='online'){presSet(t.checked);return}if(t.dataset&&t.dataset.cfg==='private'){privSet({is_private:t.checked},t.checked?'Perfil privado: agora você aprova quem segue você':'Perfil aberto: qualquer pessoa pode seguir você');return}if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
 window.addEventListener('focus',()=>setTimeout(cfgDraw,400));
 Object.assign(ACT,{
   cfgTheme:el=>{try{localStorage.setItem('athos.theme',el.dataset.k)}catch(e){}applyTheme(el.dataset.k);render()},
@@ -65,7 +70,8 @@ Object.assign(ACT,{
   cfgTour:()=>{closeSheet(CFG.el);tourStart()},
   cfgUpdate:async el=>{el.disabled=true;el.textContent='Procurando…';const r=await updCheck(true);el.disabled=false;el.textContent='Procurar atualização';
     if(r==='none')toast('Você já está na versão mais nova');else if(r==='error')toast('Não consegui verificar. Confira a internet.')},
-  cfgOpen:()=>cfgOpen()});
+  cfgOpen:()=>cfgOpen(),
+  cfgDm:el=>privSet({dm_policy:el.dataset.k},el.dataset.k==='all'?'Qualquer pessoa pode mandar mensagem':'Só quem você segue pode mandar mensagem')});
 /* Perfil fica só com dados e metas */
 {const _vp=VIEWS.perfil;VIEWS.perfil=function(){let h=_vp.apply(this,arguments);const k='<div class="card"><h3>Descanso entre séries</h3>';const i=h.indexOf(k);
   if(i>=0){const j=h.indexOf('</div></div>',i);if(j>0)h=h.slice(0,i)+h.slice(j+12)}

@@ -1,7 +1,15 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="ATHOS"><meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"><script>window.WEBAPP=true</script></head><body>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="leaflet/leaflet.css"><script src="leaflet/leaflet.js"></script><script src="supabase/supabase.js"></script><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="ATHOS"><meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"><script>window.WEBAPP=true</script></head><body>
 <title>ATHOS</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
+@font-face{font-family:"Barlow";font-weight:400;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:500;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:500;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:800;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-800-normal.woff2) format("woff2")}
 /* Layout: app de uma tela — cabeçalho fixo, conteúdo rolável, barra de abas embaixo. Macros usam as cores das anilhas olímpicas (vermelho 25 kg, amarelo 15 kg, verde 10 kg, azul 20 kg). */
 :root{
   --bg:#EEEFF1; --surface:#FFFFFF; --surface2:#E7E8EB; --line:#DDDFE3; --cardline:transparent;
@@ -888,8 +896,11 @@ const MEAS=[['cintura','Cintura','cm'],['quadril','Quadril','cm'],['peito','Peit
 function measList(k){return Object.values(S.days).filter(d=>d.meas&&d.meas[k]).sort((a,b)=>a.date<b.date?-1:1).map(d=>({date:d.date,v:+d.meas[k]}))}
 const PP={list:null,cache:{}};
 const ppNative=()=>!!(window.Android&&Android.setItem);
-function ppIdx(){if(PP.list)return PP.list;try{PP.list=JSON.parse((ppNative()?Android.getItem('athos_pp_index'):localStorage.getItem('athos.pp.index'))||'[]')}catch(e){PP.list=[]}return PP.list}
-function ppSaveIdx(){const v=JSON.stringify(PP.list||[]);try{if(ppNative())Android.setItem('athos_pp_index',v);else localStorage.setItem('athos.pp.index',v)}catch(e){}}
+function ppUid(){try{return(typeof SOC!=='undefined'&&SOC&&SOC.user&&SOC.user.id)||null}catch(e){return null}}
+function ppAll(){if(PP.all)return PP.all;try{PP.all=JSON.parse((ppNative()?Android.getItem('athos_pp_index'):localStorage.getItem('athos.pp.index'))||'[]')}catch(e){PP.all=[]}return PP.all}
+/* cada foto fica marcada com a conta dona; quem entrar com outra conta no mesmo celular não vê as fotos da primeira */
+function ppIdx(){const u=ppUid();if(PP.list&&PP.lu===u)return PP.list;PP.lu=u;PP.list=ppAll().filter(x=>!u||!x.u||x.u===u);return PP.list}
+function ppSaveIdx(){const L=PP.list||[];if(PP.lu)L.forEach(x=>{if(!x.u)x.u=PP.lu});PP.all=ppAll().filter(x=>!L.includes(x)&&x.u&&x.u!==PP.lu).concat(L);const v=JSON.stringify(PP.all);try{if(ppNative())Android.setItem('athos_pp_index',v);else localStorage.setItem('athos.pp.index',v)}catch(e){}}
 function ppDb(){return new Promise((ok,no)=>{const r=indexedDB.open('athos-fotos',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 async function ppPut(id,data){PP.cache[id]=data;if(ppNative()){Android.setItem('athos_pp_'+id,data);return}const db=await ppDb();await new Promise((ok,no)=>{const t=db.transaction('f','readwrite');t.objectStore('f').put(data,id);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 async function ppGet(id){if(PP.cache[id])return PP.cache[id];let v=null;if(ppNative())v=Android.getItem('athos_pp_'+id);else{const db=await ppDb();v=await new Promise(ok=>{const r=db.transaction('f').objectStore('f').get(id);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>ok(null)})}if(v)PP.cache[id]=v;return v}
@@ -905,8 +916,8 @@ function corpoHtml(){
   h+=`</div>`;
   const L=ppIdx().slice().sort((a,b)=>a.date<b.date?1:-1);const sel=S.ui.ppSel||[];
   h+=`<div class="card"><div class="row between"><h3>Fotos de progresso</h3><button class="btn sm soft" data-act="ppAdd">+ Foto</button></div>`;
-  if(!L.length)h+=`<p class="hint">Tire uma foto de frente, sempre no mesmo lugar e com a mesma luz. Depois compare o antes e depois. As fotos ficam só neste aparelho, não vão para a nuvem nem para a rede.</p>`;
-  else h+=`<p class="hint">${sel.length===1?'Agora toque na segunda foto para comparar.':'Toque em duas fotos para comparar o antes e depois.'} Ficam só neste aparelho.</p><div class="ppg">${L.map(x=>`<button class="pp${sel.includes(x.id)?' on':''}" data-act="ppPick" data-id="${x.id}"><img data-pp="${x.id}" alt="Foto de ${esc(dlabel(x.date))}"><span>${esc(dlabel(x.date,{day:'numeric',month:'short',year:'2-digit'}))}</span></button>`).join('')}</div>`;
+  if(!L.length)h+=`<p class="hint">Tire uma foto de frente, sempre no mesmo lugar e com a mesma luz. Depois compare o antes e depois. ${typeof ppcNote==='function'?ppcNote(true):'As fotos ficam só neste aparelho.'}</p>`;
+  else h+=`<p class="hint">${sel.length===1?'Agora toque na segunda foto para comparar.':'Toque em duas fotos para comparar o antes e depois.'} ${typeof ppcNote==='function'?ppcNote(false):'Ficam só neste aparelho.'}</p><div class="ppg">${L.map(x=>`<button class="pp${sel.includes(x.id)?' on':''}" data-act="ppPick" data-id="${x.id}"><img data-pp="${x.id}" alt="Foto de ${esc(dlabel(x.date))}"><span>${x.c===1?'☁ ':''}${esc(dlabel(x.date,{day:'numeric',month:'short',year:'2-digit'}))}</span></button>`).join('')}</div>`;
   h+=`</div>`;setTimeout(ppHydrate,30);return h}
 function measSheet(){const t=today();const last=k=>{const L=measList(k);return L.length?L[L.length-1].v:''};
   openSheet('Registrar medidas',`<p class="hint">Use fita métrica, sempre no mesmo ponto do corpo. Deixe em branco o que não mediu.</p><div class="grid2">${MEAS.map(([k,l,u])=>`<label class="fld"><span>${l} (${u})</span><input inputmode="decimal" data-m="${k}" placeholder="${last(k)?fmtD(last(k)):''}"></label>`).join('')}</div><button class="btn primary block" data-s="save">Salvar</button>`,(b,el)=>{
@@ -915,7 +926,7 @@ function measSheet(){const t=today();const last=k=>{const L=measList(k);return L
 function ppCompare(a,b){const A=ppIdx().find(x=>x.id===a),B=ppIdx().find(x=>x.id===b);if(!A||!B)return;const [x,y]=A.date<=B.date?[A,B]:[B,A];
   const wAt=d=>{const w=weightsList().filter(z=>z.date<=d).slice(-1)[0];return w?fmtD(w.kg)+' kg':''};const dd=Math.round((tOf(y.date)-tOf(x.date))/864e5);
   const el=openSheet('Antes e depois',`<div class="cmpph"><div><img data-pp="${x.id}" alt="Antes"><b>Antes</b><small>${esc(dlabel(x.date,{day:'numeric',month:'short',year:'numeric'}))}${wAt(x.date)?' · '+wAt(x.date):''}</small></div><div><img data-pp="${y.id}" alt="Depois"><b>Depois</b><small>${esc(dlabel(y.date,{day:'numeric',month:'short',year:'numeric'}))}${wAt(y.date)?' · '+wAt(y.date):''}</small></div></div><p class="hint" style="text-align:center">${dd} dia${dd===1?'':'s'} de diferença</p><button class="btn danger block" data-s="del">Apagar a foto mais recente</button>`,(bd,w)=>{
-    bd.querySelector('[data-s=del]').onclick=()=>confirmSheet('Apagar esta foto do aparelho?','Apagar',()=>{PP.list=ppIdx().filter(z=>z.id!==y.id);ppSaveIdx();ppDel(y.id);closeSheet(w);render()})});setTimeout(ppHydrate,30)}
+    bd.querySelector('[data-s=del]').onclick=()=>confirmSheet(typeof ppcOn==='function'&&ppcOn()?'Apagar esta foto do aparelho e da nuvem?':'Apagar esta foto do aparelho?','Apagar',()=>{PP.list=ppIdx().filter(z=>z.id!==y.id);ppSaveIdx();ppDel(y.id);closeSheet(w);render()})});setTimeout(ppHydrate,30)}
 function vEvolucao(){
   const p=S.profile,ws=weightsList();const tab=S.ui.evoTab||'resumo';
   let html=`<div style="padding-top:4px"><h1>Evolução</h1></div><div class="segs" role="tablist">${[['resumo','Resumo'],['peso','Peso'],['corpo','Corpo'],['forca','Força'],['corrida','Corrida'],['calorias','Calorias']].map(([k,l])=>`<button role="tab" data-act="evoTab" data-k="${k}" aria-selected="${tab===k}" class="${tab===k?'on':''}">${l}</button>`).join('')}</div>`;
@@ -1120,7 +1131,7 @@ function pickPhoto(){return pickPhotos(false).then(a=>a[0]||null)}
 function scaleItem(it,g){if(!it.per)return;it.grams=g;it.kcal=r1(it.per.kcal*g/100);it.p=r1(it.per.p*g/100);it.c=r1(it.per.c*g/100);it.f=r1(it.per.f*g/100)}
 
 /* ---------- código de barras (Open Food Facts) ---------- */
-function loadZX(){if(window.ZXing)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=window.Android?'zxing/zxing.min.js':'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
+function loadZX(){if(window.ZXing)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='zxing/zxing.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
 async function offLookup(code){const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,product_name_pt,brands,nutriments,serving_quantity,quantity`);if(!r.ok&&r.status!==404)throw new Error('net');const j=await r.json();if(j.status!==1||!j.product)return null;
   const P=j.product,n=P.nutriments||{};const kcal=n['energy-kcal_100g']!=null?+n['energy-kcal_100g']:(n['energy_100g']!=null?+n['energy_100g']/4.184:null);if(kcal==null)return{name:P.product_name_pt||P.product_name||'Produto',noData:true};
   const name=[P.product_name_pt||P.product_name||'Produto',P.brands?P.brands.split(',')[0].trim():''].filter(Boolean).join(' — ');
@@ -1529,7 +1540,7 @@ const ACT={
   shareSess:el=>{const s=S.sessions[el.dataset.id];if(s)shareCard(cardData(s))},
   measSheet:()=>measSheet(),
   measPick:el=>{S.ui.measK=el.dataset.k;render()},
-  ppAdd:async()=>{const f=await pickPhoto();if(!f)return;try{const data=await ppShrink(f);const id='p'+Date.now().toString(36);await ppPut(id,data);ppIdx().push({id,date:today()});ppSaveIdx();S.ui.evoTab='corpo';render();toast('Foto salva neste aparelho')}catch(e){toast('Não consegui abrir essa foto')}},
+  ppAdd:async()=>{const f=await pickPhoto();if(!f)return;try{const data=await ppShrink(f);const id='p'+Date.now().toString(36);await ppPut(id,data);ppIdx().push({id,date:today()});ppSaveIdx();S.ui.evoTab='corpo';render();if(typeof ppcSync==='function'&&ppcOn()){toast('Foto salva. Enviando para sua nuvem privada…');ppcSync(true)}else toast('Foto salva neste aparelho')}catch(e){toast('Não consegui abrir essa foto')}},
   ppPick:el=>{const id=el.dataset.id;let sel=(S.ui.ppSel||[]).filter(x=>x!==id);if(sel.length===(S.ui.ppSel||[]).length)sel.push(id);if(sel.length===2){S.ui.ppSel=[];render();ppCompare(sel[0],sel[1]);return}S.ui.ppSel=sel;render()},
   useSug:el=>{const x=S.active&&S.active.exercises[+el.dataset.ex];if(!x)return;for(const st of x.sets){if(st.done)continue;if(st.kg===''||st.kg==null)st.kg=String(el.dataset.kg);if(st.reps===''||st.reps==null)st.reps=String(el.dataset.reps)}saveActive();rSession();toast('Sugestão aplicada nas séries')},
   quickMeal:()=>foodSheet(today(),mealNow()),
@@ -1932,7 +1943,7 @@ function sbErr(e){const m=String((e&&(e.message||e.error_description))||e||'');
   if(/Invalid login/i.test(m))return'E-mail ou senha incorretos.';if(/already registered|already exists/i.test(m))return'Já existe uma conta com esse e-mail. Use “Entrar”.';
   if(/Password should be/i.test(m))return'A senha precisa ter pelo menos 6 caracteres.';if(/valid email|invalid format/i.test(m))return'Esse e-mail não parece válido.';
   if(/rate limit/i.test(m))return'Muitas tentativas. Espere alguns minutos.';if(/Failed to fetch|NetworkError|network/i.test(m))return'Sem conexão com a internet.';
-  if(/bloqueado/i.test(m))return'Não é possível falar com essa pessoa.';if(/username/i.test(m))return'Nome de usuário inválido ou já em uso (3 a 24 letras minúsculas, números, _ ou .).';
+  if(/bloqueado/i.test(m))return'Não é possível falar com essa pessoa.';if(/so_seguindo/i.test(m))return'Essa pessoa só recebe mensagens de quem ela segue.';if(/row-level security/i.test(m))return'Você não tem permissão para fazer isso.';if(/username/i.test(m))return'Nome de usuário inválido ou já em uso (3 a 24 letras minúsculas, números, _ ou .).';
   return'Algo deu errado: '+m.slice(0,120)}
 const avColor=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%360;return`hsl(${h} 45% 45%)`};
 function avatar(p,cls=''){p=p||{};const n=(p.name||'?').trim();const ini=n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -1947,7 +1958,7 @@ function sbInit(){
   SOC.sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   SOC.sb.auth.onAuthStateChange((ev,sess)=>{const u=sess?sess.user:null;const changed=(u&&u.id)!==(SOC.user&&SOC.user.id);SOC.user=u;try{aiActivate()}catch(e){}if(changed){if(u)socBoot();else socReset()}schedule()});
 }
-function socReset(){Object.assign(SOC,{me:null,feed:null,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),convs:null,unread:0,clubs:null,myClubs:new Set(),people:null,rank:null});if(SOC.inbox){try{SOC.sb.removeChannel(SOC.inbox)}catch(e){}SOC.inbox=null}drawDot()}
+function socReset(){Object.assign(SOC,{requested:new Set(),reqIn:0,me:null,feed:null,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),convs:null,unread:0,clubs:null,myClubs:new Set(),people:null,rank:null});if(SOC.inbox){try{SOC.sb.removeChannel(SOC.inbox)}catch(e){}SOC.inbox=null}drawDot()}
 async function socBoot(){
   try{const uid=SOC.user.id;
     let me=(await sbq(SOC.sb.from('profiles').select('*').eq('id',uid)))[0];
@@ -1955,6 +1966,7 @@ async function socBoot(){
     SOC.me=me;SOC.prof[uid]=me;
     SOC.following=new Set((await sbq(SOC.sb.from('follows').select('following').eq('follower',uid))).map(r=>r.following));
     const {count}=await SOC.sb.from('follows').select('*',{count:'exact',head:true}).eq('following',uid);SOC.followers=count||0;
+    try{const rq=await SOC.sb.from('follow_requests').select('requester,target').or(`requester.eq.${uid},target.eq.${uid}`);SOC.requested=new Set((rq.data||[]).filter(r=>r.requester===uid).map(r=>r.target));SOC.reqIn=(rq.data||[]).filter(r=>r.target===uid).length}catch(e){SOC.requested=new Set();SOC.reqIn=0}
     schedule();loadFeed();loadConvs();
     if(!SOC.inbox)SOC.inbox=SOC.sb.channel('inbox').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},onNewMessage).subscribe();
   }catch(e){SOC.err=sbErr(e);schedule()}
@@ -2030,11 +2042,11 @@ function socMsgsHtml(){
 }
 function socClubsHtml(){
   if(!SOC.clubs){once('clubs',loadClubs);return thinking('Carregando clubes…')}
-  return`<button class="btn primary" data-act="socNewClub">+ Criar clube</button>${SOC.clubs.length?`<div class="card"><div class="list">${SOC.clubs.map(c=>`<button class="li" data-act="socClub" data-id="${c.id}"><span class="t"><b>${esc(c.name)}</b><small>${c.n} membro${c.n===1?'':'s'}${SOC.myClubs.has(c.id)?' · você participa':''}</small></span><span class="muted">›</span></button>`).join('')}</div></div>`:`<div class="empty"><b>Nenhum clube ainda</b><span>Crie um clube para a sua academia ou grupo de corrida. Cada clube tem chat e ranking semanal.</span></div>`}`;
+  return`<button class="btn primary" data-act="socNewClub">+ Criar clube</button>${SOC.clubs.length?`<div class="card"><div class="list">${SOC.clubs.map(c=>`<button class="li" data-act="socClub" data-id="${c.id}"><span class="t"><b>${esc(c.name)}</b><small>${c.n} membro${c.n===1?'':'s'}${c.owner===SOC.user.id?' · você criou':SOC.myClubs.has(c.id)?' · você participa':SOC.clubReq&&SOC.clubReq.has(c.id)?' · pedido enviado':''}</small></span>${c.owner===SOC.user.id&&c.pend&&c.pend.length?`<span class="chip" style="background:var(--accent);color:#000">${c.pend.length} pedido${c.pend.length>1?'s':''}</span>`:'<span class="muted">›</span>'}</button>`).join('')}</div></div>`:`<div class="empty"><b>Nenhum clube ainda</b><span>Crie um clube para a sua academia ou grupo de corrida. Cada clube tem chat e ranking semanal.</span></div>`}`;
 }
 function socPeopleHtml(){
   if(!SOC.people)once('people',()=>socSearch(SOC.pq));
-  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}${p.id!==SOC.user.id&&presTxt(p)?' · '+presHtml(p,true):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`;
+  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}${p.id!==SOC.user.id&&presTxt(p)?' · '+presHtml(p,true):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${folLabel(p.id,true)}</button>`}</div>`;
   let h=`<input id="socQ" type="search" placeholder="Buscar pelo nome ou pelo ID" value="${esc(SOC.pq)}" aria-label="Buscar pessoas pelo nome ou ID" autocomplete="off">`;
   if(!P)return h+thinking('Buscando…');
   if(P.mode==='curto')return h+`<p class="hint">Digite pelo menos 2 letras do nome ou o ID de 7 números.</p>`;
@@ -2053,7 +2065,7 @@ function socMeHtml(){const m=SOC.me||{};
 }
 function rankHtml(r){if(!r)return thinking('Calculando…');if(!r.length)return'<p class="hint">Ninguém postou atividades nesta semana ainda.</p>';
   return`<div class="list">${r.map((x,i)=>`<div class="li"><span class="row" style="flex-wrap:nowrap;min-width:0"><b class="num" style="width:22px">${i+1}</b>${avatar(SOC.prof[x.user_id],'sm')}<span class="t"><b>${esc(pName(x.user_id))}</b><small>${x.atividades} corrida(s) · ${x.treinos} treino(s)</small></span></span><b class="num" style="font-size:19px">${fmtD(+x.km)} km</b></div>`).join('')}</div>`}
-async function loadRank(club){try{const r=await sbq(SOC.sb.rpc('weekly_ranking',club?{p_club:club}:{}));await loadProfiles(r.map(x=>x.user_id));if(club)return r;SOC.rank=r;schedule()}catch(e){if(club)throw e;SOC.rank=[];schedule()}}
+async function loadRank(club){try{const r=(await sbq(SOC.sb.rpc('weekly_ranking',club?{p_club:club}:{})))||[];await loadProfiles(r.map(x=>x.user_id));if(club)return r;SOC.rank=r;schedule()}catch(e){if(club)throw e;SOC.rank=[];schedule()}}
 
 /* ----- pessoas e perfis ----- */
 let pqT=null;
@@ -2064,22 +2076,26 @@ async function socSearch(qs){SOC.pq=qs;const t=String(qs||'').trim();
   catch(e){SOC.people={mode:'busca',list:[]};SOC.err=sbErr(e)}schedule()}
 const fmtId=v=>v?String(v).replace(/^(\d{3})(\d{4})$/,'$1 $2'):'';
 document.addEventListener('input',e=>{if(e.target.id==='socQ'){const v=e.target.value;clearTimeout(pqT);pqT=setTimeout(()=>socSearch(v),350)}});
-async function socToggleFollow(id){const on=SOC.following.has(id);
+function folLabel(id,short){return SOC.following.has(id)?(short?'Seguindo':'Deixar de seguir'):SOC.requested&&SOC.requested.has(id)?'Pedido enviado':'Seguir'}
+async function socToggleFollow(id){const on=SOC.following.has(id);SOC.requested=SOC.requested||new Set();
+  const p=SOC.prof[id]||{};
+  if(!on&&SOC.requested.has(id)){try{await sbq(SOC.sb.from('follow_requests').delete().eq('requester',SOC.user.id).eq('target',id));SOC.requested.delete(id);toast('Pedido cancelado');render()}catch(e){toast(sbErr(e))}return}
+  if(!on&&p.is_private){try{await sbq(SOC.sb.from('follow_requests').insert({requester:SOC.user.id,target:id}));SOC.requested.add(id);toast('Pedido enviado. Quando aceitarem, você passa a seguir.');render()}catch(e){toast(sbErr(e))}return}
   try{if(on){await sbq(SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',id));SOC.following.delete(id)}else{await sbq(SOC.sb.from('follows').insert({follower:SOC.user.id,following:id}));SOC.following.add(id)}SOC.rank=null;render()}
   catch(e){toast(sbErr(e))}}
 async function socProfileSheet(id){
   await loadProfiles([id]).catch(()=>{});const p=SOC.prof[id]||{id,name:'Atleta'};const mine=id===SOC.user.id;
   openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</p>${mine?'':presHtml(p)}</div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
-   ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)?'':'primary'}" data-s="follow">${SOC.following.has(id)?'Deixar de seguir':'Seguir'}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
+   ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)||(SOC.requested&&SOC.requested.has(id))?'':'primary'}" data-s="follow">${folLabel(id)}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
    <div id="pPosts">${thinking('Carregando posts…')}</div>${mine?'':'<div class="btns"><button class="btn sm danger" data-s="block">Bloquear</button><button class="btn sm" data-s="report">Denunciar perfil</button></div>'}`,async(b,el)=>{
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
-      if(x.dataset.s==='follow'){await socToggleFollow(id);x.textContent=SOC.following.has(id)?'Deixar de seguir':'Seguir';x.classList.toggle('primary',!SOC.following.has(id))}
+      if(x.dataset.s==='follow'){await socToggleFollow(id);x.textContent=folLabel(id);x.classList.toggle('primary',!SOC.following.has(id)&&!(SOC.requested&&SOC.requested.has(id)))}
       if(x.dataset.s==='dm'){try{const conv=await sbq(SOC.sb.rpc('start_dm',{other:id}));closeSheet(el);await loadConvs();socChatSheet(conv)}catch(err){toast(sbErr(err))}}
       if(x.dataset.s==='block')confirmSheet(`Bloquear ${p.name}? Vocês deixam de se ver e de conversar.`,'Bloquear',async()=>{try{await sbq(SOC.sb.from('blocks').insert({blocker:SOC.user.id,blocked:id}));await SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',id);SOC.following.delete(id);closeSheet(el);loadFeed();toast('Pessoa bloqueada')}catch(err){toast(sbErr(err))}});
       if(x.dataset.s==='report')socReport({user_id:id});
     };
     try{const posts=await sbq(SOC.sb.from('posts').select('*').eq('user_id',id).order('created_at',{ascending:false}).limit(20));await countsFor(posts);for(const q of posts)socPostCache[q.id]=q;
-      const box=b.querySelector('#pPosts');if(box)box.innerHTML=posts.length?posts.map(q=>postCard(q)).join(''):'<p class="hint">Nenhum post que você possa ver.</p>'}
+      const box=b.querySelector('#pPosts');if(box)box.innerHTML=posts.length?posts.map(q=>postCard(q)).join(''):(p.is_private&&!mine&&!SOC.following.has(id)?'<div class="empty"><b>🔒 Perfil privado</b><span>Siga e espere a pessoa aceitar para ver os treinos e corridas.</span></div>':'<p class="hint">Nenhum post que você possa ver.</p>')}
     catch(err){const box=b.querySelector('#pPosts');if(box)box.innerHTML=`<p class="hint">${esc(sbErr(err))}</p>`}
   });
 }
@@ -2184,14 +2200,14 @@ function socNewPost(preId){
 /* ----- mensagens ----- */
 async function loadConvs(){
   if(!SOC.user)return;
-  try{const mem=await sbq(SOC.sb.from('conversation_members').select('conversation_id,user_id,last_read'));
+  try{const mem=await sbq(SOC.sb.from('conversation_members').select('*'));
     const ids=[...new Set(mem.map(m=>m.conversation_id))];if(!ids.length){SOC.convs=[];SOC.unread=0;drawDot();schedule();return}
     const convs=await sbq(SOC.sb.from('conversations').select('*').in('id',ids).order('last_at',{ascending:false}));
     const msgs=await sbq(SOC.sb.from('messages').select('*').in('conversation_id',ids).order('created_at',{ascending:false}).limit(300));
     const others=mem.filter(m=>m.user_id!==SOC.user.id);await loadProfiles(others.map(m=>m.user_id));
     let tot=0;SOC.convs=convs.map(c=>{const mine=mem.find(m=>m.conversation_id===c.id&&m.user_id===SOC.user.id);const other=(others.find(m=>m.conversation_id===c.id)||{}).user_id;const cm=msgs.filter(m=>m.conversation_id===c.id);
       const unread=cm.filter(m=>m.user_id!==SOC.user.id&&mine&&new Date(m.created_at)>new Date(mine.last_read)).length;tot+=unread;
-      return{...c,other,title:c.is_group?(c.name||'Grupo'):pName(other),last:cm[0]||null,unread,lastRead:mine&&mine.last_read}});
+      const om=others.find(m=>m.conversation_id===c.id);return{...c,other,title:c.is_group?(c.name||'Grupo'):pName(other),last:cm[0]||null,unread,lastRead:mine&&mine.last_read,muted:!!(mine&&mine.muted),otherRead:om&&om.last_read}});
     SOC.unread=tot;drawDot();schedule()}
   catch(e){SOC.convs=SOC.convs||[];SOC.err=sbErr(e);schedule()}
 }
@@ -2218,18 +2234,31 @@ function socChatSheet(convId){
 
 /* ----- clubes ----- */
 async function loadClubs(){try{const clubs=await sbq(SOC.sb.from('clubs').select('*').order('created_at',{ascending:false}).limit(100));const mem=await sbq(SOC.sb.from('club_members').select('club_id,user_id'));
-  SOC.myClubs=new Set(mem.filter(m=>m.user_id===SOC.user.id).map(m=>m.club_id));SOC.clubs=clubs.map(c=>({...c,n:mem.filter(m=>m.club_id===c.id).length})).sort((a,b)=>(SOC.myClubs.has(b.id)-SOC.myClubs.has(a.id))||b.n-a.n)}
+  let rq=[];try{rq=await sbq(SOC.sb.from('club_requests').select('club_id,user_id,created_at'))}catch(e){}
+  SOC.clubReq=new Set(rq.filter(r=>r.user_id===SOC.user.id).map(r=>r.club_id));SOC.clubPend=rq.filter(r=>r.user_id!==SOC.user.id);
+  SOC.myClubs=new Set(mem.filter(m=>m.user_id===SOC.user.id).map(m=>m.club_id));SOC.clubs=clubs.map(c=>({...c,n:mem.filter(m=>m.club_id===c.id).length,mem:mem.filter(m=>m.club_id===c.id).map(m=>m.user_id),pend:rq.filter(r=>r.club_id===c.id&&r.user_id!==SOC.user.id)})).sort((a,b)=>(SOC.myClubs.has(b.id)-SOC.myClubs.has(a.id))||b.n-a.n)}
   catch(e){SOC.clubs=[];SOC.err=sbErr(e)}schedule()}
 function socNewClub(){openSheet('Criar clube',`<label class="fld"><span>Nome</span><input id="ncN" maxlength="60" placeholder="Ex.: Academia Força Total"></label><label class="fld"><span>Descrição</span><textarea id="ncD" maxlength="500" placeholder="Quem pode entrar, horários de treino, objetivo do grupo…"></textarea></label><button class="btn primary block" data-s="ok">Criar</button>`,(b,el)=>{
   b.querySelector('[data-s=ok]').onclick=async()=>{const name=b.querySelector('#ncN').value.trim();if(name.length<2){toast('Dê um nome ao clube');return}
     try{const c=(await sbq(SOC.sb.from('clubs').insert({name,description:b.querySelector('#ncD').value.trim()||null,owner:SOC.user.id}).select()))[0];closeSheet(el);SOC.clubs=null;await loadClubs();loadConvs();socClubSheet(c.id)}catch(e){toast(sbErr(e))}}})}
 function socClubSheet(id){const c=(SOC.clubs||[]).find(x=>x.id===id);if(!c)return;const inC=SOC.myClubs.has(id),own=c.owner===SOC.user.id;
   openSheet(c.name,`${c.description?`<p>${esc(c.description)}</p>`:''}<p class="small muted">${c.n} membro${c.n===1?'':'s'}</p>
-   <div class="btns">${inC?'<button class="btn primary" data-s="chat">Abrir chat do clube</button>':'<button class="btn primary" data-s="join">Entrar no clube</button>'}${inC&&!own?'<button class="btn" data-s="leave">Sair</button>':''}${own?'<button class="btn danger" data-s="del">Apagar clube</button>':''}</div>
+   <div class="btns">${inC?'<button class="btn primary" data-s="chat">Abrir chat do clube</button>':SOC.clubReq&&SOC.clubReq.has(id)?'<button class="btn" data-s="unreq">Pedido enviado · cancelar</button>':'<button class="btn primary" data-s="join">Pedir para entrar</button>'}${inC&&!own?'<button class="btn" data-s="leave">Sair</button>':''}${own?'<button class="btn danger" data-s="del">Apagar clube</button>':''}</div>
+   ${!inC?'<p class="hint">O criador do clube precisa aceitar seu pedido para você entrar no chat e no ranking.</p>':''}
+   ${own?`<div class="card"><h3>Pedidos para entrar${c.pend&&c.pend.length?` (${c.pend.length})`:''}</h3><div id="cpd">${(c.pend||[]).length?'':'<p class="hint">Nenhum pedido agora. Quem quiser entrar vai aparecer aqui.</p>'}</div></div>
+     <div class="card"><h3>Membros (${c.n})</h3><div id="cmb"></div></div>`:''}
    <div class="card"><h3>Ranking da semana</h3><div id="crk">${thinking('Calculando…')}</div></div>`,async(b,el)=>{
+    if(own){const ids=[...(c.pend||[]).map(r=>r.user_id),...(c.mem||[])];loadProfiles(ids).catch(()=>{}).then(()=>{
+      const pd=b.querySelector('#cpd');if(pd&&(c.pend||[]).length)pd.innerHTML=c.pend.map(r=>{const p=SOC.prof[r.user_id]||{id:r.user_id,name:'Atleta'};return`<div class="li" style="gap:8px"><span class="row" style="flex:1;min-width:0;flex-wrap:nowrap">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b><small>${p.public_id?'ID '+esc(fmtId(p.public_id))+' · ':''}${ago(r.created_at)}</small></span></span><button class="btn sm primary" data-s="cok" data-u="${r.user_id}">Aceitar</button><button class="btn sm" data-s="cno" data-u="${r.user_id}">Recusar</button></div>`}).join('');
+      const mb=b.querySelector('#cmb');if(mb)mb.innerHTML=(c.mem||[]).map(u=>{const p=SOC.prof[u]||{id:u,name:'Atleta'};return`<div class="li" style="gap:8px"><span class="row" style="flex:1;min-width:0;flex-wrap:nowrap">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b>${u===SOC.user.id?'<small>Criador</small>':''}</span></span>${u===SOC.user.id?'':`<button class="btn sm" data-s="ckick" data-u="${u}">Remover</button>`}</div>`}).join('')})}
     loadRank(id).then(r=>{const x=b.querySelector('#crk');if(x)x.innerHTML=rankHtml(r)}).catch(e=>{const x=b.querySelector('#crk');if(x)x.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`});
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
-      try{if(x.dataset.s==='join'){await sbq(SOC.sb.from('club_members').insert({club_id:id,user_id:SOC.user.id}));closeSheet(el);await loadClubs();await loadConvs();toast('Você entrou no clube');socClubSheet(id)}
+      const again=async m=>{closeSheet(el);SOC.clubs=null;await loadClubs();if(m)toast(m);socClubSheet(id)};
+      try{if(x.dataset.s==='join'){await sbq(SOC.sb.from('club_requests').insert({club_id:id,user_id:SOC.user.id}));await again('Pedido enviado. O criador do clube vai aceitar ou recusar.')}
+        if(x.dataset.s==='unreq'){await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',SOC.user.id));await again('Pedido cancelado')}
+        if(x.dataset.s==='cok'){x.disabled=true;await sbq(SOC.sb.rpc('approve_club_member',{p_club:id,p_user:x.dataset.u}));await again('Pessoa aceita no clube');loadConvs()}
+        if(x.dataset.s==='cno'){x.disabled=true;await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',x.dataset.u));await again('Pedido recusado')}
+        if(x.dataset.s==='ckick'){const u=x.dataset.u,nm=(SOC.prof[u]||{}).name||'essa pessoa';confirmSheet(`Remover ${nm} do clube?`,'Remover',async()=>{try{await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',u));await again('Removido do clube')}catch(err){toast(sbErr(err))}})}
         if(x.dataset.s==='leave'){await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',SOC.user.id));closeSheet(el);loadClubs();loadConvs()}
         if(x.dataset.s==='chat'){const cv=await sbq(SOC.sb.from('conversations').select('id').eq('club_id',id));if(!cv.length){toast('Chat ainda não disponível');return}closeSheet(el);await loadConvs();socChatSheet(cv[0].id)}
         if(x.dataset.s==='del')confirmSheet(`Apagar o clube “${c.name}” e o chat dele?`,'Apagar',async()=>{try{await sbq(SOC.sb.from('clubs').delete().eq('id',id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs()}catch(err){toast(sbErr(err))}})}
@@ -2417,7 +2446,7 @@ function drawGate(){
     <label class="fld"><span>E-mail</span><input id="gEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="${esc(ACC.email)}" placeholder="voce@email.com" required></label>
     ${pwField('gPass','Senha','new-password','Mínimo 8 caracteres')}<div class="meter" aria-hidden="true"><i id="gMeter" style="width:0"></i></div><small class="muted" id="gMeterL">Use letras e números.</small>
     ${pwField('gPass2','Confirmar senha','new-password')}
-    <label class="check terms" style="align-items:flex-start"><input type="checkbox" id="gTerms"><span>Li e aceito: meus dados de treino, dieta e corridas ficam guardados na minha conta no servidor do ATHOS (Supabase). Eu escolho quem vê cada post e posso excluir minha conta e meus dados quando quiser, no Perfil.</span></label>
+    <label class="check terms" style="align-items:flex-start"><input type="checkbox" id="gTerms"><span>Tenho 13 anos ou mais (se tenho menos de 18, meus pais ou responsáveis autorizaram) e aceito os <a href="#" data-legal="termos" style="color:var(--accent);font-weight:700">Termos de uso</a> e a <a href="#" data-legal="privacidade" style="color:var(--accent);font-weight:700">Política de privacidade</a>.</span></label>
     <button class="btn primary block" type="submit" ${busy}>${ACC.busy?'Criando…':'Criar conta'}</button></form>
     <p class="alt">Já tem conta? <button class="link" data-g="v" data-v="login">Entrar</button></p>`;
   else if(ACC.view==='verify')h=`${hero}<form class="in" style="gap:12px" novalidate><h2>Confirme seu e-mail</h2>
@@ -2462,7 +2491,7 @@ async function gateSubmit(){
     if(r.error){if(/not confirmed/i.test(r.error.message||'')){await SOC.sb.auth.resend({type:'signup',email});ACC.view='verify';ACC.ok='Mandamos um novo código para confirmar seu e-mail.';startCool();return drawGate()}return fail(accErr(r.error))}return}
   if(v==='signup'){const name=nm;ACC.name=name;const p=pass;
     if(!name)return fail('Digite seu nome.');if(!/^\S+@\S+\.\S+$/.test(email))return fail('Digite um e-mail válido.');if(p.length<8)return fail('A senha precisa ter pelo menos 8 caracteres.');
-    if(p!==pass2)return fail('As senhas não são iguais.');if(!terms)return fail('Marque que você leu e aceita como seus dados são guardados.');
+    if(p!==pass2)return fail('As senhas não são iguais.');if(!terms)return fail('Para criar a conta, confirme a idade e aceite os Termos de uso e a Política de privacidade.');
     ACC.busy=true;keepDraw();const r=await SOC.sb.auth.signUp({email,password:p,options:{data:{name}}});ACC.busy=false;
     if(r.error)return fail(accErr(r.error));
     if(r.data&&r.data.user&&Array.isArray(r.data.user.identities)&&!r.data.user.identities.length)return fail('Já existe uma conta com esse e-mail. Toque em “Entrar”.');
@@ -2610,6 +2639,10 @@ function nLine(n){const who=`<b>${esc(pName(n.actor_id))}</b>`;
   if(n.kind==='like')return`${who} curtiu seu post`;
   if(n.kind==='comment')return`${who} comentou: <span class="q">“${esc(n.body||'')}”</span>`;
   if(n.kind==='follow')return`${who} começou a seguir você`;
+  if(n.kind==='request')return`${who} pediu para seguir você`;
+  if(n.kind==='club_request')return`${who} pediu para entrar no clube <b>${esc(n.body||'')}</b>`;
+  if(n.kind==='club_ok')return`${who} aceitou você no clube <b>${esc(n.body||'')}</b>`;
+  if(n.kind==='accepted')return`${who} aceitou seu pedido para seguir`;
   if(n.kind==='pr')return`🏆 ${who} bateu um recorde${n.body?`: <span class="q">${esc(n.body)}</span>`:''}`;
   return`${who} mandou uma mensagem: <span class="q">${esc(n.body||'')}</span>`}
 function nOpen(){
@@ -2617,16 +2650,18 @@ function nOpen(){
     const box=b.querySelector('#ntL');
     try{const list=await sbq(SOC.sb.from('notifications').select('*').eq('user_id',SOC.user.id).order('id',{ascending:false}).limit(60));
       await loadProfiles(list.map(n=>n.actor_id).filter(Boolean));
-      box.innerHTML=list.length?`<div>${list.map(n=>`<button class="nt${n.read?'':' new'}" data-k="${n.kind}" data-post="${n.post_id||''}" data-conv="${n.conversation_id||''}" data-actor="${n.actor_id||''}">${avatar(SOC.prof[n.actor_id],'sm')}<span class="tx">${nLine(n)}<small>${ago(n.created_at)}</small></span></button>`).join('')}</div>`
+      box.innerHTML=list.length?`<div>${list.map(n=>`<button class="nt${n.read?'':' new'}" data-k="${n.kind}" data-post="${n.post_id||''}" data-conv="${n.conversation_id||''}" data-actor="${n.actor_id||''}" data-club="${n.club_id||''}">${avatar(SOC.prof[n.actor_id],'sm')}<span class="tx">${nLine(n)}<small>${ago(n.created_at)}</small></span></button>`).join('')}</div>`
         :`<div class="empty"><b>Nada por aqui ainda</b><span>Quando curtirem, comentarem, seguirem você ou mandarem mensagem, aparece aqui.</span></div>`;
       if(list.some(n=>!n.read)){await SOC.sb.from('notifications').update({read:true}).eq('user_id',SOC.user.id).eq('read',false);NT.unread=0;nBell()}
       if(list[0]&&NATIVE&&NATIVE.notifSetAfter)try{NATIVE.notifSetAfter(list[0].id)}catch(e){}
     }catch(e){box.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`}
-    box.addEventListener('click',e=>{const it=e.target.closest('.nt');if(!it)return;closeSheet(el);nGoto(it.dataset.k,it.dataset.post,it.dataset.conv,it.dataset.actor)});
+    box.addEventListener('click',e=>{const it=e.target.closest('.nt');if(!it)return;closeSheet(el);nGoto(it.dataset.k,it.dataset.post,it.dataset.conv,it.dataset.actor,it.dataset.club)});
   })}
-async function nGoto(kind,post,conv,actor){
+async function nGoto(kind,post,conv,actor,club){
+  if((kind==='club_request'||kind==='club_ok')&&club){go('social');SOC.sub='clubes';SOC.clubs=null;await loadClubs();if(kind==='club_ok')loadConvs();socClubSheet(club);return}
   if(kind==='message'&&conv){go('social');socChatSheet(conv);return}
-  if(kind==='follow'&&actor){go('social');socProfileSheet(actor);return}
+  if(kind==='request'){go('social');reqSheet();return}
+  if((kind==='follow'||kind==='accepted')&&actor){if(kind==='accepted'){SOC.following.add(actor);SOC.requested&&SOC.requested.delete(actor)}go('social');socProfileSheet(actor);return}
   if(post){go('social');if(!findPost(post)){try{const p=await sbq(SOC.sb.from('posts').select('*').eq('id',post).single());socPostCache[post]=p;await loadProfiles([p.user_id])}catch(e){toast('Esse post não está mais disponível');return}}socOpenPost(post)}
 }
 window.androidOpen=function(o){if(!o)return;
@@ -2709,7 +2744,11 @@ const TI={
   evolucao:'<svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   social:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.7.8 2.7 2.6 3 5.2"/></svg>',
   bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg>',
-  go:'<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'};
+  go:'<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>',
+  chat:'<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  photo:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3.5"/></svg>'};
 function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'logo',t:'Bem-vindo ao ATHOS',h:`<p>Treino, dieta, corrida e seus amigos num app só. Em 2 minutos eu te mostro tudo, inclusive as novidades.</p>`},
   {tab:'perfil',ic:'target',t:'Comece pelas metas',h:`<p>No <b>Perfil</b>, toque em <b>Editar</b> nas Metas diárias e coloque idade, altura, peso e objetivo.</p><p>O ATHOS calcula suas calorias, proteína, carbo, gordura e água.</p>`},
@@ -2718,12 +2757,23 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'treino',ic:'go',t:'Durante o treino',h:`<ul><li>Anote carga e repetições e toque em <b>✓</b> em cada série. O <b>descanso</b> começa sozinho.</li><li>💡 A <b>sugestão de carga</b> mostra quanto colocar hoje. Toque em <b>Usar</b>.</li><li>▶ <b>Como fazer</b> mostra a execução de cada exercício.</li>${and?'<li>Controle a <b>música</b> do YouTube Music ou do Spotify sem sair do app.</li>':''}</ul>`},
   ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Toque em <b>Correr</b>, <b>Caminhar</b> ou <b>Pedalar</b>.</p><ul><li>Mapa, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
   {tab:'dieta',ic:'dieta',t:'Sua dieta',h:`<ul><li>Toque no <b>+</b> de cada refeição para adicionar.</li><li><b>Ler código de barras</b>: aponte a câmera para a embalagem e o alimento entra sozinho.</li><li>Com a IA: <b>foto do prato</b> ou <b>descrever</b> o que comeu.</li><li>Toque na refeição para ver os alimentos ou <b>repetir a de ontem</b>.</li></ul>`},
-  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>. As fotos ficam só no seu celular.</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
+  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>, guardadas numa pasta privada da sua conta (até 20).</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
   {tab:'perfil',ic:'target',t:'Nível e medalhas',h:`<ul><li>Cada treino, corrida e dia ativo dá <b>XP</b>. Suba de <b>Bronze</b> até <b>Lenda</b>.</li><li>Complete os <b>desafios do mês</b> e ganhe <b>medalhas</b>, que aparecem no seu Perfil.</li></ul>`},
   {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Ache amigos pelo <b>nome</b> ou pelo <b>ID</b>. O seu fica em Social → Eu.</li><li>No topo do feed, as <b>bolinhas</b> mostram quem treinou hoje. O ponto verde é quem está <b>online</b>.</li><li><b>Dois toques</b> na foto ou no mapa para curtir.</li><li><b>Compartilhar</b> gera um card bonito para os stories do Instagram e do WhatsApp.</li><li>Na aba <b>Desafios</b>: ranking e medalhas do mês.</li></ul>`},
+  {tab:'social',ic:'chat',t:'Chat e clubes',h:`<ul><li>No <b>Chat</b>: toque numa mensagem para <b>reagir</b>, <b>responder</b> ou apagar. O <b>+</b> manda seu treino.</li><li><b>Clubes</b> têm chat, mural, ranking e <b>meta da semana</b>. Para entrar, peça e o criador aceita.</li><li>Em ⚙ → Privacidade: <b>perfil privado</b> e quem pode te mandar mensagem.</li></ul>`},
   {tab:'hoje',ic:'bell',t:'Fique por dentro',h:`<ul><li>O <b>sininho</b> mostra curtidas, comentários, seguidores, mensagens e recordes dos amigos.</li><li>A <b>engrenagem ⚙</b> abre as Configurações: notificações, tema, música, privacidade e mais.</li><li>O <b>☰</b> recolhe a barra de baixo.</li></ul>`},
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
-const TOUR={i:0,steps:null};
+/* ---------- novidades de cada versão (para quem já usa o app) ----------
+   Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
+const NEWS_V='2.2';
+function newsSteps(){return[
+  {ic:'star',t:'Novidades do ATHOS 2.2',h:`<p>Separei em 1 minuto o que mudou. Bora?</p>`},
+  {tab:'social',ic:'chat',t:'Chat novo',h:`<ul><li>Visual novo, com <b>dia</b> e <b>hora</b> de cada mensagem e <b>Visto ✓✓</b>.</li><li>Toque numa mensagem para <b>reagir</b> (❤️🔥💪), <b>responder</b>, copiar ou <b>apagar</b>. Dois toques = ❤️.</li><li>O <b>+</b> manda seu último treino ou corrida no chat.</li><li>No <b>⋮</b>: silenciar, ver perfil, denunciar ou bloquear.</li></ul>`},
+  {tab:'social',ic:'social',t:'Clubes de verdade',h:`<ul><li>Clubes com <b>ícone</b>, <b>cor</b>, tipo e cidade.</li><li>Dentro do clube: <b>Mural</b> com os treinos da galera, <b>Ranking</b>, <b>Membros</b> e <b>Meta da semana</b> em km.</li><li>Para entrar, você <b>pede</b> e o criador <b>aceita</b>. Quem cria pode fixar um <b>aviso</b> e escrever as <b>regras</b>.</li></ul>`},
+  {tab:'social',ic:'lock',t:'Sua privacidade',h:`<ul><li>Em <b>⚙ → Privacidade</b>: <b>perfil privado</b> (você aprova quem segue) e <b>quem pode te mandar mensagem</b>.</li><li>Seu perfil só aparece para quem tem ligação com você ou procura seu nome ou ID.</li><li><b>Termos de uso</b> e <b>Política de privacidade</b> ficam em ⚙ → Ajuda.</li></ul>`},
+  {tab:'evolucao',ic:'photo',t:'Fotos de evolução na nuvem',h:`<ul><li>As fotos de antes e depois agora ficam também numa <b>pasta privada da sua conta</b>: trocou de celular, elas voltam.</li><li>A nuvem guarda até <b>20</b>. Ao chegar em 20, as 10 mais antigas saem de lá (continuam no celular).</li><li>Se ficar <b>30 dias</b> sem abrir o app, as da nuvem são apagadas. Avisamos antes.</li></ul>`},
+  {tab:'perfil',ic:'target',t:'Desafios mais justos',h:`<p>Agora o servidor confere o <b>XP</b>, os <b>km</b> e as <b>medalhas</b>. Ninguém consegue trapacear no ranking.</p>`,last:true}]}
+const TOUR={i:0,steps:null,news:false};
 function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#tour');
   if(!el){el=document.createElement('div');el.id='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');document.body.appendChild(el);
     el.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;const k=b.dataset.t;
@@ -2734,10 +2784,13 @@ function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#to
   el.setAttribute('aria-label',s.t);
   el.innerHTML=`<div class="tscrim"></div><div class="tc"><div class="ti">${ic}</div><span class="ts">Passo ${TOUR.i+1} de ${n}</span><h2>${esc(s.t)}</h2>${s.h}
    <div class="tb">${TOUR.i?`<button class="skip" data-t="back">Voltar</button>`:`<button class="skip" data-t="skip">Pular</button>`}<span class="dots">${TOUR.steps.map((_,j)=>`<i class="${j===TOUR.i?'on':''}"></i>`).join('')}</span>
-   <button class="btn primary next" data-t="next">${s.last?'Configurar metas':TOUR.i?'Próximo':'Começar'}</button></div></div>`;
+   <button class="btn primary next" data-t="next">${s.last?(TOUR.news?'Entendi!':'Configurar metas'):TOUR.i?'Próximo':'Começar'}</button></div></div>`;
   el.querySelector('.next').focus()}
-function tourStart(){TOUR.steps=tourSteps();TOUR.i=0;tourDraw()}
+function tourStart(){TOUR.news=false;TOUR.steps=tourSteps();TOUR.i=0;tourDraw()}
+function newsStart(){TOUR.news=true;TOUR.steps=newsSteps();TOUR.i=0;tourDraw()}
+function newsMark(){S.profile.newsV=NEWS_V;try{store.mark('profile')}catch(e){}try{localStorage.setItem('athos.news',NEWS_V)}catch(e){}}
 function tourEnd(goSetup){const el=$('#tour');if(el)el.remove();document.body.classList.remove('touring');document.querySelectorAll('.tab.spot').forEach(t=>t.classList.remove('spot'));
+  newsMark();if(TOUR.news){TOUR.news=false;go('hoje');return}
   S.profile.tourDone=true;S.profile.tourV=2;store.mark('profile');try{localStorage.setItem('athos.tour','2')}catch(e){}
   if(goSetup){go('perfil');try{ACT.profileSheet()}catch(e){}}else go('hoje')}
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#tour'))tourEnd(false)});
@@ -2751,10 +2804,18 @@ const tourTick=setInterval(()=>{
   clearInterval(tourTick);
   let seen=false;try{seen=localStorage.getItem('athos.tour')==='2'}catch(e){}
   if(!seen&&S.profile.tourV!==2&&!sheets.length&&!S.active)tourStart();
+  else newsTick=setInterval(newsCheck,1500);
 },1000);
+/* quem já usava o app vê só as novidades da versão nova, uma vez */
+let newsTick=null;
+function newsCheck(){if($('#tour')||sheets.length||S.active)return;const gate=$('#authGate');if(gate&&!gate.hidden)return;
+  let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}
+  clearInterval(newsTick);newsTick=null;
+  if(seen!==NEWS_V&&S.profile.newsV!==NEWS_V)newsStart()}
 /* botão para rever no Perfil */
 /* o botão aparece em Configurações */
 ACT.tourAgain=()=>tourStart();
+ACT.newsAgain=()=>newsStart();
 /* ---------- música no treino: YouTube Music, Spotify e outros players ---------- */
 document.head.insertAdjacentHTML('beforeend',`<style>
 .mu{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:18px;padding:10px 10px 10px 10px;min-width:0;border:1px solid var(--ink2)}
@@ -2913,19 +2974,24 @@ function cfgAbout(){const v=NATIVE&&NATIVE.appVersionName?NATIVE.appVersionName(
   return`<div class="card"><div class="cfg-row"><span class="t"><b>ATHOS ${esc(v||'')}</b><small>${NATIVE?'App para Android':'Versão web: atualiza sozinha'}</small></span>${NATIVE&&NATIVE.updateDownload?`<button class="btn sm" data-act="cfgUpdate">Procurar atualização</button>`:''}</div></div>`}
 function cfgHtml(){let h='<div class="cfg view" style="padding:0;gap:12px">';
   if(SOC&&SOC.user&&typeof accCard==='function')h+=`<p class="cfg-h">Conta</p>${accCard()}`;
-  if(SOC&&SOC.user)h+=`<p class="cfg-h">Privacidade</p><div class="card"><label class="swr" style="padding:0"><span class="t"><b>Mostrar quando estou online</b><small>Seus amigos veem "Online" ou "visto há 3 h". Desligado, ninguém vê.</small></span><input type="checkbox" class="sw" data-cfg="online" ${SOC.me&&SOC.me.show_online===false?'':'checked'}></label></div>`;
+  if(SOC&&SOC.user){const me=SOC.me||{};const dm=me.dm_policy||'all';
+    h+=`<p class="cfg-h">Privacidade</p><div class="card">
+     <label class="swr" style="padding:0"><span class="t"><b>Perfil privado</b><small>Só quem você aceitar vê seus treinos e corridas. Quem já segue você continua seguindo.</small></span><input type="checkbox" class="sw" data-cfg="private" ${me.is_private?'checked':''}></label>
+     ${me.is_private||SOC.reqIn?`<button class="btn block" data-act="reqSheet" style="margin-top:4px">Pedidos para seguir${SOC.reqIn?` (${SOC.reqIn})`:''}</button>`:''}
+     <div style="border-top:1px solid var(--line);margin-top:4px;padding-top:12px"><b>Quem pode me mandar mensagem</b><div class="seg" role="group" aria-label="Quem pode me mandar mensagem" style="margin-top:8px"><button data-act="cfgDm" data-k="all" aria-pressed="${dm==='all'}">Todo mundo</button><button data-act="cfgDm" data-k="following" aria-pressed="${dm==='following'}">Só quem eu sigo</button></div></div>
+     <label class="swr" style="border-top:1px solid var(--line);margin-top:4px;padding:12px 0 0"><span class="t"><b>Mostrar quando estou online</b><small>Seus amigos veem "Online" ou "visto há 3 h". Desligado, ninguém vê.</small></span><input type="checkbox" class="sw" data-cfg="online" ${me.show_online===false?'':'checked'}></label></div>`}
   const nc=typeof nCard==='function'?nCard():'';if(nc)h+=`<p class="cfg-h">Notificações</p>${nc.replace('<h3>Notificações</h3>','')}`;
   const mu=cfgMusic();if(mu)h+=`<p class="cfg-h">Música</p>${mu}`;
   h+=`<p class="cfg-h">Treino</p>${cfgTraining()}`;
   h+=`<p class="cfg-h">Aparência</p>${cfgLook()}`;
   if(typeof AIHOST!=='undefined'&&AIHOST&&typeof aiCard==='function')h+=`<p class="cfg-h">Inteligência artificial</p>${aiCard()}`;
-  h+=`<p class="cfg-h">Ajuda</p><div class="card"><button class="btn block" data-act="cfgTour">Ver o tutorial de novo</button></div>`;
+  h+=`<p class="cfg-h">Ajuda</p><div class="card"><button class="btn block" data-act="cfgTour">Ver o tutorial de novo</button><button class="btn block" data-act="newsAgain" style="margin-top:8px">Ver as novidades da versão</button><button class="btn block" data-act="legalOpen" data-k="termos" style="margin-top:8px">Termos de uso</button><button class="btn block" data-act="legalOpen" data-k="privacidade" style="margin-top:8px">Política de privacidade</button></div>`;
   h+=`<p class="cfg-h">Sobre</p>${cfgAbout()}<p class="hint" style="text-align:center">Estimativas de calorias e macros são aproximadas e não substituem nutricionista ou médico.</p></div>`;
   return h}
 function cfgDraw(){if(!CFG.el||!CFG.el.isConnected)return;const b=CFG.el.querySelector('.sheet-b');if(!b)return;const y=b.scrollTop;b.innerHTML=cfgHtml();b.scrollTop=y}
 function cfgOpen(){CFG.el=openSheet('Configurações',cfgHtml(),(b,el)=>{el.querySelector('.sheet').style.maxHeight='96%'})}
 {const _r=render;render=function(){_r.apply(this,arguments);cfgDraw()}}
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='online'){presSet(t.checked);return}if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='online'){presSet(t.checked);return}if(t.dataset&&t.dataset.cfg==='private'){privSet({is_private:t.checked},t.checked?'Perfil privado: agora você aprova quem segue você':'Perfil aberto: qualquer pessoa pode seguir você');return}if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
 window.addEventListener('focus',()=>setTimeout(cfgDraw,400));
 Object.assign(ACT,{
   cfgTheme:el=>{try{localStorage.setItem('athos.theme',el.dataset.k)}catch(e){}applyTheme(el.dataset.k);render()},
@@ -2933,7 +2999,8 @@ Object.assign(ACT,{
   cfgTour:()=>{closeSheet(CFG.el);tourStart()},
   cfgUpdate:async el=>{el.disabled=true;el.textContent='Procurando…';const r=await updCheck(true);el.disabled=false;el.textContent='Procurar atualização';
     if(r==='none')toast('Você já está na versão mais nova');else if(r==='error')toast('Não consegui verificar. Confira a internet.')},
-  cfgOpen:()=>cfgOpen()});
+  cfgOpen:()=>cfgOpen(),
+  cfgDm:el=>privSet({dm_policy:el.dataset.k},el.dataset.k==='all'?'Qualquer pessoa pode mandar mensagem':'Só quem você segue pode mandar mensagem')});
 /* Perfil fica só com dados e metas */
 {const _vp=VIEWS.perfil;VIEWS.perfil=function(){let h=_vp.apply(this,arguments);const k='<div class="card"><h3>Descanso entre séries</h3>';const i=h.indexOf(k);
   if(i>=0){const j=h.indexOf('</div></div>',i);if(j>0)h=h.slice(0,i)+h.slice(j+12)}
@@ -3115,6 +3182,464 @@ perfilSlots=h=>{if(!SOC.user||!SOC.me)return h;const m=SOC.me;
 /* sincroniza XP ao entrar e de tempos em tempos */
 let xpUid=null;setInterval(()=>{const id=SOC.user?SOC.user.id:null;if(id!==xpUid){xpUid=id;CH.joined=null;CH.boards={};XP.medals=null;XP.lastL=null;XP.sent=null;if(id)setTimeout(xpSync,4000)}else if(id)xpSync()},30000);
 setInterval(()=>{const id=SOC.user?SOC.user.id:null;if(id&&id!==xpUid){xpUid=id;CH.joined=null;XP.sent=null;XP.lastL=null;setTimeout(xpSync,4000)}},2000);
+/* ---------- Fotos de evolução na nuvem ----------
+   Pasta privada "progresso" (só o dono vê). Até 20 fotos por conta: ao chegar em 20,
+   as 10 mais antigas saem da nuvem (continuam no aparelho onde estão).
+   Quem fica 30 dias sem abrir o app perde as fotos da nuvem (limpeza diária no servidor). */
+const PPC={busy:false,again:false,n:null,touched:0};
+const PPC_MAX=20,PPC_DROP=10;
+function ppcOn(){return!!(typeof SOC!=='undefined'&&SOC&&SOC.sb&&SOC.user)}
+function ppcPath(id){return SOC.user.id+'/'+id+'.jpg'}
+function ppcNote(empty){if(!ppcOn())return'As fotos ficam só neste aparelho.';
+  const n=PPC.n==null?'':` (${PPC.n} de ${PPC_MAX})`;
+  return empty?`Ficam neste aparelho e numa pasta privada da sua conta, que só você vê. A nuvem guarda até ${PPC_MAX} fotos: ao chegar em ${PPC_MAX}, as ${PPC_DROP} mais antigas saem da nuvem, mas continuam neste aparelho. Se ficar 30 dias sem abrir o ATHOS, as fotos da nuvem são apagadas.`
+    :`Só você vê. ☁ na nuvem${n}; ao chegar em ${PPC_MAX}, as ${PPC_DROP} mais antigas saem da nuvem. 30 dias sem abrir o app apaga as da nuvem.`}
+function ppcBlob(d){const b=atob(d.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:'image/jpeg'})}
+function ppcData(bl){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(bl)})}
+function ppcTell(n){PPC.n=n;try{NATIVE&&NATIVE.ppCloud&&NATIVE.ppCloud(n)}catch(e){}}
+async function ppcTouch(force){if(!ppcOn())return;const now=Date.now();if(!force&&now-PPC.touched<3600e3)return;PPC.touched=now;try{await SOC.sb.rpc('touch_active')}catch(e){}}
+async function ppcRows(){const r=await SOC.sb.from('progress_photos').select('id,taken,created_at').eq('user_id',SOC.user.id).order('created_at',{ascending:true});if(r.error)throw r.error;return r.data||[]}
+async function ppcUpload(it){const data=await ppGet(it.id);if(!data)return false;
+  const up=await SOC.sb.storage.from('progresso').upload(ppcPath(it.id),ppcBlob(data),{contentType:'image/jpeg',upsert:false});
+  if(up.error&&!/exist|duplicate/i.test(up.error.message||''))throw up.error;
+  const ins=await SOC.sb.from('progress_photos').insert({user_id:SOC.user.id,id:it.id,taken:it.date});
+  if(ins.error&&!/duplicate|23505/i.test((ins.error.message||'')+(ins.error.code||''))){await SOC.sb.storage.from('progresso').remove([ppcPath(it.id)]).catch(()=>{});throw ins.error}
+  it.c=1;return true}
+/* chegou em 20: as 10 mais antigas saem da nuvem */
+async function ppcRotate(rows){if(rows.length<PPC_MAX)return rows;const old=rows.slice(0,PPC_DROP),ids=old.map(x=>x.id);
+  const rm=await SOC.sb.storage.from('progresso').remove(ids.map(ppcPath));if(rm.error)throw rm.error;
+  const del=await SOC.sb.from('progress_photos').delete().eq('user_id',SOC.user.id).in('id',ids);if(del.error)throw del.error;
+  ppIdx().forEach(it=>{if(ids.includes(it.id))it.c=-1});ppSaveIdx();
+  toast(`Sua nuvem chegou a ${PPC_MAX} fotos: as ${PPC_DROP} mais antigas saíram da nuvem (continuam neste aparelho).`);
+  return rows.slice(PPC_DROP)}
+async function ppcSync(loud){if(!ppcOn())return;if(PPC.busy){PPC.again=true;return}PPC.busy=true;
+  try{ppcTouch();let rows=await ppcRows();const L=ppIdx();let ch=false;
+    /* baixa as da nuvem que não estão neste aparelho (celular novo, por exemplo) */
+    for(const r of rows){const it=L.find(z=>z.id===r.id);if(it){if(it.c!==1){it.c=1;ch=true}continue}
+      const d=await SOC.sb.storage.from('progresso').download(ppcPath(r.id));if(d.error||!d.data)continue;
+      await ppPut(r.id,await ppcData(d.data));L.push({id:r.id,date:r.taken,c:1,u:SOC.user.id});ch=true}
+    /* as que estavam na nuvem e sumiram de lá (outro aparelho girou ou a limpeza dos 30 dias) */
+    for(const it of L)if(it.c===1&&!rows.find(r=>r.id===it.id)){it.c=-1;ch=true}
+    /* envia as novas, da mais antiga para a mais nova */
+    const pend=L.filter(it=>!it.c).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+    for(const it of pend){rows=await ppcRotate(rows);if(await ppcUpload(it)){rows.push({id:it.id,taken:it.date});ch=true}}
+    rows=await ppcRotate(rows);
+    if(ch)ppSaveIdx();ppcTell(rows.length);
+    if(loud&&pend.length)toast('Foto guardada na sua nuvem privada');
+    if(S.tab==='evolucao'&&!sheets.length)render()}
+  catch(e){if(loud)toast('A foto ficou no aparelho. Envio para a nuvem quando a internet voltar.')}
+  finally{PPC.busy=false;if(PPC.again){PPC.again=false;setTimeout(()=>ppcSync(),500)}}}
+/* apagar a foto também apaga da nuvem */
+{const _del=ppDel;ppDel=async function(id){await _del(id);if(!ppcOn())return;try{await SOC.sb.storage.from('progresso').remove([ppcPath(id)]);await SOC.sb.from('progress_photos').delete().eq('user_id',SOC.user.id).eq('id',id);ppcSync()}catch(e){}}}
+/* quando entra na conta e quando volta para o app */
+{let last=null;setInterval(()=>{const u=ppcOn()?SOC.user.id:null;if(u!==last){last=u;PP.list=null;if(u){ppcTouch(true);ppcSync()}}},3000)}
+{const _r=window.androidResume;window.androidResume=function(){try{_r&&_r()}catch(e){}ppcTouch()}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')ppcTouch()});
+/* ---------- Privacidade: perfil privado, pedidos para seguir, mensagens, termos ---------- */
+const LEGAL_V='2026-10';
+const LEGAL_EMAIL='athos.app01@gmail.com';
+const LEGAL_DATE='29 de outubro de 2026';
+function legalContact(){return LEGAL_EMAIL?`pelo e-mail <b>${esc(LEGAL_EMAIL)}</b>`:'pelo botão “Denunciar” no app ou pelo contato informado na página do ATHOS'}
+function legalHtml(k){
+  if(k==='termos')return`<h2>Termos de uso do ATHOS</h2><p class="small muted">Atualizado em ${LEGAL_DATE}</p>
+<h3>1. O que é o ATHOS</h3><p>O ATHOS é um aplicativo gratuito para registrar treinos, dieta, corridas e acompanhar a evolução, com uma rede social para treinar junto com amigos. Ele é mantido por Higo Lirio, pessoa física, no Brasil.</p>
+<h3>2. Quem pode usar</h3><p>É preciso ter <b>13 anos ou mais</b>. Quem tem menos de 18 anos só pode usar com autorização dos pais ou responsáveis. Cada pessoa pode ter uma conta, com dados verdadeiros.</p>
+<h3>3. Não é orientação médica</h3><p>Calorias, macros, sugestões de carga, planos e respostas da inteligência artificial são <b>estimativas</b> e não substituem médico, nutricionista ou educador físico. Antes de começar dieta ou treino intenso, procure um profissional. Você treina por sua conta e risco.</p>
+<h3>4. Regras da rede social</h3><p>Não é permitido: ofender, ameaçar ou assediar; publicar conteúdo sexual, violento, discriminatório ou ilegal; fingir ser outra pessoa; fazer spam ou propaganda; publicar foto ou dado de outra pessoa sem autorização; trapacear em desafios e rankings. Você é responsável pelo que publica.</p>
+<h3>5. Moderação</h3><p>Você pode bloquear e denunciar pessoas e posts. O ATHOS pode remover conteúdo, zerar pontos obtidos com trapaça e suspender ou excluir contas que desrespeitem estas regras.</p>
+<h3>6. Seu conteúdo</h3><p>Os treinos, fotos e textos continuam sendo seus. Ao publicar, você permite que o ATHOS os mostre para as pessoas que você escolheu (público, seguidores ou só você).</p>
+<h3>7. O serviço</h3><p>O ATHOS é oferecido gratuitamente, do jeito que está, e pode ter falhas, ficar fora do ar ou mudar de funções. Recomendamos manter o app atualizado. Funções pagas, se existirem no futuro, serão avisadas antes e serão opcionais.</p>
+<h3>8. Encerrar a conta</h3><p>Você pode excluir sua conta quando quiser, em Configurações → Conta. Isso apaga seus dados do servidor, como explicado na Política de privacidade.</p>
+<h3>9. Mudanças e lei</h3><p>Se estes termos mudarem, avisaremos no app. Valem as leis do Brasil. Dúvidas: ${legalContact()}.</p>`;
+  return`<h2>Política de privacidade do ATHOS</h2><p class="small muted">Atualizado em ${LEGAL_DATE} · Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018)</p>
+<h3>Quem cuida dos seus dados</h3><p>Higo Lirio, responsável pelo ATHOS. Contato ${legalContact()}.</p>
+<h3>Quais dados guardamos</h3><p><b>Conta:</b> nome, e-mail e senha (a senha é guardada de forma cifrada; ninguém consegue lê-la).<br><b>Perfil:</b> foto, cidade, bio, ID de 7 números, nível e medalhas.<br><b>Saúde e corpo:</b> treinos, cargas, refeições, água, peso, medidas e fotos de evolução. São dados sensíveis, guardados só com o seu consentimento.<br><b>Atividades:</b> corridas, caminhadas e pedais com distância, tempo, passos e o trajeto do GPS (a localização só é usada enquanto você grava uma atividade).<br><b>Rede social:</b> posts, curtidas, comentários, mensagens, quem você segue, clubes, desafios, denúncias e bloqueios.<br><b>Uso:</b> quando você abriu o app pela última vez, status online (pode ser escondido) e quantas vezes usou a IA no dia.</p>
+<h3>Para que usamos</h3><p>Para o app funcionar: guardar e sincronizar seus registros, mostrar sua evolução, fazer a rede social, os rankings e as notificações. <b>Não vendemos seus dados e não mostramos anúncios.</b></p>
+<h3>Quem vê o quê</h3><p>Treinos, dieta, peso, medidas e fotos de evolução são <b>só seus</b>. Posts aparecem para quem você escolher em cada um. Com o perfil privado, só quem você aceitar vê seus posts. Seu perfil (nome e foto) aparece para quem procura seu nome ou ID e para quem já tem ligação com você.</p>
+<h3>Serviços que ajudam o ATHOS</h3><p><b>Supabase</b>: servidor onde ficam a conta e os dados. <b>Google Gemini e Groq</b>: só quando você usa a inteligência artificial, recebem o texto e as fotos que você mandou para ela responder. <b>Open Food Facts</b>: recebe só o código de barras lido. <b>GitHub</b>: hospeda o site e as atualizações. <b>Gmail</b>: envia os códigos de confirmação. Alguns desses serviços ficam fora do Brasil.</p>
+<h3>Por quanto tempo</h3><p>Enquanto sua conta existir. As fotos de evolução guardadas na nuvem ficam numa pasta privada, no máximo 20: ao chegar em 20, as 10 mais antigas saem da nuvem; e são apagadas se você ficar 30 dias sem abrir o app (elas continuam no seu celular). Ao excluir a conta, apagamos perfil, posts, mensagens, registros e fotos do servidor em até 1 dia.</p>
+<h3>Seus direitos</h3><p>Você pode ver, corrigir, baixar (backup em Configurações) e apagar seus dados, além de retirar o consentimento excluindo a conta. Para qualquer pedido sobre seus dados, fale ${legalContact()}.</p>
+<h3>Segurança</h3><p>Usamos conexão cifrada, regras no servidor para que cada pessoa só acesse o que é dela, e confirmação de e-mail por código. Nenhum sistema é 100% seguro; se acontecer um incidente que afete você, avisaremos.</p>
+<h3>Menores de idade</h3><p>O ATHOS é para quem tem 13 anos ou mais. Menores de 18 precisam da autorização dos pais ou responsáveis.</p>`}
+function legalOpen(k){document.querySelectorAll('.legalx').forEach(x=>x.remove());
+  const w=document.createElement('div');w.className='legalx';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
+  w.innerHTML=`<div class="legalx-in"><button class="icon-btn legalx-c" aria-label="Fechar">✕</button><div class="legalx-b">${legalHtml(k)}</div><button class="btn primary block legalx-ok">Entendi</button></div>`;
+  document.body.appendChild(w);const close=()=>w.remove();w.querySelector('.legalx-c').onclick=close;w.querySelector('.legalx-ok').onclick=close;w.onclick=e=>{if(e.target===w)close()}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.legalx{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.legalx-in{position:relative;background:var(--bg);color:var(--fg);width:100%;max-width:560px;max-height:92%;border-radius:22px 22px 0 0;padding:18px 18px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.legalx-b{overflow:auto;flex:1;line-height:1.5;font-size:14.5px}.legalx-b h2{font:800 22px var(--display);text-transform:uppercase;margin:0 36px 2px 0}.legalx-b h3{font:700 16px var(--display);text-transform:uppercase;letter-spacing:.03em;margin:16px 0 4px}.legalx-b p{margin:0 0 6px}
+.legalx-c{position:absolute;top:12px;right:12px}
+</style>`);
+document.addEventListener('click',e=>{const a=e.target.closest('[data-legal]');if(!a)return;e.preventDefault();e.stopPropagation();legalOpen(a.dataset.legal)},true);
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='gTerms'){try{localStorage.setItem('athos.termsOk',e.target.checked?LEGAL_V:'')}catch(_){}}});
+
+/* quem já tinha conta aceita os termos uma vez */
+let legalAsked=false;
+function legalCheck(){if(!SOC||!SOC.user||!S.profile||legalAsked)return;if(S.profile.termsV===LEGAL_V)return;
+  let ok='';try{ok=localStorage.getItem('athos.termsOk')||''}catch(e){}
+  if(ok===LEGAL_V){S.profile.termsV=LEGAL_V;try{store.mark('profile')}catch(e){}saveLocal();return}
+  if(document.querySelector('.legalx')||document.getElementById('legalAsk'))return;
+  if(typeof sheets!=='undefined'&&sheets.length)return;
+  {const se=document.getElementById('session');if(se&&!se.hidden)return}if(document.querySelector('.tour,#tour,.tourx'))return;
+  if(document.getElementById('authGate')&&!document.getElementById('authGate').hidden)return;
+  legalAsked=true;
+  const el=openSheet('Termos e privacidade',`<div id="legalAsk"><p>O ATHOS agora tem <b>Termos de uso</b> e <b>Política de privacidade</b>, explicando quais dados guardamos e como você controla quem vê o quê.</p>
+   <div class="btns"><button class="btn" data-legal="termos">Ler os termos</button><button class="btn" data-legal="privacidade">Ler a privacidade</button></div>
+   <label class="check" style="align-items:flex-start;margin-top:6px"><input type="checkbox" id="lgAge"><span>Tenho 13 anos ou mais (se tenho menos de 18, meus pais ou responsáveis autorizaram) e aceito os termos e a política.</span></label>
+   <button class="btn primary block" data-s="ok">Continuar</button></div>`,(b,w)=>{
+    b.querySelector('[data-s=ok]').onclick=()=>{if(!b.querySelector('#lgAge').checked){toast('Marque a caixa para continuar');return}
+      S.profile.termsV=LEGAL_V;try{store.mark('profile')}catch(e){}saveLocal();closeSheet(w);toast('Obrigado!')}})}
+setTimeout(()=>setInterval(legalCheck,4000),6000);
+
+/* perfil privado e mensagens */
+async function privSet(upd,msg){if(!SOC.user)return;
+  try{const r=await sbq(SOC.sb.from('profiles').update(upd).eq('id',SOC.user.id).select());if(r&&r[0]){SOC.me=Object.assign(SOC.me||{},r[0]);SOC.prof[SOC.user.id]=SOC.me}toast(msg)}catch(e){toast(sbErr(e))}
+  render()}
+
+/* pedidos para seguir */
+async function reqSheet(){if(!SOC.user)return;
+  const el=openSheet('Pedidos para seguir',`<div id="rqL">${thinking('Carregando…')}</div>`,async(b,w)=>{
+    const box=b.querySelector('#rqL');
+    const draw=async()=>{try{const rows=await sbq(SOC.sb.from('follow_requests').select('requester,created_at').eq('target',SOC.user.id).order('created_at',{ascending:false}));
+        SOC.reqIn=rows.length;await loadProfiles(rows.map(r=>r.requester));
+        box.innerHTML=rows.length?rows.map(r=>{const p=SOC.prof[r.requester]||{id:r.requester,name:'Atleta'};return`<div class="li" style="gap:10px"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex:1;min-width:0;flex-wrap:nowrap;text-align:left">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b><small>${p.public_id?'ID '+esc(fmtId(p.public_id))+' · ':''}${ago(r.created_at)}</small></span></button><button class="btn sm primary" data-ok="${r.requester}">Aceitar</button><button class="btn sm" data-no="${r.requester}">Recusar</button></div>`}).join('')
+          :`<div class="empty"><b>Nenhum pedido</b><span>Quando alguém pedir para seguir seu perfil privado, aparece aqui.</span></div>`}
+      catch(e){box.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`}};
+    box.onclick=async e=>{const ok=e.target.closest('[data-ok]'),no=e.target.closest('[data-no]');
+      try{if(ok){ok.disabled=true;await sbq(SOC.sb.rpc('approve_follow',{p_requester:ok.dataset.ok}));SOC.followers=(SOC.followers||0)+1;toast('Pedido aceito')}
+        else if(no){no.disabled=true;await sbq(SOC.sb.from('follow_requests').delete().eq('requester',no.dataset.no).eq('target',SOC.user.id));toast('Pedido recusado')}
+        else return;await draw()}catch(err){toast(sbErr(err))}};
+    await draw()})}
+Object.assign(ACT,{reqSheet:()=>reqSheet(),legalOpen:el=>legalOpen(el.dataset.k)});
+{const _r=window.androidResume;window.androidResume=function(){try{_r&&_r()}catch(e){}legalAsked=false}}
+{const _o=window.androidOpen;window.androidOpen=function(o){if(o==='clubes'){const t=()=>{if(SOC&&SOC.user){go('social');SOC.sub='clubes';SOC.clubs=null;loadClubs();render()}else setTimeout(t,800)};t();return}if(o==='pedidos'){const t=()=>{if(SOC&&SOC.user){go('social');reqSheet()}else setTimeout(t,800)};t();return}return _o&&_o(o)}}
+/* ---------- Chat e clubes (visual novo e mais opções) ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+/* lista de conversas */
+.cx-top{display:flex;flex-direction:column;gap:10px}
+.cx-search{position:relative}.cx-search input{padding-left:38px}.cx-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2}
+.cx-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.cx-chips::-webkit-scrollbar{display:none}
+.cx-chip{border:1px solid var(--cardline);background:var(--surface);color:var(--fg);border-radius:99px;padding:7px 13px;font:600 13px var(--body);white-space:nowrap;flex:none}
+.cx-chip[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.cvl{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--cardline);border-radius:20px;overflow:hidden}
+.cv{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;position:relative}
+.cv+.cv{border-top:1px solid var(--line)}
+.cv:active{background:var(--surface2)}
+.cv .avw{position:relative;flex:none}.cv .av{width:50px;height:50px;font-size:18px}
+.cv .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cv .t b{display:flex;align-items:center;gap:6px;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv .t small{color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv.unr .t small{color:var(--fg);font-weight:600}
+.cv .r{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.cv .r time{font-size:12px;color:var(--muted)}.cv.unr .r time{color:var(--accent);font-weight:700}
+.cv .nb{min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#000;font:800 11.5px/20px var(--body);text-align:center;padding:0 6px}
+.cv .mut{font-size:12px;opacity:.6}
+.ctile{display:grid;place-items:center;border-radius:16px;color:#fff;flex:none;font-size:24px;line-height:1}
+/* conversa */
+.chatS{height:96%;max-height:96%!important}
+.chatS .sheet-h{padding:10px 12px;border-bottom:1px solid var(--line);gap:10px;justify-content:flex-start}
+.chatS .sheet-h h2{display:none}
+.chh{display:flex;align-items:center;gap:10px;flex:1;min-width:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:0}
+.chh .av,.chh .ctile{width:42px;height:42px;font-size:16px}
+.chh .t{min-width:0;display:flex;flex-direction:column}.chh .t b{font:700 17px var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chh .t small{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chh .t small.on{color:var(--green)}
+.chatS .sheet-b{padding-top:0;padding-bottom:0;gap:0;flex:1}
+.chpin{position:sticky;top:0;z-index:2;margin:0 -16px;padding:9px 16px;background:color-mix(in srgb,var(--accent) 14%,var(--bg));border-bottom:1px solid var(--line);font-size:13.5px;display:flex;gap:8px;align-items:flex-start}
+.chbox{display:flex;flex-direction:column;gap:2px;padding:12px 0 8px;flex:1}
+.chday{align-self:center;margin:12px 0 8px;font:700 11.5px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--surface);border:1px solid var(--cardline);padding:4px 10px;border-radius:99px}
+.cmr{display:flex;gap:7px;align-items:flex-end;max-width:84%;margin-top:6px}.cmr.cont{margin-top:1px}
+.cmr.me{align-self:flex-end;flex-direction:row-reverse}
+.cmr .mav{width:28px;flex:none}.cmr .mav .av{width:28px;height:28px;font-size:11px}
+.bb{position:relative;padding:8px 11px 6px;border-radius:18px;background:var(--surface);border:1px solid var(--cardline);overflow-wrap:anywhere;white-space:pre-wrap;font-size:15px;line-height:1.35;min-width:56px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.cmr:not(.me) .bb{border-bottom-left-radius:6px}.cmr.me .bb{border-bottom-right-radius:6px;background:var(--accent);color:#141414;border-color:transparent}
+.cmr.cont:not(.me) .bb{border-top-left-radius:6px}.cmr.cont.me .bb{border-top-right-radius:6px}
+.bb .who{display:block;font:700 12.5px var(--body);margin-bottom:2px}
+.bb .tm{float:right;margin:6px 0 -2px 10px;font-size:10.5px;opacity:.65;white-space:nowrap}
+.bb .q{display:block;border-left:3px solid currentColor;padding:3px 8px;margin:0 0 5px;border-radius:6px;background:rgba(127,127,127,.15);font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.bb .q b{display:block;font-size:12px}
+.shr{display:flex;gap:10px;align-items:center;padding:4px 2px;min-width:200px}
+.shr .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:rgba(0,0,0,.18);flex:none}
+.cmr:not(.me) .shr .ic{background:var(--surface2)}
+.shr b{display:block;font:800 15px var(--display);text-transform:uppercase}.shr small{font-size:12.5px;opacity:.8}
+.rx{display:flex;gap:4px;flex-wrap:wrap;margin-top:-6px;position:relative;z-index:1;padding:0 8px}.cmr.me+.rxw .rx,.rxw.me .rx{justify-content:flex-end}
+.rx span{background:var(--surface2);border:2px solid var(--bg);border-radius:99px;padding:1px 6px;font-size:12.5px}
+.rx span.mine{background:color-mix(in srgb,var(--accent) 30%,var(--surface2))}
+.rxw{display:flex}.rxw.me{justify-content:flex-end}.rxw:not(.me){padding-left:35px}
+.seen{align-self:flex-end;font-size:11.5px;color:var(--muted);margin:2px 4px 0}
+.chcomp{position:sticky;bottom:0;background:var(--bg);margin:0 -16px;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.chrep{display:flex;align-items:center;gap:8px;background:var(--surface);border-left:3px solid var(--accent);border-radius:10px;padding:6px 10px;font-size:13px}
+.chrep span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chin{display:flex;gap:8px;align-items:flex-end}
+.chin textarea{flex:1;min-height:44px;max-height:120px;height:44px;border-radius:22px;padding:11px 16px;resize:none;line-height:1.3}
+.rbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid var(--cardline);background:var(--surface);color:var(--fg);font-size:20px}
+.rbtn.send{background:var(--accent);border-color:var(--accent);color:#000}.rbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.emrow{display:flex;justify-content:space-between;gap:4px;background:var(--surface);border:1px solid var(--cardline);border-radius:99px;padding:6px 8px}
+.emrow button{font-size:28px;border:0;background:none;padding:4px 6px;border-radius:50%;line-height:1}.emrow button[aria-pressed=true]{background:var(--surface2)}
+.mact{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--cardline);border-radius:18px;overflow:hidden}
+.mact button{display:flex;align-items:center;gap:12px;padding:14px 16px;border:0;background:none;color:inherit;font:600 15px var(--body);text-align:left}.mact button+button{border-top:1px solid var(--line)}
+.mact button.danger{color:var(--red)}
+.mprev{background:var(--surface);border-radius:14px;padding:10px 12px;font-size:14px;max-height:90px;overflow:hidden;color:var(--muted)}
+/* clubes */
+.clg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.clc{position:relative;border:1px solid var(--cardline);background:var(--surface);border-radius:20px;overflow:hidden;text-align:left;color:inherit;font:inherit;padding:0;display:flex;flex-direction:column}
+.clc .bn{height:62px;position:relative}
+.clc .bn .ctile{position:absolute;left:12px;bottom:-20px;width:46px;height:46px;font-size:24px;border:3px solid var(--surface);border-radius:15px}
+.clc .bd{padding:26px 12px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.clc .bd b{font:800 16px var(--display);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clc .bd small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clc .tag{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font:700 11px var(--body);padding:3px 8px;border-radius:99px;backdrop-filter:blur(4px)}
+.clc .tag.hot{background:var(--accent);color:#000}
+.clsec{font:800 15px var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 2px -2px}
+.clubS .sheet-h{position:absolute;top:0;right:0;z-index:3;background:none}.clubS .sheet-h h2{display:none}.clubS .sheet-h .icon-btn{background:rgba(0,0,0,.5);color:#fff;border-color:transparent}.clubS .sheet-b{padding-top:0}.clubS .bn{border-radius:26px 26px 0 0}
+.clh{margin:0 -16px;position:relative}
+.clh .bn{height:120px}
+.clh .ctile{position:absolute;left:16px;top:78px;width:76px;height:76px;font-size:40px;border:4px solid var(--bg);border-radius:22px}
+.clh .in{padding:44px 16px 4px;display:flex;flex-direction:column;gap:4px}
+.clh h2{font:800 28px/1.05 var(--display);text-transform:uppercase;margin:0}
+.clh .meta{color:var(--muted);font-size:13.5px}
+.avs{display:flex;align-items:center}.avs .av{width:28px;height:28px;font-size:11px;border:2px solid var(--bg);margin-left:-8px}.avs .av:first-child{margin-left:0}
+.avs small{margin-left:8px;color:var(--muted);font-size:13px}
+.clbtns{display:flex;gap:8px;flex-wrap:wrap}.clbtns .btn{flex:1;min-width:0}
+.clnote{display:flex;gap:10px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:16px;padding:12px 14px;font-size:14px}
+.clnote b{display:block;font:800 13px var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:2px}
+.goal{display:flex;flex-direction:column;gap:6px}.goal .bar{height:10px;border-radius:9px;background:var(--surface2);overflow:hidden}.goal .bar i{display:block;height:100%;background:var(--accent);border-radius:9px}
+.goal .row{justify-content:space-between}
+.cltabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--cardline);border-radius:14px;padding:4px;position:sticky;top:-2px;z-index:2}
+.cltabs button{flex:1;border:0;background:none;color:var(--muted);font:700 13.5px var(--body);padding:9px 4px;border-radius:10px}
+.cltabs button[aria-selected=true]{background:var(--fg);color:var(--bg)}
+.mbr{display:flex;align-items:center;gap:10px;padding:10px 0}.mbr+.mbr{border-top:1px solid var(--line)}
+.mbr .t{flex:1;min-width:0}.mbr .t b{display:block}.mbr .t small{color:var(--muted);font-size:12.5px}
+.crown{font-size:11px;background:var(--accent);color:#000;border-radius:99px;padding:1px 7px;font-weight:800;margin-left:6px;vertical-align:2px}
+.pick{display:flex;flex-wrap:wrap;gap:6px}.pick button{width:44px;height:44px;border-radius:12px;border:2px solid transparent;background:var(--surface);font-size:22px}
+.pick button[aria-pressed=true]{border-color:var(--accent)}
+.pick.col button{border-radius:50%;width:38px;height:38px}.pick.col button[aria-pressed=true]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+</style>`);
+
+/* ---------- utilidades ---------- */
+const CL_KINDS=[['academia','Academia','🏋️'],['corrida','Corrida','🏃'],['ciclismo','Ciclismo','🚴'],['crossfit','Crossfit','🤸'],['luta','Luta','🥊'],['funcional','Funcional','⚡'],['outro','Outro','⭐']];
+const CL_ICONS=['🏋️','🏃','🚴','💪','🔥','⚡','🥊','🤸','🏊','⛰️','🏆','🦁','🐺','🦅','⚔️','🛡️'];
+const CL_COLORS=['#E9B640','#E5484D','#F76B15','#30A46C','#0090FF','#8E4EC6','#D6409F','#12A594'];
+const CH_EMO=['❤️','🔥','💪','👏','😂','😮'];
+const clKind=k=>CL_KINDS.find(x=>x[0]===k)||CL_KINDS[CL_KINDS.length-1];
+const clColor=c=>c&&/^#[0-9a-fA-F]{6}$/.test(c.color||'')?c.color:CL_COLORS[Math.abs([...String(c&&c.id||'x')].reduce((a,ch)=>a*31+ch.charCodeAt(0)|0,7))%CL_COLORS.length];
+const clIcon=c=>(c&&c.icon)||clKind(c&&c.kind)[2];
+const clBanner=c=>{const k=clColor(c);return`background:radial-gradient(120% 140% at 85% 0%,${k} 0%,color-mix(in srgb,${k} 55%,#000) 55%,#0b0b0b 100%)`};
+const clTile=(c,size)=>`<span class="ctile" style="background:${clColor(c)};${size?`width:${size}px;height:${size}px;font-size:${Math.round(size*.5)}px`:''}">${esc(clIcon(c))}</span>`;
+const hm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+function dayKey(ts){const d=new Date(ts);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}
+function dayLbl(ts){const d=new Date(ts),n=new Date();const y=new Date(n);y.setDate(n.getDate()-1);
+  if(dayKey(d)===dayKey(n))return'Hoje';if(dayKey(d)===dayKey(y))return'Ontem';
+  return d.toLocaleDateString('pt-BR',{weekday:(n-d)<6*864e5?'long':undefined,day:'numeric',month:'short',year:d.getFullYear()!==n.getFullYear()?'numeric':undefined})}
+function cvTime(ts){if(!ts)return'';const d=new Date(ts),n=new Date();if(dayKey(d)===dayKey(n))return hm(ts);const diff=(n-d)/864e5;
+  if(diff<2&&dayLbl(ts)==='Ontem')return'Ontem';if(diff<7)return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+function msgPreview(m){if(!m)return'Sem mensagens ainda';const who=m.user_id===SOC.user.id?'Você: ':'';
+  if(m.kind==='share')return who+'💪 '+((m.meta&&m.meta.t)||'Treino compartilhado');return who+String(m.body||'')}
+function convClub(c){return c&&c.club_id&&(SOC.clubs||[]).find(x=>x.id===c.club_id)}
+const SVG_SEARCH='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+const SVG_SEND='<svg viewBox="0 0 24 24"><path d="M5 12h13M12 5l7 7-7 7"/></svg>';
+const SVG_PLUS='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+const SVG_DOTS='<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+
+/* ---------- lista de conversas ---------- */
+SOC.chatF=SOC.chatF||'todas';
+socMsgsHtml=function(){
+  if(!SOC.convs)return thinking('Carregando conversas…');
+  if(!SOC.clubs)once('clubs',loadClubs);
+  if(!SOC.convs.length)return`<div class="empty"><b>Nenhuma conversa ainda</b><span>Abra o perfil de alguém e toque em “Mensagem”, ou entre num clube para conversar com o grupo.</span></div><button class="btn primary block" data-act="socSub" data-k="pessoas">Encontrar pessoas</button>`;
+  const f=SOC.chatF,nU=SOC.convs.filter(c=>c.unread).length;
+  const L=SOC.convs.filter(c=>f==='naolidas'?c.unread:f==='grupos'?c.is_group:f==='privadas'?!c.is_group:true);
+  const row=c=>{const cl=convClub(c),p=SOC.prof[c.other];const on=!c.is_group&&p&&presTxt(p)==='Online';
+    const pic=c.is_group?clTile(cl||{id:c.id,name:c.name},50):avatar(p);
+    return`<button class="cv${c.unread?' unr':''}" data-act="socChat" data-id="${c.id}" data-name="${esc((c.title||'').toLowerCase())}"><span class="avw">${pic}${on?'<i class="ond"></i>':''}</span>
+      <span class="t"><b>${esc(c.title)}${c.muted?'<span class="mut" title="Silenciada">🔕</span>':''}</b><small>${esc(msgPreview(c.last).slice(0,80))}</small></span>
+      <span class="r"><time>${cvTime(c.last?c.last.created_at:c.last_at)}</time>${c.unread?`<span class="nb">${c.unread>99?'99+':c.unread}</span>`:'<span style="height:20px"></span>'}</span></button>`};
+  return`<div class="cx-top"><label class="cx-search">${SVG_SEARCH}<input id="chatQ" type="search" placeholder="Buscar conversa" autocomplete="off"></label>
+    <div class="cx-chips">${[['todas','Todas'],['naolidas',`Não lidas${nU?' ('+nU+')':''}`],['privadas','Pessoas'],['grupos','Clubes']].map(([k,l])=>`<button class="cx-chip" data-act="chatF" data-k="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div></div>
+    ${L.length?`<div class="cvl" id="cvList">${L.map(row).join('')}</div>`:`<div class="empty"><b>Nada aqui</b><span>${f==='naolidas'?'Você leu todas as mensagens.':'Nenhuma conversa nesse filtro.'}</span></div>`}`};
+document.addEventListener('input',e=>{if(e.target.id==='chatQ'){const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#cvList .cv').forEach(b=>{b.hidden=!!q&&!b.dataset.name.includes(q)})}
+  if(e.target.id==='clubQ'){const q=e.target.value.trim().toLowerCase();document.querySelectorAll('.clc[data-name]').forEach(b=>{b.hidden=!!q&&!b.dataset.name.includes(q)})}});
+
+/* ---------- conversa ---------- */
+socChatSheet=function(convId){
+  const c=(SOC.convs||[]).find(x=>x.id===convId)||{id:convId,title:'Conversa',is_group:false};
+  const cl=convClub(c),p=SOC.prof[c.other];
+  const el=openSheet(c.title,`${cl&&cl.notice?`<div class="chpin"><span>📌</span><span><b>Aviso do clube:</b> ${esc(cl.notice)}</span></div>`:''}<div class="chbox" id="chatBox">${thinking('Carregando…')}</div>
+    <div class="chcomp"><div id="chRep"></div><div class="chin"><button class="rbtn" data-s="plus" aria-label="Compartilhar treino">${SVG_PLUS}</button><textarea id="chatIn" rows="1" placeholder="Mensagem" maxlength="2000"></textarea><button class="rbtn send" data-s="send" aria-label="Enviar">${SVG_SEND}</button></div></div>`,async(b,el)=>{
+    const sh=el.querySelector('.sheet');sh.classList.add('chatS');
+    const hd=el.querySelector('.sheet-h');
+    const sub=()=>{if(c.is_group){const n=cl?cl.n:null;return`<small>${n?n+' membro'+(n===1?'':'s'):'Grupo'}${c.muted?' · 🔕 silenciada':''}</small>`}
+      const t=p?presTxt(p):'';return`<small class="${t==='Online'?'on':''}">${t?esc(t):'Toque para ver o perfil'}${c.muted?' · 🔕':''}</small>`};
+    const drawHd=()=>{hd.innerHTML=`<button class="icon-btn" data-close aria-label="Voltar">←</button><button class="chh" data-s="who">${c.is_group?clTile(cl||{id:c.id},42):avatar(p)}<span class="t"><b>${esc(c.title)}</b>${sub()}</span></button><button class="icon-btn" data-s="menu" aria-label="Opções">${SVG_DOTS}</button>`};drawHd();
+    const box=b.querySelector('#chatBox');let list=[],rx={},otherRead=c.otherRead||null,reply=null;
+    const byId=id=>list.find(m=>m.id===id);
+    const bodyHtml=m=>{if(m.kind==='share'){const x=m.meta||{};return`<span class="shr"><span class="ic">${esc(x.i||'💪')}</span><span><b>${esc(x.t||'Treino')}</b><small>${esc(x.sub||'')}${x.d?' · '+esc(dlabel(x.d,{day:'numeric',month:'short'})):''}</small></span></span>`}return esc(m.body)};
+    const draw=()=>{if(!list.length){box.innerHTML=`<div class="empty" style="margin:auto 0"><b>${c.is_group?'Comece a conversa do clube':'Diga oi! 👋'}</b><span>${c.is_group?'Combine treinos, mande desafios e motive a galera.':'Mande uma mensagem ou compartilhe seu último treino com o +.'}</span></div>`;return}
+      let h='',pd='',pu='',pt=0;const myLast=[...list].reverse().find(m=>m.user_id===SOC.user.id);
+      for(const m of list){const t=new Date(m.created_at).getTime(),dk=dayKey(m.created_at);
+        if(dk!==pd){h+=`<span class="chday">${esc(dayLbl(m.created_at))}</span>`;pu='';}
+        const me=m.user_id===SOC.user.id,cont=pu===m.user_id&&t-pt<5*60e3;
+        const q=m.reply_to?byId(m.reply_to):null;
+        const r=rx[m.id]||[];const agg={};r.forEach(x=>{agg[x.emoji]=(agg[x.emoji]||0)+1});
+        h+=`<div class="cmr${me?' me':''}${cont?' cont':''}" data-mid="${m.id}">${c.is_group&&!me?`<span class="mav">${cont?'':avatar(SOC.prof[m.user_id],'sm')}</span>`:''}<div class="bb" data-s="msg" data-id="${m.id}">${c.is_group&&!me&&!cont?`<span class="who" style="color:${avColor(m.user_id)}">${esc(pName(m.user_id))}</span>`:''}${q?`<span class="q" data-s="jump" data-id="${q.id}"><b>${esc(q.user_id===SOC.user.id?'Você':pName(q.user_id))}</b>${esc(q.kind==='share'?'💪 '+((q.meta&&q.meta.t)||'Treino'):q.body)}</span>`:m.reply_to?'<span class="q">Mensagem apagada</span>':''}${bodyHtml(m)}<span class="tm">${hm(m.created_at)}</span></div></div>`;
+        if(r.length)h+=`<div class="rxw${me?' me':''}"><div class="rx">${Object.entries(agg).map(([e,n])=>`<span class="${r.some(x=>x.emoji===e&&x.user_id===SOC.user.id)?'mine':''}">${e}${n>1?' '+n:''}</span>`).join('')}</div></div>`;
+        if(!c.is_group&&me&&m===myLast&&otherRead&&new Date(otherRead)>=new Date(m.created_at))h+=`<span class="seen">Visto ✓✓</span>`;
+        pd=dk;pu=m.user_id;pt=t}
+      box.innerHTML=h;b.scrollTop=b.scrollHeight};
+    const drawRep=()=>{const r=b.querySelector('#chRep');r.innerHTML=reply?`<div class="chrep"><span><b>${esc(reply.user_id===SOC.user.id?'Você':pName(reply.user_id))}</b> · ${esc(reply.kind==='share'?'💪 '+((reply.meta&&reply.meta.t)||'Treino'):reply.body)}</span><button class="icon-btn" data-s="unrep" aria-label="Cancelar resposta" style="width:28px;height:28px">✕</button></div>`:''};
+    const loadRx=async()=>{const ids=list.map(m=>m.id);if(!ids.length)return;try{const r=await sbq(SOC.sb.from('message_reactions').select('*').in('message_id',ids));rx={};r.forEach(x=>{(rx[x.message_id]=rx[x.message_id]||[]).push(x)})}catch(e){}};
+    const markRead=()=>SOC.sb.from('conversation_members').update({last_read:new Date().toISOString()}).eq('conversation_id',convId).eq('user_id',SOC.user.id).then(()=>{});
+    SOC.openConv={id:convId,push:async m=>{if(!document.body.contains(el)){SOC.openConv=null;return}if(list.some(x=>x.id===m.id))return;await loadProfiles([m.user_id]).catch(()=>{});list.push(m);if(m.user_id!==SOC.user.id)otherRead=new Date().toISOString();draw();markRead()}};
+    try{list=(await sbq(SOC.sb.from('messages').select('*').eq('conversation_id',convId).order('created_at',{ascending:false}).limit(150))).reverse();
+      await loadProfiles(list.map(m=>m.user_id));await loadRx();
+      if(!c.is_group){try{const mm=await sbq(SOC.sb.from('conversation_members').select('user_id,last_read').eq('conversation_id',convId));const o=mm.find(x=>x.user_id!==SOC.user.id);if(o)otherRead=o.last_read}catch(e){}}
+      draw();markRead();if(c.unread){SOC.unread=Math.max(0,SOC.unread-c.unread);c.unread=0;drawDot()}}
+    catch(e){box.innerHTML=`<p class="hint">${esc(sbErr(e))}</p>`}
+    const ta=b.querySelector('#chatIn');
+    const grow=()=>{ta.style.height='44px';ta.style.height=Math.min(120,ta.scrollHeight)+'px'};ta.addEventListener('input',grow);
+    const sendRow=async row=>{try{const m=(await sbq(SOC.sb.from('messages').insert({conversation_id:convId,user_id:SOC.user.id,...row}).select()))[0];if(!list.some(x=>x.id===m.id)){list.push(m);draw()}return true}catch(err){toast(sbErr(err));return false}};
+    const send=async()=>{const body=ta.value.trim();if(!body)return;ta.value='';grow();const rp=reply;reply=null;drawRep();
+      if(!await sendRow({body,reply_to:rp?rp.id:null})){ta.value=body;reply=rp;drawRep()}};
+    b.querySelector('[data-s=send]').onclick=send;
+    ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!('ontouchstart' in window)){e.preventDefault();send()}});
+    const react=async(m,e)=>{const mine=(rx[m.id]||[]).find(x=>x.user_id===SOC.user.id);
+      try{if(mine&&mine.emoji===e){await sbq(SOC.sb.from('message_reactions').delete().eq('message_id',m.id).eq('user_id',SOC.user.id));rx[m.id]=(rx[m.id]||[]).filter(x=>x!==mine)}
+        else if(mine){await sbq(SOC.sb.from('message_reactions').update({emoji:e}).eq('message_id',m.id).eq('user_id',SOC.user.id));mine.emoji=e}
+        else{await sbq(SOC.sb.from('message_reactions').insert({message_id:m.id,user_id:SOC.user.id,emoji:e}));(rx[m.id]=rx[m.id]||[]).push({message_id:m.id,user_id:SOC.user.id,emoji:e})}
+        draw()}catch(err){toast(sbErr(err))}};
+    const msgMenu=m=>{const me=m.user_id===SOC.user.id;const mine=(rx[m.id]||[]).find(x=>x.user_id===SOC.user.id);
+      openSheet('Mensagem',`<div class="mprev">${m.kind==='share'?'💪 '+esc((m.meta&&m.meta.t)||'Treino'):esc(m.body)}</div><div class="emrow">${CH_EMO.map(e=>`<button data-e="${e}" aria-pressed="${!!mine&&mine.emoji===e}">${e}</button>`).join('')}</div>
+        <div class="mact"><button data-a="rep">↩️ Responder</button>${m.kind!=='share'?'<button data-a="copy">📋 Copiar texto</button>':''}${!me?'<button data-a="rep2">🚩 Denunciar mensagem</button>':''}${me?'<button data-a="del" class="danger">🗑️ Apagar para todos</button>':''}</div><p class="small muted" style="text-align:center">${esc(new Date(m.created_at).toLocaleString('pt-BR',{dateStyle:'medium',timeStyle:'short'}))}</p>`,(mb,mw)=>{
+        mb.onclick=async e=>{const em=e.target.closest('[data-e]'),a=e.target.closest('[data-a]');
+          if(em){closeSheet(mw);react(m,em.dataset.e);return}if(!a)return;closeSheet(mw);
+          if(a.dataset.a==='rep'){reply=m;drawRep();ta.focus()}
+          if(a.dataset.a==='copy'){try{await navigator.clipboard.writeText(m.body);toast('Texto copiado')}catch(_){toast('Não consegui copiar')}}
+          if(a.dataset.a==='rep2')socReport({user_id:m.user_id,reason:null});
+          if(a.dataset.a==='del')confirmSheet('Apagar esta mensagem para todos?','Apagar',async()=>{try{await sbq(SOC.sb.from('messages').delete().eq('id',m.id));list=list.filter(x=>x.id!==m.id);draw();loadConvs()}catch(err){toast(sbErr(err))}})}})};
+    const shareMenu=()=>{const ss=Object.values(S.sessions||{}).filter(s=>s&&s.date).sort((a,b)=>(b.end||b.ts||0)-(a.end||a.ts||0)||(a.date<b.date?1:-1)).slice(0,6);
+      openSheet('Compartilhar no chat',ss.length?`<p class="hint">Escolha o treino ou a corrida para mandar.</p><div class="mact">${ss.map(s=>`<button data-sid="${esc(s.id)}"><span style="font-size:22px">${s.run?(s.run.type==='bike'?'🚴':s.run.type==='walk'?'🚶':'🏃'):'🏋️'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(s.name||(s.run?'Corrida':'Treino'))}</b><small class="muted">${esc(dlabel(s.date,{day:'numeric',month:'short'}))} · ${esc(sessSub(s,true))}</small></span></button>`).join('')}</div>`
+        :`<div class="empty"><b>Nenhum treino ainda</b><span>Finalize um treino ou corrida e depois compartilhe aqui.</span></div>`,(sb2,sw)=>{
+        sb2.onclick=async e=>{const x=e.target.closest('[data-sid]');if(!x)return;const s=S.sessions[x.dataset.sid];if(!s)return;closeSheet(sw);
+          const t=s.name||(s.run?(s.run.type==='bike'?'Pedal':s.run.type==='walk'?'Caminhada':'Corrida'):'Treino');
+          await sendRow({body:'💪 '+t,kind:'share',meta:{t,sub:sessSub(s,true),i:s.run?(s.run.type==='bike'?'🚴':s.run.type==='walk'?'🚶':'🏃'):'🏋️',d:s.date}})}})};
+    const optMenu=()=>{const prof=!c.is_group&&c.other;
+      openSheet('Opções',`<div class="mact">${prof?'<button data-o="prof">👤 Ver perfil</button>':''}${cl?'<button data-o="club">🏟️ Ver clube</button>':''}<button data-o="mute">${c.muted?'🔔 Ativar notificações':'🔕 Silenciar notificações'}</button>${prof?'<button data-o="report">🚩 Denunciar</button><button data-o="block" class="danger">⛔ Bloquear</button>':''}</div>`,(ob,ow)=>{
+        ob.onclick=async e=>{const o=e.target.closest('[data-o]');if(!o)return;closeSheet(ow);const k=o.dataset.o;
+          if(k==='prof')socProfileSheet(c.other);
+          if(k==='club'){closeSheet(el);socClubSheet(cl.id)}
+          if(k==='report')socReport({user_id:c.other});
+          if(k==='block')confirmSheet(`Bloquear ${pName(c.other)}? Vocês deixam de se ver e de conversar.`,'Bloquear',async()=>{try{await sbq(SOC.sb.from('blocks').insert({blocker:SOC.user.id,blocked:c.other}));await SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',c.other);SOC.following.delete(c.other);closeSheet(el);toast('Pessoa bloqueada')}catch(err){toast(sbErr(err))}});
+          if(k==='mute'){try{await sbq(SOC.sb.from('conversation_members').update({muted:!c.muted}).eq('conversation_id',convId).eq('user_id',SOC.user.id).select());c.muted=!c.muted;drawHd();toast(c.muted?'Conversa silenciada':'Notificações ativadas')}catch(err){toast(sbErr(err))}}}})};
+    el.addEventListener('click',e=>{const x=e.target.closest('[data-s]');if(!x||!el.contains(x))return;const k=x.dataset.s;
+      if(k==='who'){if(c.is_group){if(cl){closeSheet(el);socClubSheet(cl.id)}}else if(c.other)socProfileSheet(c.other)}
+      if(k==='menu')optMenu();if(k==='plus')shareMenu();if(k==='unrep'){reply=null;drawRep()}
+      if(k==='jump'){e.stopPropagation();const r=box.querySelector(`[data-mid="${x.dataset.id}"]`);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.animate([{opacity:.3},{opacity:1}],{duration:700})}return}
+      if(k==='msg'){const m=byId(+x.dataset.id)||byId(x.dataset.id);if(m)msgMenu(m)}});
+    /* dois toques: ❤️ */
+    let lastTap=0,lastId=null;box.addEventListener('pointerup',e=>{const x=e.target.closest('.bb');if(!x)return;const now=Date.now();if(lastId===x.dataset.id&&now-lastTap<300){const m=byId(+x.dataset.id)||byId(x.dataset.id);if(m){e.stopPropagation();react(m,'❤️')}lastTap=0;return}lastTap=now;lastId=x.dataset.id});
+    const obs=new MutationObserver(()=>{if(!document.body.contains(el)){SOC.openConv=null;obs.disconnect();loadConvs()}});obs.observe($('#sheets'),{childList:true});
+  });
+  return el};
+
+/* ---------- clubes: lista ---------- */
+SOC.clubK=SOC.clubK||'';
+socClubsHtml=function(){
+  if(!SOC.clubs){once('clubs',loadClubs);return thinking('Carregando clubes…')}
+  const k=SOC.clubK,F=SOC.clubs.filter(c=>!k||c.kind===k);
+  const mine=F.filter(c=>SOC.myClubs.has(c.id)||c.owner===SOC.user.id),other=F.filter(c=>!mine.includes(c));
+  const card=c=>{const own=c.owner===SOC.user.id,pend=own&&c.pend&&c.pend.length,req=SOC.clubReq&&SOC.clubReq.has(c.id);const kd=clKind(c.kind);
+    return`<button class="clc" data-act="socClub" data-id="${c.id}" data-name="${esc((c.name+' '+(c.city||'')+' '+kd[1]).toLowerCase())}"><span class="bn" style="${clBanner(c)}">${clTile(c)}${pend?`<span class="tag hot">${pend} pedido${pend>1?'s':''}</span>`:own?'<span class="tag">Criador</span>':req?'<span class="tag">Pedido enviado</span>':''}</span>
+      <span class="bd"><b>${esc(c.name)}</b><small>${esc(kd[1])}${c.city?' · '+esc(c.city):''}</small><small>👥 ${c.n} membro${c.n===1?'':'s'}</small></span></button>`};
+  return`<div class="cx-top"><div class="row" style="gap:8px;flex-wrap:nowrap"><label class="cx-search" style="flex:1">${SVG_SEARCH}<input id="clubQ" type="search" placeholder="Buscar clube ou cidade" autocomplete="off"></label><button class="btn primary" data-act="socNewClub" style="flex:none">+ Criar</button></div>
+    <div class="cx-chips"><button class="cx-chip" data-act="clubK" data-k="" aria-pressed="${!k}">Todos</button>${CL_KINDS.map(([id,l,i])=>`<button class="cx-chip" data-act="clubK" data-k="${id}" aria-pressed="${k===id}">${i} ${l}</button>`).join('')}</div></div>
+    ${mine.length?`<p class="clsec">Meus clubes</p><div class="clg">${mine.map(card).join('')}</div>`:''}
+    ${other.length?`<p class="clsec">Descobrir</p><div class="clg">${other.map(card).join('')}</div>`:''}
+    ${!SOC.clubs.length?`<div class="empty"><b>Nenhum clube ainda</b><span>Crie o clube da sua academia ou do seu grupo de corrida: chat, ranking da semana, meta coletiva e mural.</span></div>`:!F.length?'<div class="empty"><b>Nenhum clube desse tipo</b><span>Que tal criar o primeiro?</span></div>':''}`};
+
+/* ---------- clubes: criar e editar ---------- */
+socNewClub=function(edit){const c=edit||{};let icon=c.icon||'🏋️',color=clColor(c.id?c:{color:'#E9B640'}),kind=c.kind||'academia';
+  openSheet(edit?'Editar clube':'Criar clube',`<div class="clh" style="margin-top:-2px"><div class="bn" id="ncBn" style="${clBanner({color})};height:90px;border-radius:18px;margin:0 16px"></div></div>
+   <label class="fld"><span>Nome</span><input id="ncN" maxlength="60" value="${esc(c.name||'')}" placeholder="Ex.: Academia Força Total"></label>
+   <div class="fld"><span>Tipo</span><div class="cx-chips" id="ncK" style="flex-wrap:wrap">${CL_KINDS.map(([id,l,i])=>`<button class="cx-chip" data-k="${id}" aria-pressed="${kind===id}">${i} ${l}</button>`).join('')}</div></div>
+   <div class="fld"><span>Ícone</span><div class="pick" id="ncI">${CL_ICONS.map(i=>`<button data-i="${i}" aria-pressed="${icon===i}">${i}</button>`).join('')}</div></div>
+   <div class="fld"><span>Cor</span><div class="pick col" id="ncC">${CL_COLORS.map(k=>`<button data-c="${k}" aria-pressed="${color===k}" style="background:${k}" aria-label="Cor ${k}"></button>`).join('')}</div></div>
+   <label class="fld"><span>Cidade (opcional)</span><input id="ncCity" maxlength="60" value="${esc(c.city||'')}" placeholder="Ex.: Campinas"></label>
+   <label class="fld"><span>Descrição</span><textarea id="ncD" maxlength="500" placeholder="Sobre o que é o clube, horários, onde treinam…">${esc(c.description||'')}</textarea></label>
+   <label class="fld"><span>Meta da semana em km (opcional)</span><input id="ncG" inputmode="decimal" value="${c.goal_km||''}" placeholder="Ex.: 100 (soma de todos os membros)"></label>
+   ${edit?`<label class="fld"><span>Aviso fixado no topo (opcional)</span><textarea id="ncNo" maxlength="300" placeholder="Ex.: Treino coletivo sábado às 8h no parque">${esc(c.notice||'')}</textarea></label>
+   <label class="fld"><span>Regras (opcional)</span><textarea id="ncR" maxlength="1000" placeholder="Ex.: respeito sempre, nada de propaganda">${esc(c.rules||'')}</textarea></label>`:''}
+   <p class="hint">Para entrar no clube, a pessoa pede e você aceita.</p>
+   <button class="btn primary block" data-s="ok">${edit?'Salvar':'Criar clube'}</button>`,(b,el)=>{
+    const bn=b.querySelector('#ncBn');
+    b.onclick=async e=>{const k=e.target.closest('#ncK [data-k]'),i=e.target.closest('#ncI [data-i]'),cc=e.target.closest('#ncC [data-c]');
+      if(k){kind=k.dataset.k;b.querySelectorAll('#ncK [data-k]').forEach(x=>x.setAttribute('aria-pressed',x===k));if(!edit&&!b.dataset.iconSet){icon=clKind(kind)[2];b.querySelectorAll('#ncI [data-i]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.i===icon))}return}
+      if(i){icon=i.dataset.i;b.dataset.iconSet=1;b.querySelectorAll('#ncI [data-i]').forEach(x=>x.setAttribute('aria-pressed',x===i));return}
+      if(cc){color=cc.dataset.c;bn.style.cssText=clBanner({color})+';height:90px;border-radius:18px;margin:0 16px';b.querySelectorAll('#ncC [data-c]').forEach(x=>x.setAttribute('aria-pressed',x===cc));return}
+      if(!e.target.closest('[data-s=ok]'))return;
+      const name=b.querySelector('#ncN').value.trim();if(name.length<2){toast('Dê um nome ao clube');return}
+      const g=num(b.querySelector('#ncG').value);
+      const row={name,description:b.querySelector('#ncD').value.trim()||null,icon,color,kind,city:b.querySelector('#ncCity').value.trim()||null,goal_km:g>0?Math.min(100000,g):null};
+      if(edit){row.notice=b.querySelector('#ncNo').value.trim()||null;row.rules=b.querySelector('#ncR').value.trim()||null}
+      try{let id=c.id;if(edit)await sbq(SOC.sb.from('clubs').update(row).eq('id',c.id).select());else{id=(await sbq(SOC.sb.from('clubs').insert({...row,owner:SOC.user.id}).select()))[0].id}
+        closeSheet(el);if(edit)sheets.slice().forEach(s=>{if(s.dataset.club===c.id)closeSheet(s)});SOC.clubs=null;await loadClubs();loadConvs();toast(edit?'Clube atualizado':'Clube criado!');socClubSheet(id)}
+      catch(err){toast(sbErr(err))}}})};
+
+/* ---------- clubes: página ---------- */
+socClubSheet=function(id,tab){const c=(SOC.clubs||[]).find(x=>x.id===id);if(!c)return;
+  const inC=SOC.myClubs.has(id),own=c.owner===SOC.user.id,req=SOC.clubReq&&SOC.clubReq.has(id),kd=clKind(c.kind);
+  tab=tab||(inC?'mural':'sobre');
+  const tabs=inC?[['mural','Mural'],['ranking','Ranking'],['membros','Membros'],['sobre','Sobre']]:[['sobre','Sobre']];
+  const el=openSheet(c.name,`<div class="clh"><div class="bn" style="${clBanner(c)}"></div>${clTile(c)}<div class="in"><h2>${esc(c.name)}</h2><span class="meta">${kd[2]} ${esc(kd[1])}${c.city?' · 📍 '+esc(c.city):''}</span><div class="avs" id="clAvs"></div></div></div>
+    <div class="clbtns">${inC?`<button class="btn primary" data-s="chat">💬 Chat</button><button class="btn" data-s="invite">📣 Convidar</button>`:req?'<button class="btn" data-s="unreq">⏳ Pedido enviado · cancelar</button>':'<button class="btn primary" data-s="join">Pedir para entrar</button>'}
+      ${own?'<button class="btn" data-s="edit">✏️ Editar</button>':''}</div>
+    ${!inC&&!req?'<p class="hint" style="margin-top:-4px">O criador do clube aceita os pedidos. Depois você entra no chat, no ranking e no mural.</p>':''}
+    ${c.notice&&inC?`<div class="clnote"><span>📌</span><span><b>Aviso</b>${esc(c.notice)}</span></div>`:''}
+    ${own&&c.pend&&c.pend.length?`<div class="card"><h3>Pedidos para entrar (${c.pend.length})</h3><div id="cpd"></div></div>`:''}
+    ${inC&&c.goal_km?`<div class="card goal" id="clGoal"><div class="row"><b>🎯 Meta da semana</b><span class="small muted">${fmtD(c.goal_km)} km</span></div><div class="bar"><i style="width:0"></i></div><small class="muted">Calculando…</small></div>`:''}
+    ${tabs.length>1?`<div class="cltabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-t="${k}" aria-selected="${tab===k}">${l}</button>`).join('')}</div>`:''}
+    <div id="clBody">${thinking('Carregando…')}</div>`,async(b,el)=>{
+    el.dataset.club=id;el.querySelector('.sheet').style.maxHeight='96%';el.querySelector('.sheet').classList.add('clubS');
+    const ids=[...new Set([...(c.mem||[]),...(c.pend||[]).map(r=>r.user_id),c.owner])];await loadProfiles(ids).catch(()=>{});
+    const av=b.querySelector('#clAvs');if(av)av.innerHTML=(c.mem||[]).slice(0,6).map(u=>avatar(SOC.prof[u],'sm')).join('')+`<small>${c.n} membro${c.n===1?'':'s'}</small>`;
+    const pd=b.querySelector('#cpd');if(pd)pd.innerHTML=c.pend.map(r=>{const p=SOC.prof[r.user_id]||{id:r.user_id,name:'Atleta'};return`<div class="mbr">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}</b><small>${p.public_id?'ID '+esc(fmtId(p.public_id))+' · ':''}pediu ${ago(r.created_at)}</small></span><button class="btn sm primary" data-s="cok" data-u="${r.user_id}">Aceitar</button><button class="btn sm" data-s="cno" data-u="${r.user_id}">Recusar</button></div>`}).join('');
+    let rank=null;const getRank=async()=>{if(rank)return rank;try{rank=await loadRank(id)||[]}catch(e){rank=[]}return rank};
+    if(inC&&c.goal_km)getRank().then(r=>{const g=b.querySelector('#clGoal');if(!g)return;const km=r.reduce((a,x)=>a+(+x.km||0),0);const p=Math.min(100,Math.round(km/c.goal_km*100));
+      g.querySelector('.bar i').style.width=p+'%';g.querySelector('small').textContent=p>=100?`🏆 Meta batida! ${fmtD(km)} km juntos nesta semana.`:`${fmtD(km)} de ${fmtD(c.goal_km)} km · faltam ${fmtD(Math.max(0,c.goal_km-km))} km (${p}%)`});
+    const body=b.querySelector('#clBody');
+    const show=async t=>{tab=t;b.querySelectorAll('.cltabs [data-t]').forEach(x=>x.setAttribute('aria-selected',x.dataset.t===t));body.innerHTML=thinking('Carregando…');
+      if(t==='sobre'){const ow=SOC.prof[c.owner]||{name:'Atleta'};
+        body.innerHTML=`<div class="card">${c.description?`<p style="white-space:pre-wrap">${esc(c.description)}</p>`:'<p class="hint">Sem descrição.</p>'}
+          <div class="mbr" style="border-top:1px solid var(--line);margin-top:4px">${avatar(ow,'sm')}<span class="t"><b>${esc(ow.name||'Atleta')}<span class="crown">CRIADOR</span></b><small>Criado em ${esc(new Date(c.created_at).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'}))}</small></span></div></div>
+          ${c.rules?`<div class="card"><h3>📜 Regras</h3><p style="white-space:pre-wrap">${esc(c.rules)}</p></div>`:''}
+          <div class="btns">${inC&&!own?'<button class="btn" data-s="leave">Sair do clube</button>':''}${!own?'<button class="btn sm" data-s="report">🚩 Denunciar clube</button>':''}${own?'<button class="btn danger" data-s="del">Apagar clube</button>':''}</div>`}
+      if(t==='ranking'){const r=await getRank();body.innerHTML=`<div class="card"><h3>🏆 Ranking da semana</h3>${rankHtml(r||[])}</div>`}
+      if(t==='membros'){const L=(c.mem||[]).slice().sort((a,b)=>(b===c.owner)-(a===c.owner)||pName(a).localeCompare(pName(b)));
+        body.innerHTML=`<div class="card">${L.map(u=>{const p=SOC.prof[u]||{id:u,name:'Atleta'};const t=presTxt(p);return`<div class="mbr"><button class="row" data-act="socProfile" data-id="${u}" style="border:0;background:none;padding:0;flex:1;min-width:0;flex-wrap:nowrap;text-align:left;color:inherit">${avatar(p,'sm')}<span class="t"><b>${esc(p.name||'Atleta')}${u===c.owner?'<span class="crown">CRIADOR</span>':''}</b><small>${u===SOC.user.id?'Você':t?esc(t):p.public_id?'ID '+esc(fmtId(p.public_id)):''}</small></span></button>${own&&u!==SOC.user.id?`<button class="btn sm" data-s="ckick" data-u="${u}">Remover</button>`:''}</div>`}).join('')}</div>`}
+      if(t==='mural'){try{const mem=(c.mem||[]);const posts=mem.length?await sbq(SOC.sb.from('posts').select('*').in('user_id',mem).order('created_at',{ascending:false}).limit(25)):[];
+          await loadProfiles(posts.map(q=>q.user_id));await countsFor(posts);for(const q of posts)socPostCache[q.id]=q;
+          body.innerHTML=posts.length?posts.map(q=>postCard(q)).join(''):`<div class="empty"><b>O mural está vazio</b><span>Os treinos e corridas que os membros postam aparecem aqui.</span></div>`}
+        catch(err){body.innerHTML=`<p class="hint">${esc(sbErr(err))}</p>`}}};
+    show(tab);
+    const again=async(m,t)=>{closeSheet(el);SOC.clubs=null;await loadClubs();if(m)toast(m);socClubSheet(id,t)};
+    b.addEventListener('click',async e=>{const tb=e.target.closest('.cltabs [data-t]');if(tb){show(tb.dataset.t);return}
+      const x=e.target.closest('[data-s]');if(!x||!b.contains(x))return;const s=x.dataset.s;
+      try{if(s==='join'){await sbq(SOC.sb.from('club_requests').insert({club_id:id,user_id:SOC.user.id}));await again('Pedido enviado. O criador do clube vai aceitar ou recusar.')}
+        if(s==='unreq'){await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',SOC.user.id));await again('Pedido cancelado')}
+        if(s==='cok'){x.disabled=true;await sbq(SOC.sb.rpc('approve_club_member',{p_club:id,p_user:x.dataset.u}));loadConvs();await again('Pessoa aceita no clube',tab)}
+        if(s==='cno'){x.disabled=true;await sbq(SOC.sb.from('club_requests').delete().eq('club_id',id).eq('user_id',x.dataset.u));await again('Pedido recusado',tab)}
+        if(s==='ckick'){const u=x.dataset.u;confirmSheet(`Remover ${pName(u)} do clube?`,'Remover',async()=>{try{await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',u));await again('Removido do clube','membros')}catch(err){toast(sbErr(err))}})}
+        if(s==='leave')confirmSheet(`Sair do clube “${c.name}”? Para voltar, vai precisar pedir de novo.`,'Sair',async()=>{try{await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',SOC.user.id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs();toast('Você saiu do clube')}catch(err){toast(sbErr(err))}});
+        if(s==='del')confirmSheet(`Apagar o clube “${c.name}” e o chat dele? Não dá para desfazer.`,'Apagar',async()=>{try{await sbq(SOC.sb.from('clubs').delete().eq('id',id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs();toast('Clube apagado')}catch(err){toast(sbErr(err))}});
+        if(s==='edit')socNewClub(c);
+        if(s==='report')socReport({user_id:c.owner,reason:null});
+        if(s==='chat'){const cv=await sbq(SOC.sb.from('conversations').select('id').eq('club_id',id));if(!cv.length){toast('Chat ainda não disponível');return}closeSheet(el);await loadConvs();socChatSheet(cv[0].id)}
+        if(s==='invite'){const txt=`Bora treinar comigo! Entre no clube “${c.name}” no ATHOS: abra Social → Clubes e procure por “${c.name}”.`;
+          try{if(navigator.share){await navigator.share({title:'ATHOS',text:txt});return}}catch(_){return}
+          try{await navigator.clipboard.writeText(txt);toast('Convite copiado. Cole no WhatsApp!')}catch(_){toast(txt)}}}
+      catch(err){toast(sbErr(err))}});
+  });
+  return el};
+Object.assign(ACT,{chatF:el=>{SOC.chatF=el.dataset.k;render()},clubK:el=>{SOC.clubK=el.dataset.k;render()},socNewClub:()=>socNewClub()});
 window.androidBack=function(){if(window.updBlocking&&window.updBlocking())return true;if(window.tourBack&&window.tourBack())return true;if($('#authGate')&&!$('#authGate').hidden){if(/signup|forgot|reset|verify/.test(ACC.view)){setView('login');return true}return false}if(sheets.length){closeSheet();return true}if($('#run')&&!$('#run').hidden){ACT.runMin();return true}if($('#authGate')&&!$('#authGate').hidden){if(/signup|forgot|reset|verify/.test(ACC.view)){setView('login');return true}return false}if(sheets.length){closeSheet();return true}if(!$('#session').hidden){closeActive();return true}if(S.tab!=='hoje'){go('hoje');return true}return false};
 window.androidSaved=function(ok){toast(ok?'Backup salvo':'Backup não foi salvo')};
 /* ---------- início ---------- */

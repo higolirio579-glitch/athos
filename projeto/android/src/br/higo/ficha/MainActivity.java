@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.1 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.2 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -489,6 +489,9 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void ppCloud(int n) { Notif.prefs(MainActivity.this).edit().putInt("pp_cloud", n).apply(); }
+
+        @JavascriptInterface
         public String takeOpen() { String o = pendingOpen; pendingOpen = null; return o; }
 
         @JavascriptInterface
@@ -705,6 +708,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         visible = true;
+        Notif.prefs(this).edit().putLong("last_open", System.currentTimeMillis()).remove("pp_warned").apply();
         if (web != null) web.evaluateJavascript("window.androidResume&&window.androidResume()", null);
     }
 

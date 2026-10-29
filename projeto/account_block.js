@@ -106,7 +106,7 @@ function drawGate(){
     <label class="fld"><span>E-mail</span><input id="gEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="${esc(ACC.email)}" placeholder="voce@email.com" required></label>
     ${pwField('gPass','Senha','new-password','Mínimo 8 caracteres')}<div class="meter" aria-hidden="true"><i id="gMeter" style="width:0"></i></div><small class="muted" id="gMeterL">Use letras e números.</small>
     ${pwField('gPass2','Confirmar senha','new-password')}
-    <label class="check terms" style="align-items:flex-start"><input type="checkbox" id="gTerms"><span>Li e aceito: meus dados de treino, dieta e corridas ficam guardados na minha conta no servidor do ATHOS (Supabase). Eu escolho quem vê cada post e posso excluir minha conta e meus dados quando quiser, no Perfil.</span></label>
+    <label class="check terms" style="align-items:flex-start"><input type="checkbox" id="gTerms"><span>Tenho 13 anos ou mais (se tenho menos de 18, meus pais ou responsáveis autorizaram) e aceito os <a href="#" data-legal="termos" style="color:var(--accent);font-weight:700">Termos de uso</a> e a <a href="#" data-legal="privacidade" style="color:var(--accent);font-weight:700">Política de privacidade</a>.</span></label>
     <button class="btn primary block" type="submit" ${busy}>${ACC.busy?'Criando…':'Criar conta'}</button></form>
     <p class="alt">Já tem conta? <button class="link" data-g="v" data-v="login">Entrar</button></p>`;
   else if(ACC.view==='verify')h=`${hero}<form class="in" style="gap:12px" novalidate><h2>Confirme seu e-mail</h2>
@@ -151,7 +151,7 @@ async function gateSubmit(){
     if(r.error){if(/not confirmed/i.test(r.error.message||'')){await SOC.sb.auth.resend({type:'signup',email});ACC.view='verify';ACC.ok='Mandamos um novo código para confirmar seu e-mail.';startCool();return drawGate()}return fail(accErr(r.error))}return}
   if(v==='signup'){const name=nm;ACC.name=name;const p=pass;
     if(!name)return fail('Digite seu nome.');if(!/^\S+@\S+\.\S+$/.test(email))return fail('Digite um e-mail válido.');if(p.length<8)return fail('A senha precisa ter pelo menos 8 caracteres.');
-    if(p!==pass2)return fail('As senhas não são iguais.');if(!terms)return fail('Marque que você leu e aceita como seus dados são guardados.');
+    if(p!==pass2)return fail('As senhas não são iguais.');if(!terms)return fail('Para criar a conta, confirme a idade e aceite os Termos de uso e a Política de privacidade.');
     ACC.busy=true;keepDraw();const r=await SOC.sb.auth.signUp({email,password:p,options:{data:{name}}});ACC.busy=false;
     if(r.error)return fail(accErr(r.error));
     if(r.data&&r.data.user&&Array.isArray(r.data.user.identities)&&!r.data.user.identities.length)return fail('Já existe uma conta com esse e-mail. Toque em “Entrar”.');

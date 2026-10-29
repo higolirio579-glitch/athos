@@ -35,7 +35,11 @@ const TI={
   evolucao:'<svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   social:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.7.8 2.7 2.6 3 5.2"/></svg>',
   bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg>',
-  go:'<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'};
+  go:'<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>',
+  chat:'<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  photo:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3.5"/></svg>'};
 function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'logo',t:'Bem-vindo ao ATHOS',h:`<p>Treino, dieta, corrida e seus amigos num app só. Em 2 minutos eu te mostro tudo, inclusive as novidades.</p>`},
   {tab:'perfil',ic:'target',t:'Comece pelas metas',h:`<p>No <b>Perfil</b>, toque em <b>Editar</b> nas Metas diárias e coloque idade, altura, peso e objetivo.</p><p>O ATHOS calcula suas calorias, proteína, carbo, gordura e água.</p>`},
@@ -44,12 +48,23 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'treino',ic:'go',t:'Durante o treino',h:`<ul><li>Anote carga e repetições e toque em <b>✓</b> em cada série. O <b>descanso</b> começa sozinho.</li><li>💡 A <b>sugestão de carga</b> mostra quanto colocar hoje. Toque em <b>Usar</b>.</li><li>▶ <b>Como fazer</b> mostra a execução de cada exercício.</li>${and?'<li>Controle a <b>música</b> do YouTube Music ou do Spotify sem sair do app.</li>':''}</ul>`},
   ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Toque em <b>Correr</b>, <b>Caminhar</b> ou <b>Pedalar</b>.</p><ul><li>Mapa, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
   {tab:'dieta',ic:'dieta',t:'Sua dieta',h:`<ul><li>Toque no <b>+</b> de cada refeição para adicionar.</li><li><b>Ler código de barras</b>: aponte a câmera para a embalagem e o alimento entra sozinho.</li><li>Com a IA: <b>foto do prato</b> ou <b>descrever</b> o que comeu.</li><li>Toque na refeição para ver os alimentos ou <b>repetir a de ontem</b>.</li></ul>`},
-  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>. As fotos ficam só no seu celular.</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
+  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>, guardadas numa pasta privada da sua conta (até 20).</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
   {tab:'perfil',ic:'target',t:'Nível e medalhas',h:`<ul><li>Cada treino, corrida e dia ativo dá <b>XP</b>. Suba de <b>Bronze</b> até <b>Lenda</b>.</li><li>Complete os <b>desafios do mês</b> e ganhe <b>medalhas</b>, que aparecem no seu Perfil.</li></ul>`},
   {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Ache amigos pelo <b>nome</b> ou pelo <b>ID</b>. O seu fica em Social → Eu.</li><li>No topo do feed, as <b>bolinhas</b> mostram quem treinou hoje. O ponto verde é quem está <b>online</b>.</li><li><b>Dois toques</b> na foto ou no mapa para curtir.</li><li><b>Compartilhar</b> gera um card bonito para os stories do Instagram e do WhatsApp.</li><li>Na aba <b>Desafios</b>: ranking e medalhas do mês.</li></ul>`},
+  {tab:'social',ic:'chat',t:'Chat e clubes',h:`<ul><li>No <b>Chat</b>: toque numa mensagem para <b>reagir</b>, <b>responder</b> ou apagar. O <b>+</b> manda seu treino.</li><li><b>Clubes</b> têm chat, mural, ranking e <b>meta da semana</b>. Para entrar, peça e o criador aceita.</li><li>Em ⚙ → Privacidade: <b>perfil privado</b> e quem pode te mandar mensagem.</li></ul>`},
   {tab:'hoje',ic:'bell',t:'Fique por dentro',h:`<ul><li>O <b>sininho</b> mostra curtidas, comentários, seguidores, mensagens e recordes dos amigos.</li><li>A <b>engrenagem ⚙</b> abre as Configurações: notificações, tema, música, privacidade e mais.</li><li>O <b>☰</b> recolhe a barra de baixo.</li></ul>`},
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
-const TOUR={i:0,steps:null};
+/* ---------- novidades de cada versão (para quem já usa o app) ----------
+   Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
+const NEWS_V='2.2';
+function newsSteps(){return[
+  {ic:'star',t:'Novidades do ATHOS 2.2',h:`<p>Separei em 1 minuto o que mudou. Bora?</p>`},
+  {tab:'social',ic:'chat',t:'Chat novo',h:`<ul><li>Visual novo, com <b>dia</b> e <b>hora</b> de cada mensagem e <b>Visto ✓✓</b>.</li><li>Toque numa mensagem para <b>reagir</b> (❤️🔥💪), <b>responder</b>, copiar ou <b>apagar</b>. Dois toques = ❤️.</li><li>O <b>+</b> manda seu último treino ou corrida no chat.</li><li>No <b>⋮</b>: silenciar, ver perfil, denunciar ou bloquear.</li></ul>`},
+  {tab:'social',ic:'social',t:'Clubes de verdade',h:`<ul><li>Clubes com <b>ícone</b>, <b>cor</b>, tipo e cidade.</li><li>Dentro do clube: <b>Mural</b> com os treinos da galera, <b>Ranking</b>, <b>Membros</b> e <b>Meta da semana</b> em km.</li><li>Para entrar, você <b>pede</b> e o criador <b>aceita</b>. Quem cria pode fixar um <b>aviso</b> e escrever as <b>regras</b>.</li></ul>`},
+  {tab:'social',ic:'lock',t:'Sua privacidade',h:`<ul><li>Em <b>⚙ → Privacidade</b>: <b>perfil privado</b> (você aprova quem segue) e <b>quem pode te mandar mensagem</b>.</li><li>Seu perfil só aparece para quem tem ligação com você ou procura seu nome ou ID.</li><li><b>Termos de uso</b> e <b>Política de privacidade</b> ficam em ⚙ → Ajuda.</li></ul>`},
+  {tab:'evolucao',ic:'photo',t:'Fotos de evolução na nuvem',h:`<ul><li>As fotos de antes e depois agora ficam também numa <b>pasta privada da sua conta</b>: trocou de celular, elas voltam.</li><li>A nuvem guarda até <b>20</b>. Ao chegar em 20, as 10 mais antigas saem de lá (continuam no celular).</li><li>Se ficar <b>30 dias</b> sem abrir o app, as da nuvem são apagadas. Avisamos antes.</li></ul>`},
+  {tab:'perfil',ic:'target',t:'Desafios mais justos',h:`<p>Agora o servidor confere o <b>XP</b>, os <b>km</b> e as <b>medalhas</b>. Ninguém consegue trapacear no ranking.</p>`,last:true}]}
+const TOUR={i:0,steps:null,news:false};
 function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#tour');
   if(!el){el=document.createElement('div');el.id='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');document.body.appendChild(el);
     el.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;const k=b.dataset.t;
@@ -60,10 +75,13 @@ function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#to
   el.setAttribute('aria-label',s.t);
   el.innerHTML=`<div class="tscrim"></div><div class="tc"><div class="ti">${ic}</div><span class="ts">Passo ${TOUR.i+1} de ${n}</span><h2>${esc(s.t)}</h2>${s.h}
    <div class="tb">${TOUR.i?`<button class="skip" data-t="back">Voltar</button>`:`<button class="skip" data-t="skip">Pular</button>`}<span class="dots">${TOUR.steps.map((_,j)=>`<i class="${j===TOUR.i?'on':''}"></i>`).join('')}</span>
-   <button class="btn primary next" data-t="next">${s.last?'Configurar metas':TOUR.i?'Próximo':'Começar'}</button></div></div>`;
+   <button class="btn primary next" data-t="next">${s.last?(TOUR.news?'Entendi!':'Configurar metas'):TOUR.i?'Próximo':'Começar'}</button></div></div>`;
   el.querySelector('.next').focus()}
-function tourStart(){TOUR.steps=tourSteps();TOUR.i=0;tourDraw()}
+function tourStart(){TOUR.news=false;TOUR.steps=tourSteps();TOUR.i=0;tourDraw()}
+function newsStart(){TOUR.news=true;TOUR.steps=newsSteps();TOUR.i=0;tourDraw()}
+function newsMark(){S.profile.newsV=NEWS_V;try{store.mark('profile')}catch(e){}try{localStorage.setItem('athos.news',NEWS_V)}catch(e){}}
 function tourEnd(goSetup){const el=$('#tour');if(el)el.remove();document.body.classList.remove('touring');document.querySelectorAll('.tab.spot').forEach(t=>t.classList.remove('spot'));
+  newsMark();if(TOUR.news){TOUR.news=false;go('hoje');return}
   S.profile.tourDone=true;S.profile.tourV=2;store.mark('profile');try{localStorage.setItem('athos.tour','2')}catch(e){}
   if(goSetup){go('perfil');try{ACT.profileSheet()}catch(e){}}else go('hoje')}
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#tour'))tourEnd(false)});
@@ -77,7 +95,15 @@ const tourTick=setInterval(()=>{
   clearInterval(tourTick);
   let seen=false;try{seen=localStorage.getItem('athos.tour')==='2'}catch(e){}
   if(!seen&&S.profile.tourV!==2&&!sheets.length&&!S.active)tourStart();
+  else newsTick=setInterval(newsCheck,1500);
 },1000);
+/* quem já usava o app vê só as novidades da versão nova, uma vez */
+let newsTick=null;
+function newsCheck(){if($('#tour')||sheets.length||S.active)return;const gate=$('#authGate');if(gate&&!gate.hidden)return;
+  let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}
+  clearInterval(newsTick);newsTick=null;
+  if(seen!==NEWS_V&&S.profile.newsV!==NEWS_V)newsStart()}
 /* botão para rever no Perfil */
 /* o botão aparece em Configurações */
 ACT.tourAgain=()=>tourStart();
+ACT.newsAgain=()=>newsStart();

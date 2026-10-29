@@ -887,8 +887,11 @@ const MEAS=[['cintura','Cintura','cm'],['quadril','Quadril','cm'],['peito','Peit
 function measList(k){return Object.values(S.days).filter(d=>d.meas&&d.meas[k]).sort((a,b)=>a.date<b.date?-1:1).map(d=>({date:d.date,v:+d.meas[k]}))}
 const PP={list:null,cache:{}};
 const ppNative=()=>!!(window.Android&&Android.setItem);
-function ppIdx(){if(PP.list)return PP.list;try{PP.list=JSON.parse((ppNative()?Android.getItem('athos_pp_index'):localStorage.getItem('athos.pp.index'))||'[]')}catch(e){PP.list=[]}return PP.list}
-function ppSaveIdx(){const v=JSON.stringify(PP.list||[]);try{if(ppNative())Android.setItem('athos_pp_index',v);else localStorage.setItem('athos.pp.index',v)}catch(e){}}
+function ppUid(){try{return(typeof SOC!=='undefined'&&SOC&&SOC.user&&SOC.user.id)||null}catch(e){return null}}
+function ppAll(){if(PP.all)return PP.all;try{PP.all=JSON.parse((ppNative()?Android.getItem('athos_pp_index'):localStorage.getItem('athos.pp.index'))||'[]')}catch(e){PP.all=[]}return PP.all}
+/* cada foto fica marcada com a conta dona; quem entrar com outra conta no mesmo celular não vê as fotos da primeira */
+function ppIdx(){const u=ppUid();if(PP.list&&PP.lu===u)return PP.list;PP.lu=u;PP.list=ppAll().filter(x=>!u||!x.u||x.u===u);return PP.list}
+function ppSaveIdx(){const L=PP.list||[];if(PP.lu)L.forEach(x=>{if(!x.u)x.u=PP.lu});PP.all=ppAll().filter(x=>!L.includes(x)&&x.u&&x.u!==PP.lu).concat(L);const v=JSON.stringify(PP.all);try{if(ppNative())Android.setItem('athos_pp_index',v);else localStorage.setItem('athos.pp.index',v)}catch(e){}}
 function ppDb(){return new Promise((ok,no)=>{const r=indexedDB.open('athos-fotos',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 async function ppPut(id,data){PP.cache[id]=data;if(ppNative()){Android.setItem('athos_pp_'+id,data);return}const db=await ppDb();await new Promise((ok,no)=>{const t=db.transaction('f','readwrite');t.objectStore('f').put(data,id);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 async function ppGet(id){if(PP.cache[id])return PP.cache[id];let v=null;if(ppNative())v=Android.getItem('athos_pp_'+id);else{const db=await ppDb();v=await new Promise(ok=>{const r=db.transaction('f').objectStore('f').get(id);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>ok(null)})}if(v)PP.cache[id]=v;return v}
@@ -904,8 +907,8 @@ function corpoHtml(){
   h+=`</div>`;
   const L=ppIdx().slice().sort((a,b)=>a.date<b.date?1:-1);const sel=S.ui.ppSel||[];
   h+=`<div class="card"><div class="row between"><h3>Fotos de progresso</h3><button class="btn sm soft" data-act="ppAdd">+ Foto</button></div>`;
-  if(!L.length)h+=`<p class="hint">Tire uma foto de frente, sempre no mesmo lugar e com a mesma luz. Depois compare o antes e depois. As fotos ficam só neste aparelho, não vão para a nuvem nem para a rede.</p>`;
-  else h+=`<p class="hint">${sel.length===1?'Agora toque na segunda foto para comparar.':'Toque em duas fotos para comparar o antes e depois.'} Ficam só neste aparelho.</p><div class="ppg">${L.map(x=>`<button class="pp${sel.includes(x.id)?' on':''}" data-act="ppPick" data-id="${x.id}"><img data-pp="${x.id}" alt="Foto de ${esc(dlabel(x.date))}"><span>${esc(dlabel(x.date,{day:'numeric',month:'short',year:'2-digit'}))}</span></button>`).join('')}</div>`;
+  if(!L.length)h+=`<p class="hint">Tire uma foto de frente, sempre no mesmo lugar e com a mesma luz. Depois compare o antes e depois. ${typeof ppcNote==='function'?ppcNote(true):'As fotos ficam só neste aparelho.'}</p>`;
+  else h+=`<p class="hint">${sel.length===1?'Agora toque na segunda foto para comparar.':'Toque em duas fotos para comparar o antes e depois.'} ${typeof ppcNote==='function'?ppcNote(false):'Ficam só neste aparelho.'}</p><div class="ppg">${L.map(x=>`<button class="pp${sel.includes(x.id)?' on':''}" data-act="ppPick" data-id="${x.id}"><img data-pp="${x.id}" alt="Foto de ${esc(dlabel(x.date))}"><span>${x.c===1?'☁ ':''}${esc(dlabel(x.date,{day:'numeric',month:'short',year:'2-digit'}))}</span></button>`).join('')}</div>`;
   h+=`</div>`;setTimeout(ppHydrate,30);return h}
 function measSheet(){const t=today();const last=k=>{const L=measList(k);return L.length?L[L.length-1].v:''};
   openSheet('Registrar medidas',`<p class="hint">Use fita métrica, sempre no mesmo ponto do corpo. Deixe em branco o que não mediu.</p><div class="grid2">${MEAS.map(([k,l,u])=>`<label class="fld"><span>${l} (${u})</span><input inputmode="decimal" data-m="${k}" placeholder="${last(k)?fmtD(last(k)):''}"></label>`).join('')}</div><button class="btn primary block" data-s="save">Salvar</button>`,(b,el)=>{
@@ -914,7 +917,7 @@ function measSheet(){const t=today();const last=k=>{const L=measList(k);return L
 function ppCompare(a,b){const A=ppIdx().find(x=>x.id===a),B=ppIdx().find(x=>x.id===b);if(!A||!B)return;const [x,y]=A.date<=B.date?[A,B]:[B,A];
   const wAt=d=>{const w=weightsList().filter(z=>z.date<=d).slice(-1)[0];return w?fmtD(w.kg)+' kg':''};const dd=Math.round((tOf(y.date)-tOf(x.date))/864e5);
   const el=openSheet('Antes e depois',`<div class="cmpph"><div><img data-pp="${x.id}" alt="Antes"><b>Antes</b><small>${esc(dlabel(x.date,{day:'numeric',month:'short',year:'numeric'}))}${wAt(x.date)?' · '+wAt(x.date):''}</small></div><div><img data-pp="${y.id}" alt="Depois"><b>Depois</b><small>${esc(dlabel(y.date,{day:'numeric',month:'short',year:'numeric'}))}${wAt(y.date)?' · '+wAt(y.date):''}</small></div></div><p class="hint" style="text-align:center">${dd} dia${dd===1?'':'s'} de diferença</p><button class="btn danger block" data-s="del">Apagar a foto mais recente</button>`,(bd,w)=>{
-    bd.querySelector('[data-s=del]').onclick=()=>confirmSheet('Apagar esta foto do aparelho?','Apagar',()=>{PP.list=ppIdx().filter(z=>z.id!==y.id);ppSaveIdx();ppDel(y.id);closeSheet(w);render()})});setTimeout(ppHydrate,30)}
+    bd.querySelector('[data-s=del]').onclick=()=>confirmSheet(typeof ppcOn==='function'&&ppcOn()?'Apagar esta foto do aparelho e da nuvem?':'Apagar esta foto do aparelho?','Apagar',()=>{PP.list=ppIdx().filter(z=>z.id!==y.id);ppSaveIdx();ppDel(y.id);closeSheet(w);render()})});setTimeout(ppHydrate,30)}
 function vEvolucao(){
   const p=S.profile,ws=weightsList();const tab=S.ui.evoTab||'resumo';
   let html=`<div style="padding-top:4px"><h1>Evolução</h1></div><div class="segs" role="tablist">${[['resumo','Resumo'],['peso','Peso'],['corpo','Corpo'],['forca','Força'],['corrida','Corrida'],['calorias','Calorias']].map(([k,l])=>`<button role="tab" data-act="evoTab" data-k="${k}" aria-selected="${tab===k}" class="${tab===k?'on':''}">${l}</button>`).join('')}</div>`;
@@ -1115,7 +1118,7 @@ function pickPhoto(){return pickPhotos(false).then(a=>a[0]||null)}
 function scaleItem(it,g){if(!it.per)return;it.grams=g;it.kcal=r1(it.per.kcal*g/100);it.p=r1(it.per.p*g/100);it.c=r1(it.per.c*g/100);it.f=r1(it.per.f*g/100)}
 
 /* ---------- código de barras (Open Food Facts) ---------- */
-function loadZX(){if(window.ZXing)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=window.Android?'zxing/zxing.min.js':'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
+function loadZX(){if(window.ZXing)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='zxing/zxing.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
 async function offLookup(code){const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,product_name_pt,brands,nutriments,serving_quantity,quantity`);if(!r.ok&&r.status!==404)throw new Error('net');const j=await r.json();if(j.status!==1||!j.product)return null;
   const P=j.product,n=P.nutriments||{};const kcal=n['energy-kcal_100g']!=null?+n['energy-kcal_100g']:(n['energy_100g']!=null?+n['energy_100g']/4.184:null);if(kcal==null)return{name:P.product_name_pt||P.product_name||'Produto',noData:true};
   const name=[P.product_name_pt||P.product_name||'Produto',P.brands?P.brands.split(',')[0].trim():''].filter(Boolean).join(' — ');
@@ -1522,7 +1525,7 @@ const ACT={
   shareSess:el=>{const s=S.sessions[el.dataset.id];if(s)shareCard(cardData(s))},
   measSheet:()=>measSheet(),
   measPick:el=>{S.ui.measK=el.dataset.k;render()},
-  ppAdd:async()=>{const f=await pickPhoto();if(!f)return;try{const data=await ppShrink(f);const id='p'+Date.now().toString(36);await ppPut(id,data);ppIdx().push({id,date:today()});ppSaveIdx();S.ui.evoTab='corpo';render();toast('Foto salva neste aparelho')}catch(e){toast('Não consegui abrir essa foto')}},
+  ppAdd:async()=>{const f=await pickPhoto();if(!f)return;try{const data=await ppShrink(f);const id='p'+Date.now().toString(36);await ppPut(id,data);ppIdx().push({id,date:today()});ppSaveIdx();S.ui.evoTab='corpo';render();if(typeof ppcSync==='function'&&ppcOn()){toast('Foto salva. Enviando para sua nuvem privada…');ppcSync(true)}else toast('Foto salva neste aparelho')}catch(e){toast('Não consegui abrir essa foto')}},
   ppPick:el=>{const id=el.dataset.id;let sel=(S.ui.ppSel||[]).filter(x=>x!==id);if(sel.length===(S.ui.ppSel||[]).length)sel.push(id);if(sel.length===2){S.ui.ppSel=[];render();ppCompare(sel[0],sel[1]);return}S.ui.ppSel=sel;render()},
   useSug:el=>{const x=S.active&&S.active.exercises[+el.dataset.ex];if(!x)return;for(const st of x.sets){if(st.done)continue;if(st.kg===''||st.kg==null)st.kg=String(el.dataset.kg);if(st.reps===''||st.reps==null)st.reps=String(el.dataset.reps)}saveActive();rSession();toast('Sugestão aplicada nas séries')},
   quickMeal:()=>foodSheet(today(),mealNow()),
