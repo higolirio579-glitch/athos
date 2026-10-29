@@ -150,10 +150,19 @@ function runPRs(s){if(!s.run)return[];const r=s.run,prev=Object.values(S.session
   const bd=best('dist');if(prev.length&&r.dist>(bd||0)&&r.dist>=1000)out.push(r.type==='bike'?'Maior pedal':r.type==='walk'?'Maior caminhada':'Maior corrida');
   return out}
 {const _stp=sessToPost;sessToPost=function(s){const p=_stp(s);if(s.run){p.stats.prs=runPRs(s)}return p}}
-{const _ps=postStats;postStats=function(p){let h=_ps(p);const prs=(p.stats||{}).prs||[];
-  if(prs.length&&p.kind==='run')h+=`<div class="chips">${prs.map(x=>`<span class="chip pr">Recorde: ${esc(x)}</span>`).join('')}</div>`;
-  return(prs.length?`<div class="prban">🏆 ${prs.length>1?prs.length+' novos recordes':'Novo recorde'}!</div>`:'')+h}}
-{const _pc=postCard;postCard=function(p,full){const h=_pc(p,full);const a=SOC.prof[p.user_id];if(!a||a.xp==null)return h;const nm=`<b>${esc(a.name||'Atleta')}</b>`;const i=h.indexOf(nm);return i<0?h:h.slice(0,i)+`<b>${esc(a.name||'Atleta')}${lvTag(a.xp)}</b>`+h.slice(i+nm.length)}}
+
+/* --- nível e medalhas nas telas Hoje e Perfil --- */
+hojeLvl=()=>{if(!SOC.user||!SOC.me||SOC.me.xp==null)return'';const v=lvOf(SOC.me.xp);return`<button class="lvl" data-act="goChallenges" style="--lc:${v.color};font-size:13px;padding:7px 10px;white-space:nowrap;flex:none;border:0">Nv ${v.L} · ${v.tier}</button>`};
+perfilSlots=h=>{if(!SOC.user||!SOC.me)return h;const m=SOC.me;
+  if(m.avatar_url)h=h.replace(/<span class="avbig" data-slot="av">[^<]*<\/span>/,`<span class="avbig" data-slot="av"><img src="${esc(m.avatar_url)}" alt=""></span>`);
+  if(m.name)h=h.replace(/(<span class="avbig"[^]*?<\/span>)<h2>[^<]*<\/h2>/,`$1<h2>${esc(m.name)}</h2>`);
+  h=h.replace(/<small data-slot="sub">[^<]*<\/small>/,`<small data-slot="sub">${m.public_id?'ID '+fmtId(m.public_id):''}${m.city?' · '+esc(m.city):''}</small>`);
+  if(m.xp!=null){const v=lvOf(m.xp),p=Math.round((m.xp-v.from)/(v.to-v.from)*100);
+    h=h.replace('<span data-slot="lvl"></span>',`<button class="lvl" data-act="goChallenges" style="--lc:${v.color};font-size:13px;padding:7px 11px;border:0">Nível ${v.L} · ${v.tier}</button><div class="xpbar" style="width:100%;background:var(--surface2)"><i style="width:${p}%;background:${v.color}"></i></div><small>${fmtN(m.xp-v.from)} / ${fmtN(v.to-v.from)} XP para o nível ${v.L+1}</small>`).replace('class="avbig"',`class="avbig" style="--lc:${v.color}"`)}
+  const md=XP.medals;if(md===null&&!CH.loading)chLoad();
+  if(md){h=h.replace(/<div data-slot="medN">[^]*?<\/small><\/div>/,`<div data-slot="medN"><b>${md.length}</b><small>medalha${md.length===1?'':'s'}</small></div>`);
+    h=h.replace('<div data-slot="medals"></div>',`<div class="card"><div class="row between"><h3>Medalhas</h3><button class="btn sm soft" data-act="goChallenges">Desafios</button></div>${md.length?`<div class="medals">${md.slice(0,6).map(x=>`<div class="medal"><span aria-hidden="true">${esc(x.icon||'🏅')}</span><b>${esc(x.title)}</b></div>`).join('')}</div>`:'<p class="hint">Complete um desafio do mês para ganhar sua primeira medalha.</p>'}</div>`)}
+  return h};
 
 /* --- aba Desafios na rede social --- */
 {const _vs=vSocial;vSocial=function(){let h=_vs();if(!SOC.user)return h;
@@ -161,10 +170,6 @@ function runPRs(s){if(!s.run)return[];const r=s.run,prev=Object.values(S.session
   if(SOC.sub==='desafios'){const i=h.indexOf('</div>',h.indexOf('soc-seg'))+6;const errI=h.indexOf('<p class="chip warn"',i);const cut=errI>=0?h.indexOf('</p>',errI)+4:i;h=h.slice(0,cut)+chHtml()}
   return h};VIEWS.social=vSocial}
 
-/* --- nível na tela Hoje --- */
-{const _vh=VIEWS.hoje;VIEWS.hoje=function(){const h=_vh.apply(this,arguments);if(!SOC.user||!SOC.me||SOC.me.xp==null)return h;const xp=SOC.me.xp,v=lvOf(xp),p=Math.round((xp-v.from)/(v.to-v.from)*100);
-  const card=`<button class="card lvmini" data-act="goChallenges" style="--lc:${v.color};text-align:left;width:100%;font:inherit;color:inherit">${lvBadge(v)}<span class="t"><b>Nível ${v.L} · ${v.tier}</b><small>Faltam ${fmtN(v.to-xp)} XP para o nível ${v.L+1} · ver desafios</small><span class="xpbar" style="display:block"><i style="width:${p}%"></i></span></span></button>`;
-  const k='<div class="card khero">';const i=h.indexOf(k);if(i<0)return h+card;const j=h.indexOf('<div class="card"',i+k.length);return j<0?h+card:h.slice(0,j)+card+h.slice(j)}}
 
 /* sincroniza XP ao entrar e de tempos em tempos */
 let xpUid=null;setInterval(()=>{const id=SOC.user?SOC.user.id:null;if(id!==xpUid){xpUid=id;CH.joined=null;CH.boards={};XP.medals=null;XP.lastL=null;XP.sent=null;if(id)setTimeout(xpSync,4000)}else if(id)xpSync()},30000);

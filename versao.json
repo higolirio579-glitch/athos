@@ -1,6 +1,6 @@
 {
-  "code": 28,
-  "nome": "1.9.7",
+  "code": 29,
+  "nome": "2.0",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": ["Atualizações agora são obrigatórias: todo mundo sempre na versão mais nova", "Seu ID único e busca de pessoas por nome ou ID", "Aba Treino reorganizada"]
+  "notas": ["Visual novo nas telas Hoje, Dieta, Evolução, Perfil e Social", "Leitor de código de barras na Dieta", "Sugestão de carga em cada exercício", "Medidas e fotos de antes e depois", "Card para os stories do Instagram e WhatsApp", "Status online dos amigos", "Tutorial novo ensinando tudo"]
 }

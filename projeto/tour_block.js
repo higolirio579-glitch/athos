@@ -37,16 +37,18 @@ const TI={
   bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2.2 2.2 0 0 0 4 0"/></svg>',
   go:'<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>'};
 function tourSteps(){const and=!!NATIVE;return[
-  {tab:'hoje',ic:'logo',t:'Bem-vindo ao ATHOS',h:`<p>Seu app de treino, dieta e corrida, com seus amigos. Em 1 minuto eu te mostro onde fica cada coisa.</p>`},
-  {tab:'perfil',ic:'target',t:'Comece pelas metas',h:`<p>No <b>Perfil</b>, toque em <b>Editar dados e metas</b> e coloque idade, altura, peso e objetivo.</p><p>Com isso o ATHOS calcula suas calorias, proteína, carbo, gordura e água do dia.</p>`},
-  {tab:'hoje',ic:'hoje',t:'A tela Hoje',h:`<ul><li>O <b>anel dourado</b> mostra quantas calorias ainda restam.</li><li>A <b>chama</b> no topo conta os dias seguidos com treino ou refeição registrada.</li><li>Também dá pra marcar a <b>água</b> e o <b>peso</b> por aqui.</li></ul>`},
-  {tab:'treino',ic:'treino',t:'Seus treinos',h:`<ul><li><b>Musculação</b> começa um treino livre na hora.</li><li><b>+ Criar</b> monta sua ficha: do zero, com IA, por foto ou a partir de um modelo pronto.</li><li>Toque em <b>Iniciar</b>, anote carga e repetições e marque <b>✓</b> em cada série.</li><li>O <b>descanso</b> começa sozinho e avisa quando acabar.</li><li>Recordes aparecem com destaque no final.</li></ul>`},
-  ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Na aba Treino, toque em <b>Correr</b>, <b>Caminhar</b> ou <b>Pedalar</b> para gravar com GPS.</p><ul><li>Mapa do percurso, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
-  {tab:'dieta',ic:'dieta',t:'Sua dieta',h:`<ul><li>Em cada refeição, toque em <b>+ Adicionar</b> e busque o alimento.</li><li>Com a IA dá pra <b>tirar foto do prato</b> ou <b>descrever</b> o que comeu (20 usos grátis por dia).</li><li>Registre a <b>água</b> no fim da página.</li></ul>`},
-  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<p>Gráficos do <b>peso</b>, da <b>carga de cada exercício</b>, das calorias e o calendário de atividade. Quanto mais você registra, mais completo fica.</p>`},
-  {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Poste seus treinos e corridas e veja o <b>feed</b> de quem você segue.</li><li>Curta, comente e converse no <b>chat</b>.</li><li>Entre em <b>clubes</b> e dispute o ranking da semana.</li></ul>`},
-  {tab:'social',ic:'bell',t:'Fique por dentro',h:`<ul><li>O <b>sininho</b> no topo mostra curtidas, comentários, seguidores e mensagens.</li>${and?'<li>Lembretes de água, refeições e treino chegam no celular. Ajuste tudo em <b>Perfil → Notificações</b>.</li>':''}<li>O botão <b>☰</b> na barra de baixo recolhe o menu.</li></ul>`},
-  {tab:'perfil',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta e aparecem em qualquer aparelho.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
+  {tab:'hoje',ic:'logo',t:'Bem-vindo ao ATHOS',h:`<p>Treino, dieta, corrida e seus amigos num app só. Em 2 minutos eu te mostro tudo, inclusive as novidades.</p>`},
+  {tab:'perfil',ic:'target',t:'Comece pelas metas',h:`<p>No <b>Perfil</b>, toque em <b>Editar</b> nas Metas diárias e coloque idade, altura, peso e objetivo.</p><p>O ATHOS calcula suas calorias, proteína, carbo, gordura e água.</p>`},
+  {tab:'hoje',ic:'hoje',t:'A tela Hoje',h:`<ul><li>As <b>bolinhas da semana</b> acendem nos dias com treino ou refeição. É a sua sequência 🔥.</li><li>O <b>anel dourado</b> mostra as calorias que restam. Embaixo: <b>+ Refeição</b>, <b>+ Água</b> e <b>+ Peso</b>.</li><li><b>Treino de hoje</b> já sugere a próxima ficha.</li></ul>`},
+  {tab:'treino',ic:'treino',t:'Seus treinos',h:`<ul><li><b>Começar agora</b>: Musculação, Check-in${and?', Correr, Caminhar e Pedalar':''} com um toque.</li><li><b>+ Criar</b> monta sua ficha do zero, com IA, por foto ou por modelo pronto.</li><li>Cada ficha tem <b>Iniciar</b>. Pode até colar uma <b>playlist</b> nela.</li></ul>`},
+  {tab:'treino',ic:'go',t:'Durante o treino',h:`<ul><li>Anote carga e repetições e toque em <b>✓</b> em cada série. O <b>descanso</b> começa sozinho.</li><li>💡 A <b>sugestão de carga</b> mostra quanto colocar hoje. Toque em <b>Usar</b>.</li><li>▶ <b>Como fazer</b> mostra a execução de cada exercício.</li>${and?'<li>Controle a <b>música</b> do YouTube Music ou do Spotify sem sair do app.</li>':''}</ul>`},
+  ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Toque em <b>Correr</b>, <b>Caminhar</b> ou <b>Pedalar</b>.</p><ul><li>Mapa, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
+  {tab:'dieta',ic:'dieta',t:'Sua dieta',h:`<ul><li>Toque no <b>+</b> de cada refeição para adicionar.</li><li><b>Ler código de barras</b>: aponte a câmera para a embalagem e o alimento entra sozinho.</li><li>Com a IA: <b>foto do prato</b> ou <b>descrever</b> o que comeu.</li><li>Toque na refeição para ver os alimentos ou <b>repetir a de ontem</b>.</li></ul>`},
+  {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>. As fotos ficam só no seu celular.</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
+  {tab:'perfil',ic:'target',t:'Nível e medalhas',h:`<ul><li>Cada treino, corrida e dia ativo dá <b>XP</b>. Suba de <b>Bronze</b> até <b>Lenda</b>.</li><li>Complete os <b>desafios do mês</b> e ganhe <b>medalhas</b>, que aparecem no seu Perfil.</li></ul>`},
+  {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Ache amigos pelo <b>nome</b> ou pelo <b>ID</b>. O seu fica em Social → Eu.</li><li>No topo do feed, as <b>bolinhas</b> mostram quem treinou hoje. O ponto verde é quem está <b>online</b>.</li><li><b>Dois toques</b> na foto ou no mapa para curtir.</li><li><b>Compartilhar</b> gera um card bonito para os stories do Instagram e do WhatsApp.</li><li>Na aba <b>Desafios</b>: ranking e medalhas do mês.</li></ul>`},
+  {tab:'hoje',ic:'bell',t:'Fique por dentro',h:`<ul><li>O <b>sininho</b> mostra curtidas, comentários, seguidores, mensagens e recordes dos amigos.</li><li>A <b>engrenagem ⚙</b> abre as Configurações: notificações, tema, música, privacidade e mais.</li><li>O <b>☰</b> recolhe a barra de baixo.</li></ul>`},
+  {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 const TOUR={i:0,steps:null};
 function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#tour');
   if(!el){el=document.createElement('div');el.id='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');document.body.appendChild(el);
@@ -62,7 +64,7 @@ function tourDraw(){const s=TOUR.steps[TOUR.i],n=TOUR.steps.length;let el=$('#to
   el.querySelector('.next').focus()}
 function tourStart(){TOUR.steps=tourSteps();TOUR.i=0;tourDraw()}
 function tourEnd(goSetup){const el=$('#tour');if(el)el.remove();document.body.classList.remove('touring');document.querySelectorAll('.tab.spot').forEach(t=>t.classList.remove('spot'));
-  S.profile.tourDone=true;store.mark('profile');try{localStorage.setItem('athos.tour','1')}catch(e){}
+  S.profile.tourDone=true;S.profile.tourV=2;store.mark('profile');try{localStorage.setItem('athos.tour','2')}catch(e){}
   if(goSetup){go('perfil');try{ACT.profileSheet()}catch(e){}}else go('hoje')}
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#tour'))tourEnd(false)});
 window.tourBack=function(){if(!$('#tour'))return false;if(TOUR.i>0){TOUR.i--;tourDraw()}else tourEnd(false);return true};
@@ -73,8 +75,8 @@ const tourTick=setInterval(()=>{
   if(!(SOC&&SOC.user))return;
   if(++tourWait<3)return;
   clearInterval(tourTick);
-  let seen=false;try{seen=localStorage.getItem('athos.tour')==='1'}catch(e){}
-  if(!seen&&!S.profile.tourDone&&!sheets.length&&!S.active)tourStart();
+  let seen=false;try{seen=localStorage.getItem('athos.tour')==='2'}catch(e){}
+  if(!seen&&S.profile.tourV!==2&&!sheets.length&&!S.active)tourStart();
 },1000);
 /* botão para rever no Perfil */
 /* o botão aparece em Configurações */

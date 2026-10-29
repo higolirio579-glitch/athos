@@ -21,23 +21,35 @@ public class ApkProvider extends ContentProvider {
         return new File(d, NAME);
     }
 
+    static final String SHARE = "athos-story.png";
+
+    static File shareFile(android.content.Context c) {
+        File d = new File(c.getCacheDir(), "share");
+        d.mkdirs();
+        return new File(d, SHARE);
+    }
+
     static Uri uri() { return Uri.parse("content://" + AUTH + "/" + NAME); }
+    static Uri shareUri() { return Uri.parse("content://" + AUTH + "/" + SHARE); }
 
     @Override public boolean onCreate() { return true; }
 
-    @Override public String getType(Uri u) { return "application/vnd.android.package-archive"; }
+    @Override public String getType(Uri u) { return SHARE.equals(u.getLastPathSegment()) ? "image/png" : "application/vnd.android.package-archive"; }
 
     @Override
     public ParcelFileDescriptor openFile(Uri u, String mode) throws FileNotFoundException {
-        if (!NAME.equals(u.getLastPathSegment())) throw new FileNotFoundException();
+        String n = u.getLastPathSegment();
+        if (SHARE.equals(n)) return ParcelFileDescriptor.open(shareFile(getContext()), ParcelFileDescriptor.MODE_READ_ONLY);
+        if (!NAME.equals(n)) throw new FileNotFoundException();
         return ParcelFileDescriptor.open(file(getContext()), ParcelFileDescriptor.MODE_READ_ONLY);
     }
 
     @Override
     public Cursor query(Uri u, String[] proj, String sel, String[] args, String sort) {
-        File f = file(getContext());
+        boolean sh = SHARE.equals(u.getLastPathSegment());
+        File f = sh ? shareFile(getContext()) : file(getContext());
         MatrixCursor c = new MatrixCursor(new String[]{OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE});
-        c.addRow(new Object[]{NAME, f.length()});
+        c.addRow(new Object[]{sh ? SHARE : NAME, f.length()});
         return c;
     }
 

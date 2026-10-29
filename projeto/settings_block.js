@@ -45,6 +45,7 @@ function cfgAbout(){const v=NATIVE&&NATIVE.appVersionName?NATIVE.appVersionName(
   return`<div class="card"><div class="cfg-row"><span class="t"><b>ATHOS ${esc(v||'')}</b><small>${NATIVE?'App para Android':'Versão web: atualiza sozinha'}</small></span>${NATIVE&&NATIVE.updateDownload?`<button class="btn sm" data-act="cfgUpdate">Procurar atualização</button>`:''}</div></div>`}
 function cfgHtml(){let h='<div class="cfg view" style="padding:0;gap:12px">';
   if(SOC&&SOC.user&&typeof accCard==='function')h+=`<p class="cfg-h">Conta</p>${accCard()}`;
+  if(SOC&&SOC.user)h+=`<p class="cfg-h">Privacidade</p><div class="card"><label class="swr" style="padding:0"><span class="t"><b>Mostrar quando estou online</b><small>Seus amigos veem "Online" ou "visto há 3 h". Desligado, ninguém vê.</small></span><input type="checkbox" class="sw" data-cfg="online" ${SOC.me&&SOC.me.show_online===false?'':'checked'}></label></div>`;
   const nc=typeof nCard==='function'?nCard():'';if(nc)h+=`<p class="cfg-h">Notificações</p>${nc.replace('<h3>Notificações</h3>','')}`;
   const mu=cfgMusic();if(mu)h+=`<p class="cfg-h">Música</p>${mu}`;
   h+=`<p class="cfg-h">Treino</p>${cfgTraining()}`;
@@ -56,7 +57,7 @@ function cfgHtml(){let h='<div class="cfg view" style="padding:0;gap:12px">';
 function cfgDraw(){if(!CFG.el||!CFG.el.isConnected)return;const b=CFG.el.querySelector('.sheet-b');if(!b)return;const y=b.scrollTop;b.innerHTML=cfgHtml();b.scrollTop=y}
 function cfgOpen(){CFG.el=openSheet('Configurações',cfgHtml(),(b,el)=>{el.querySelector('.sheet').style.maxHeight='96%'})}
 {const _r=render;render=function(){_r.apply(this,arguments);cfgDraw()}}
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cfg==='online'){presSet(t.checked);return}if(t.dataset&&t.dataset.cfg==='mfab'){try{localStorage.setItem('athos.mfab',t.checked?'1':'0')}catch(_){}mfTick();return}if(t.dataset&&t.dataset.cfg==='voice'){lsSet('ficha.voice',t.checked);try{NATIVE.runVoice&&NATIVE.runVoice(t.checked)}catch(_){}}});
 window.addEventListener('focus',()=>setTimeout(cfgDraw,400));
 Object.assign(ACT,{
   cfgTheme:el=>{try{localStorage.setItem('athos.theme',el.dataset.k)}catch(e){}applyTheme(el.dataset.k);render()},

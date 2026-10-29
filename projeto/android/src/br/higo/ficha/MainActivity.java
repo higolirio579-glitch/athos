@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -41,7 +42,8 @@ import java.util.ArrayList;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3, REQ_NOTIF = 4;
+    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3, REQ_NOTIF = 4, REQ_CAM = 5;
+    private PermissionRequest pendingCam;
     private static final Charset UTF8 = Charset.forName("UTF-8");
     static final String HOST = "appassets.androidplatform.net";
     private WebView web;
@@ -76,7 +78,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/1.9.7 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.0 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -103,6 +105,19 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest r) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        boolean cam = false;
+                        for (String x : r.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(x)) cam = true;
+                        if (!cam) { r.deny(); return; }
+                        if (granted(Manifest.permission.CAMERA)) r.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                        else { pendingCam = r; requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAM); }
+                    }
+                });
+            }
+
             @Override
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams params) {
                 if (fileCb != null) fileCb.onReceiveValue(null);
@@ -211,6 +226,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        if (req == REQ_CAM) {
+            if (pendingCam != null) {
+                if (granted(Manifest.permission.CAMERA)) pendingCam.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                else pendingCam.deny();
+                pendingCam = null;
+            }
+            return;
+        }
         if (req == REQ_NOTIF) { js("window.androidNotifPerm&&window.androidNotifPerm(" + Notif.allowed(this) + ")"); return; }
         if (req == REQ_PERM && pendingPerm != null) {
             js("window.androidPermDone&&window.androidPermDone(" + JSONObject.quote(pendingPerm) + "," + permState() + ")");
@@ -487,6 +510,32 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void restCancel() {
             ((AlarmManager) getSystemService(ALARM_SERVICE)).cancel(restPi());
+        }
+
+        /* ----- compartilhar imagem nos stories ----- */
+        @JavascriptInterface
+        public void shareImage(final String b64, final String text) {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        byte[] data = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+                        FileOutputStream os = new FileOutputStream(ApkProvider.shareFile(MainActivity.this));
+                        os.write(data);
+                        os.close();
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        i.setType("image/png");
+                        i.putExtra(Intent.EXTRA_STREAM, ApkProvider.shareUri());
+                        i.setClipData(ClipData.newRawUri("ATHOS", ApkProvider.shareUri()));
+                        if (text != null) i.putExtra(Intent.EXTRA_TEXT, text);
+                        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        Intent ch = Intent.createChooser(i, "Compartilhar");
+                        ch.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(ch);
+                    } catch (Exception e) {
+                        web.evaluateJavascript("toast&&0", null);
+                    }
+                }
+            });
         }
 
         /* ----- aparência e versão ----- */

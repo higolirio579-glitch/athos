@@ -13,6 +13,30 @@ body .tabbar nav{grid-template-columns:repeat(6,1fr)}
 .post .acts button{flex:1;border:0;background:var(--surface2);border-radius:10px;min-height:40px;font-weight:600;color:var(--fg)}
 .post .acts button[aria-pressed="true"]{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
 .post .route{height:180px}
+.card.post2{padding:0;gap:0;overflow:hidden}
+.post2 .hd{display:flex;align-items:center;gap:10px;padding:14px 14px 10px 16px;min-width:0}
+.post2 .hd .t{flex:1;min-width:0;display:flex;flex-direction:column}.post2 .hd b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.post2 .hd small{color:var(--muted);font-size:12.5px}
+.post2 .av-btn{border:0;background:none;padding:0}
+.post2 .ttl{padding:0 16px 10px}.post2 .ttl h3{font-size:21px}.post2 .ttl .body{color:var(--muted);margin-top:3px}
+.post2 .media{position:relative;background:var(--surface2)}
+.post2 .media.route{height:210px;border-radius:0}
+.post2 .media.photo img{display:block;width:100%;max-height:440px;object-fit:cover}
+.post2 .prb{position:absolute;left:12px;top:12px;background:var(--accent);color:#000;font:800 12.5px var(--body);padding:6px 10px;border-radius:10px;box-shadow:0 4px 14px rgb(0 0 0 / .35)}
+.post2 .prline{padding:0 16px 6px}.post2 .prline .prb{position:static;display:inline-block}
+.post2 .st{display:grid;grid-template-columns:repeat(3,1fr);padding:12px 16px 4px;gap:6px}.post2 .st b{font:800 22px/1 var(--display);display:block}.post2 .st small{color:var(--muted);font-size:12px}
+.post2 .exl{padding:4px 16px 0;color:var(--muted);font-size:13px}.post2 .exl b{color:var(--fg);font-weight:600}
+.post2 .ac{display:flex;gap:6px;padding:8px 10px 12px}
+.post2 .ac button{border:0;background:none;color:var(--muted);font:700 15px var(--body);padding:8px 10px;border-radius:10px}
+.post2 .ac button[aria-pressed="true"]{color:#ff5a6e}.post2 .ac .sh{margin-left:auto}
+.heartpop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:90px;color:#ff5a6e;pointer-events:none;animation:hp .8s ease forwards;text-shadow:0 6px 20px rgb(0 0 0 / .4)}
+@keyframes hp{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.stories{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px}.stories::-webkit-scrollbar{display:none}
+.sto{display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;width:64px;border:0;background:none;color:var(--fg);font:600 12px var(--body);padding:0}
+.sto .r{position:relative;width:60px;height:60px;border-radius:50%;padding:3px;background:conic-gradient(var(--accent),#ff8a3d,var(--accent))}
+.sto .r.off{background:var(--line)}
+.sto .r .av{width:100%;height:100%;border:3px solid var(--bg);font-size:17px}
+.sto .n{max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ond{position:absolute;right:2px;bottom:2px;width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid var(--bg)}
 .cmt{display:flex;gap:8px;align-items:flex-start}.cmt .bub{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px 10px;min-width:0;flex:1}
 .cmt .bub b{font-size:13.5px}.cmt .bub p{overflow-wrap:anywhere;white-space:pre-wrap}
 .chat{display:flex;flex-direction:column;gap:6px}.msg{max-width:80%;padding:8px 11px;border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow-wrap:anywhere;white-space:pre-wrap;align-self:flex-start}
@@ -74,20 +98,35 @@ async function countsFor(posts){const ids=posts.map(p=>p.id);if(!ids.length)retu
   for(const id of ids){SOC.likeN[id]=0;SOC.cmtN[id]=0}for(const l of lk){SOC.likeN[l.post_id]++;if(l.user_id===SOC.user.id)SOC.myLikes.add(l.post_id)}for(const c of cm)SOC.cmtN[c.post_id]++}
 const VIS={public:'Público',followers:'Seguidores',private:'Só eu'};
 function postStats(p){const s=p.stats||{};
-  if(p.kind==='run'){const r={type:s.type||'run',dist:s.dist||0,moving:s.moving||0};return`<div class="grid3"><div class="stat"><span class="num">${km2(r.dist)}</span><small>km</small></div><div class="stat"><span class="num">${speedOrPace(r).replace('/km','')}</span><small>${r.type==='bike'?'velocidade':'ritmo /km'}</small></div><div class="stat"><span class="num">${fmtDur(r.moving*1000).replace(/^00:/,'')}</span><small>tempo</small></div>${s.steps?`<div class="stat"><span class="num">${fmtN(s.steps)}</span><small>passos</small></div>`:''}${s.elev?`<div class="stat"><span class="num">+${fmtN(s.elev)}</span><small>m subida</small></div>`:''}</div>`}
-  if(p.kind==='workout'){if(s.checkin)return`<p class="small muted">Check-in · ${fmtN(s.dur||0)} min</p>`;
-    return`<div class="grid3"><div class="stat"><span class="num">${fmtN(s.sets||0)}</span><small>séries</small></div><div class="stat"><span class="num">${fmtN(s.vol||0)}</span><small>kg de volume</small></div><div class="stat"><span class="num">${fmtN(s.dur||0)}</span><small>min</small></div></div>${(s.ex||[]).length?`<p class="small muted">${s.ex.map(e=>esc(e.n)+(e.best?` (${fmtD(e.best)} kg)`:'')).join(' · ')}</p>`:''}${(s.prs||[]).length?`<div class="chips">${s.prs.map(x=>`<span class="chip pr">Recorde: ${esc(x)}</span>`).join('')}</div>`:''}`}
+  if(p.kind==='run'){const r={type:s.type||'run',dist:s.dist||0,moving:s.moving||0};return`<div class="st"><div><b>${km2(r.dist)}</b><small>km</small></div><div><b>${speedOrPace(r).replace('/km','')}</b><small>${r.type==='bike'?'km/h':'ritmo /km'}</small></div><div><b>${fmtDur(r.moving*1000).replace(/^00:/,'')}</b><small>tempo</small></div></div>`}
+  if(p.kind==='workout'){if(s.checkin)return`<div class="st"><div><b>✓</b><small>check-in</small></div><div><b>${fmtN(s.dur||0)}</b><small>min</small></div></div>`;
+    return`<div class="st"><div><b>${fmtN(s.sets||0)}</b><small>séries</small></div><div><b>${fmtN(s.vol||0)}</b><small>kg de volume</small></div><div><b>${fmtN(s.dur||0)}</b><small>min</small></div></div>${(s.ex||[]).length?`<p class="exl">${s.ex.map(e=>esc(e.n)+(e.best?` <b>${fmtD(e.best)} kg</b>`:'')).join(' · ')}</p>`:''}`}
   return'';
 }
-function postCard(p,full){const a=SOC.prof[p.user_id]||{id:p.user_id};const mine=p.user_id===(SOC.user&&SOC.user.id);
-  return`<article class="card post" data-post="${p.id}"><div class="who"><button class="av-btn" data-act="socProfile" data-id="${p.user_id}" style="border:0;background:none;padding:0">${avatar(a)}</button><div class="t"><b>${esc(a.name||'Atleta')}</b><small>${ago(p.created_at)}${a.city?' · '+esc(a.city):''} · ${VIS[p.visibility]||''}</small></div><button class="icon-btn" data-act="socPostMenu" data-id="${p.id}" aria-label="Opções do post">⋯</button></div>
-  ${p.title?`<h3>${esc(p.title)}</h3>`:''}${p.body?`<p class="body">${esc(p.body)}</p>`:''}${postStats(p)}
-  ${p.route&&p.route.length>1?`<div class="route" ${full?'id="socMap"':''}>${routeSvg(p.route)}</div>`:''}${p.photo_url?`<div class="photo"><img src="${esc(p.photo_url)}" alt="Foto do post" loading="lazy"></div>`:''}
-  <div class="acts"><button data-act="socLike" data-id="${p.id}" aria-pressed="${SOC.myLikes.has(p.id)}">♥ ${SOC.likeN[p.id]||0}</button>${full?'':`<button data-act="socOpenPost" data-id="${p.id}">Comentar · ${SOC.cmtN[p.id]||0}</button>`}</div></article>`}
+function postCard(p,full){const a=SOC.prof[p.user_id]||{id:p.user_id};const prs=(p.stats||{}).prs||[];
+  const lv=typeof lvTag==='function'?lvTag(a.xp):'';
+  const prb=prs.length?`<span class="prb">🏆 ${prs.length>1?prs.length+' recordes':'Novo recorde'} · ${esc(prs[0])}</span>`:'';
+  const route=p.route&&p.route.length>1,photo=!!p.photo_url;
+  let media='';if(route)media+=`<div class="media route" ${full?'id="socMap"':''} data-post="${p.id}">${routeSvg(p.route)}${prb}</div>`;
+  if(photo)media+=`<div class="media photo" data-post="${p.id}"><img src="${esc(p.photo_url)}" alt="Foto do post" loading="lazy">${route?'':prb}</div>`;
+  return`<article class="card post post2" data-post="${p.id}"><div class="hd"><button class="av-btn" data-act="socProfile" data-id="${p.user_id}" aria-label="Ver perfil de ${esc(a.name||'Atleta')}">${avatar(a)}</button><span class="t"><b>${esc(a.name||'Atleta')}${lv}</b><small>${ago(p.created_at)}${a.city?' · '+esc(a.city):''} · ${VIS[p.visibility]||''}</small></span><button class="icon-btn" data-act="socPostMenu" data-id="${p.id}" aria-label="Opções do post">⋯</button></div>
+  ${p.title||p.body?`<div class="ttl">${p.title?`<h3>${esc(p.title)}</h3>`:''}${p.body?`<p class="body">${esc(p.body)}</p>`:''}</div>`:''}
+  ${media}${!media&&prb?`<div class="prline">${prb}</div>`:''}${postStats(p)}
+  <div class="ac"><button data-act="socLike" data-id="${p.id}" aria-pressed="${SOC.myLikes.has(p.id)}" aria-label="Curtir">♥ ${SOC.likeN[p.id]||0}</button>${full?'':`<button data-act="socOpenPost" data-id="${p.id}" aria-label="Comentários">💬 ${SOC.cmtN[p.id]||0}</button>`}<button class="sh" data-act="socSharePost" data-id="${p.id}">Compartilhar</button></div></article>`}
+/* curtir com dois toques na foto ou no mapa */
+document.addEventListener('dblclick',e=>{const m=e.target.closest('.post2 .media');if(!m||!SOC.user)return;const id=m.dataset.post;if(!SOC.myLikes.has(id))socLike(id);
+  const h=document.createElement('span');h.className='heartpop';h.textContent='♥';m.appendChild(h);setTimeout(()=>h.remove(),800)});
+/* quem você segue, estilo stories */
+function socStories(){const ids=[...SOC.following];if(!ids.length)return'';const now=Date.now();
+  const recent={};for(const p of SOC.feed||[]){if(now-new Date(p.created_at).getTime()<864e5&&!recent[p.user_id])recent[p.user_id]=p.id}
+  const on=id=>{const ls=SOC.prof[id]&&SOC.prof[id].last_seen;return ls&&now-new Date(ls).getTime()<3*60e3};
+  const list=ids.map(id=>SOC.prof[id]).filter(Boolean).sort((a,b)=>(recent[b.id]?2:0)+(on(b.id)?1:0)-((recent[a.id]?2:0)+(on(a.id)?1:0))).slice(0,15);
+  if(!list.length)return'';
+  return`<div class="stories" role="list" aria-label="Quem você segue">${list.map(pr=>`<button role="listitem" class="sto" ${recent[pr.id]?`data-act="socOpenPost" data-id="${recent[pr.id]}"`:`data-act="socProfile" data-id="${pr.id}"`}><span class="r${recent[pr.id]?'':' off'}">${avatar(pr)}${on(pr.id)?'<i class="ond" aria-label="online"></i>':''}</span><span class="n">${esc((pr.name||'').split(' ')[0])}</span></button>`).join('')}</div>`}
 
 /* ----- telas ----- */
 function vSocial(){
-  let h=`<div class="row between" style="padding-top:4px"><div><p class="eyebrow">Comunidade</p><h1>Social</h1></div>${SOC.user?'<button class="btn primary sm" data-act="socNewPost">+ Postar</button>':''}</div>`;
+  let h=`<div class="row between" style="padding-top:4px"><h1>Social</h1>${SOC.user?'<button class="btn primary sm" data-act="socNewPost">+ Postar</button>':''}</div>`;
   if(!SOC.sb)return h+`<div class="empty"><b>Rede indisponível</b><span>Não consegui carregar a conexão com a rede. Verifique a internet e abra o app de novo.</span></div>`;
   if(!SOC.user)return h+socLoginHtml();
   const tabs=[['feed','Feed'],['msgs','Mensagens'],['clubes','Clubes'],['pessoas','Pessoas'],['eu','Eu']];
@@ -107,7 +146,7 @@ function socFeedHtml(){
   let h=`<div class="chips"><button class="chip" data-act="socFeedMode" data-k="seguindo" aria-pressed="${SOC.feedMode==='seguindo'}">Seguindo</button><button class="chip" data-act="socFeedMode" data-k="descobrir" aria-pressed="${SOC.feedMode==='descobrir'}">Descobrir</button><button class="chip" data-act="socReload">Atualizar</button></div>`;
   if(SOC.loading&&!SOC.feed)return h+thinking('Carregando o feed…');
   if(!SOC.feed||!SOC.feed.length)return h+`<div class="empty"><b>${SOC.feedMode==='seguindo'?'Seu feed está vazio':'Nenhum post público ainda'}</b><span>${SOC.feedMode==='seguindo'?'Siga pessoas na aba Pessoas ou poste sua primeira atividade.':'Seja o primeiro a postar em público.'}</span><button class="btn primary" data-act="socNewPost">Postar uma atividade</button></div>`;
-  return h+SOC.feed.map(p=>postCard(p)).join('');
+  return h+socStories()+SOC.feed.map(p=>postCard(p)).join('');
 }
 function socMsgsHtml(){
   if(!SOC.convs)return thinking('Carregando conversas…');
@@ -120,7 +159,7 @@ function socClubsHtml(){
 }
 function socPeopleHtml(){
   if(!SOC.people)once('people',()=>socSearch(SOC.pq));
-  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`;
+  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}${p.id!==SOC.user.id&&presTxt(p)?' · '+presHtml(p,true):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`;
   let h=`<input id="socQ" type="search" placeholder="Buscar pelo nome ou pelo ID" value="${esc(SOC.pq)}" aria-label="Buscar pessoas pelo nome ou ID" autocomplete="off">`;
   if(!P)return h+thinking('Buscando…');
   if(P.mode==='curto')return h+`<p class="hint">Digite pelo menos 2 letras do nome ou o ID de 7 números.</p>`;
@@ -155,7 +194,7 @@ async function socToggleFollow(id){const on=SOC.following.has(id);
   catch(e){toast(sbErr(e))}}
 async function socProfileSheet(id){
   await loadProfiles([id]).catch(()=>{});const p=SOC.prof[id]||{id,name:'Atleta'};const mine=id===SOC.user.id;
-  openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</p></div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
+  openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</p>${mine?'':presHtml(p)}</div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
    ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)?'':'primary'}" data-s="follow">${SOC.following.has(id)?'Deixar de seguir':'Seguir'}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
    <div id="pPosts">${thinking('Carregando posts…')}</div>${mine?'':'<div class="btns"><button class="btn sm danger" data-s="block">Bloquear</button><button class="btn sm" data-s="report">Denunciar perfil</button></div>'}`,async(b,el)=>{
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
@@ -286,7 +325,7 @@ async function onNewMessage(pl){const m=pl.new;if(SOC.openConv&&SOC.openConv.id=
   if(m.user_id===SOC.user.id)return;await loadProfiles([m.user_id]).catch(()=>{});toast(`${pName(m.user_id)}: ${m.body.slice(0,60)}`);try{NATIVE&&NATIVE.vibrate()}catch(e){}loadConvs()}
 function socChatSheet(convId){
   const c=(SOC.convs||[]).find(x=>x.id===convId)||{id:convId,title:'Conversa',is_group:false};
-  openSheet(c.title,`<div class="chat" id="chatBox">${thinking('Carregando…')}</div><div class="sendbar"><textarea id="chatIn" placeholder="Mensagem" maxlength="2000"></textarea><button class="btn primary" data-s="send">Enviar</button></div>`,async(b,el)=>{
+  openSheet(c.title,`${!c.is_group&&c.other&&SOC.prof[c.other]?`<p class="chatpres">${presHtml(SOC.prof[c.other])||'&nbsp;'}</p>`:''}<div class="chat" id="chatBox">${thinking('Carregando…')}</div><div class="sendbar"><textarea id="chatIn" placeholder="Mensagem" maxlength="2000"></textarea><button class="btn primary" data-s="send">Enviar</button></div>`,async(b,el)=>{
     const box=b.querySelector('#chatBox');let list=[];
     const draw=()=>{box.innerHTML=list.length?list.map(m=>{const me=m.user_id===SOC.user.id;return`<div class="msg ${me?'me':''}">${c.is_group&&!me?`<span class="who">${esc(pName(m.user_id))}</span>`:''}${esc(m.body)}<small>${new Date(m.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</small></div>`}).join(''):'<p class="hint">Diga oi!</p>';
       const sb=b;sb.scrollTop=sb.scrollHeight};
@@ -365,6 +404,7 @@ Object.assign(ACT,{
   socOpenPost:el=>socOpenPost(el.dataset.id),
   socPostMenu:el=>socPostMenu(el.dataset.id),
   socProfile:el=>socProfileSheet(el.dataset.id),
+socSharePost:el=>{const p=findPost(el.dataset.id);if(p)shareCard(postCardData(p))},
 socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://higolirio579-glitch.github.io/athos/`;
   try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){}
   try{await navigator.clipboard.writeText(txt);toast('ID copiado. É só colar para os amigos.')}catch(e){toast('Seu ID: '+fmtId(id))}},
@@ -382,3 +422,15 @@ socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`
  document.addEventListener('click',e=>{const x=e.target.closest('[data-act=socShare]');if(x){const el=x.closest('.wrapS');if(el)closeSheet(el)}},true);}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&SOC.user){loadConvs();if(S.tab==='social'&&SOC.sub==='feed')loadFeed()}});
 sbInit();
+
+/* ----- status online ("Online", "visto há 3 h") ----- */
+document.head.insertAdjacentHTML('beforeend',`<style>.pres{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted)}.pres.on{color:var(--green);font-weight:700}.pres.on::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}.chatpres{margin:-8px 0 2px;min-height:18px}</style>`);
+function presTxt(p){if(!p||p.show_online===false||!p.last_seen)return'';const s=(Date.now()-new Date(p.last_seen).getTime())/1000;if(s<180)return'Online';return s<7*86400?'Visto há '+ago(p.last_seen):'Visto em '+new Date(p.last_seen).toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}
+function presHtml(p,inline){const t=presTxt(p);if(!t)return'';return`<span class="pres${t==='Online'?' on':''}">${esc(t)}</span>`}
+async function presTouch(){if(!SOC.user||document.hidden)return;try{await SOC.sb.rpc('touch_presence')}catch(e){}}
+async function presRefresh(){if(!SOC.user||document.hidden)return;const ids=[...SOC.following];if(!ids.length)return;
+  try{const r=await SOC.sb.from('profiles').select('id,last_seen,show_online').in('id',ids);if(r.data){let ch=false;for(const x of r.data){const o=SOC.prof[x.id];if(o&&(o.last_seen!==x.last_seen||o.show_online!==x.show_online)){o.last_seen=x.last_seen;o.show_online=x.show_online;ch=true}}if(ch&&S.tab==='social'&&!sheets.length)render()}}catch(e){}}
+setInterval(presTouch,120e3);setInterval(()=>{if(S.tab==='social')presRefresh()},60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){presTouch();presRefresh()}});
+{let pu=null;setInterval(()=>{const id=SOC.user?SOC.user.id:null;if(id&&id!==pu){pu=id;setTimeout(()=>{presTouch();presRefresh()},3000)}if(!id)pu=null},2000)}
+async function presSet(on){if(!SOC.user)return;try{await sbq(SOC.sb.from('profiles').update({show_online:on,last_seen:on?new Date().toISOString():null}).eq('id',SOC.user.id).select());if(SOC.me){SOC.me.show_online=on}if(on)presTouch();toast(on?'Agora seus amigos veem quando você está online':'Seu status online ficou escondido')}catch(e){toast(sbErr(e))}}
