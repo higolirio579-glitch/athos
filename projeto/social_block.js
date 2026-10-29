@@ -120,11 +120,18 @@ function socClubsHtml(){
 }
 function socPeopleHtml(){
   if(!SOC.people)once('people',()=>socSearch(SOC.pq));
-  return`<input id="socQ" type="search" placeholder="Buscar pessoas pelo nome" value="${esc(SOC.pq)}" aria-label="Buscar pessoas">${!SOC.people?thinking('Buscando…'):SOC.people.length?`<div class="card"><div class="list">${SOC.people.map(p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${esc(p.city||'')}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`).join('')}</div></div>`:'<p class="hint">Ninguém encontrado com esse nome.</p>'}`;
-}
+  const P=SOC.people,row=p=>`<div class="li"><button class="row" data-act="socProfile" data-id="${p.id}" style="border:0;background:none;padding:0;flex-wrap:nowrap;min-width:0;text-align:left;color:inherit">${avatar(p)}<span class="t"><b>${esc(p.name)}</b><small>${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</small></span></button>${p.id===SOC.user.id?'<span class="chip">Você</span>':`<button class="btn sm ${SOC.following.has(p.id)?'':'primary'}" data-act="socFollow" data-id="${p.id}">${SOC.following.has(p.id)?'Seguindo':'Seguir'}</button>`}</div>`;
+  let h=`<input id="socQ" type="search" placeholder="Buscar pelo nome ou pelo ID" value="${esc(SOC.pq)}" aria-label="Buscar pessoas pelo nome ou ID" autocomplete="off">`;
+  if(!P)return h+thinking('Buscando…');
+  if(P.mode==='curto')return h+`<p class="hint">Digite pelo menos 2 letras do nome ou o ID de 7 números.</p>`;
+  if(P.mode==='busca')return h+(P.list.length?`<div class="card"><div class="list">${P.list.map(row).join('')}</div></div>`:`<div class="empty"><b>Ninguém encontrado</b><span>Confira o nome ou peça o ID da pessoa. Ele fica na aba Eu.</span></div>`);
+  const me=SOC.me||{};
+  h+=`<div class="card"><h3>Encontre seus amigos</h3><p class="hint">Ninguém aparece numa lista aberta: para achar alguém, busque pelo nome ou pelo ID. Mande o seu ID para os amigos te acharem.</p>${me.public_id?`<div class="row between"><span>Seu ID: <b class="num" style="font-size:22px">${fmtId(me.public_id)}</b></span><button class="btn sm soft" data-act="socShareId">Compartilhar</button></div>`:''}</div>`;
+  h+=`<h3 style="margin-top:6px">Quem você segue</h3>`+(P.list.length?`<div class="card"><div class="list">${P.list.map(row).join('')}</div></div>`:`<p class="hint">Você ainda não segue ninguém.</p>`);
+  return h}
 function socMeHtml(){const m=SOC.me||{};
   if(!SOC.rank)once('rank',()=>loadRank());
-  return`<div class="card"><div class="row">${avatar(m,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(m.name||'')}</h2><p class="small muted">${esc(m.city||'')}${m.username?' · @'+esc(m.username):''}</p></div></div>${m.bio?`<p>${esc(m.bio)}</p>`:''}
+  return`<div class="card"><div class="row">${avatar(m,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(m.name||'')}</h2><p class="small muted">${m.public_id?'ID '+fmtId(m.public_id):''}${m.city?' · '+esc(m.city):''}</p></div>${m.public_id?'<button class="btn sm soft" data-act="socShareId">Compartilhar ID</button>':''}</div>${m.bio?`<p>${esc(m.bio)}</p>`:''}
    <div class="grid3"><div class="stat"><span class="num">${SOC.following.size}</span><small>seguindo</small></div><div class="stat"><span class="num">${SOC.followers}</span><small>seguidores</small></div></div>
    <div class="btns"><button class="btn" data-act="socEditMe">Editar perfil</button><button class="btn" data-act="socProfile" data-id="${m.id}">Meus posts</button></div></div>
    <div class="card"><h3>Ranking da semana</h3><p class="hint">Você e quem você segue, desde segunda.</p>${rankHtml(SOC.rank)}</div>
@@ -136,14 +143,19 @@ async function loadRank(club){try{const r=await sbq(SOC.sb.rpc('weekly_ranking',
 
 /* ----- pessoas e perfis ----- */
 let pqT=null;
-async function socSearch(qs){SOC.pq=qs;try{let qy=SOC.sb.from('profiles').select('*').order('created_at',{ascending:false}).limit(30);if(qs.trim())qy=qy.ilike('name','%'+qs.trim().replace(/[%_]/g,'')+'%');const r=await sbq(qy);for(const p of r)SOC.prof[p.id]=p;SOC.people=r}catch(e){SOC.people=[];SOC.err=sbErr(e)}schedule()}
+async function socSearch(qs){SOC.pq=qs;const t=String(qs||'').trim();
+  try{if(!t){const ids=[...SOC.following];await loadProfiles(ids);SOC.people={mode:'seguindo',list:ids.map(id=>SOC.prof[id]).filter(Boolean).sort((a,b)=>(a.name||'').localeCompare(b.name||''))}}
+    else if(t.replace(/^(id|#)\s*/i,'').replace(/\s/g,'').length<2&&!/^\d/.test(t)){SOC.people={mode:'curto',list:[]}}
+    else{const r=await sbq(SOC.sb.rpc('search_people',{q:t}));for(const p of r)SOC.prof[p.id]=p;SOC.people={mode:'busca',list:r}}}
+  catch(e){SOC.people={mode:'busca',list:[]};SOC.err=sbErr(e)}schedule()}
+const fmtId=v=>v?String(v).replace(/^(\d{3})(\d{4})$/,'$1 $2'):'';
 document.addEventListener('input',e=>{if(e.target.id==='socQ'){const v=e.target.value;clearTimeout(pqT);pqT=setTimeout(()=>socSearch(v),350)}});
 async function socToggleFollow(id){const on=SOC.following.has(id);
   try{if(on){await sbq(SOC.sb.from('follows').delete().eq('follower',SOC.user.id).eq('following',id));SOC.following.delete(id)}else{await sbq(SOC.sb.from('follows').insert({follower:SOC.user.id,following:id}));SOC.following.add(id)}SOC.rank=null;render()}
   catch(e){toast(sbErr(e))}}
 async function socProfileSheet(id){
   await loadProfiles([id]).catch(()=>{});const p=SOC.prof[id]||{id,name:'Atleta'};const mine=id===SOC.user.id;
-  openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${esc(p.city||'')}</p></div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
+  openSheet(p.name||'Perfil',`<div class="row">${avatar(p,'lg')}<div class="t" style="flex:1;min-width:0"><h2>${esc(p.name||'')}</h2><p class="small muted">${p.public_id?'ID '+fmtId(p.public_id):''}${p.city?' · '+esc(p.city):''}</p></div></div>${p.bio?`<p>${esc(p.bio)}</p>`:''}
    ${mine?'':`<div class="btns"><button class="btn ${SOC.following.has(id)?'':'primary'}" data-s="follow">${SOC.following.has(id)?'Deixar de seguir':'Seguir'}</button><button class="btn" data-s="dm">Mensagem</button></div>`}
    <div id="pPosts">${thinking('Carregando posts…')}</div>${mine?'':'<div class="btns"><button class="btn sm danger" data-s="block">Bloquear</button><button class="btn sm" data-s="report">Denunciar perfil</button></div>'}`,async(b,el)=>{
     b.onclick=async e=>{const x=e.target.closest('[data-s]');if(!x)return;
@@ -353,6 +365,9 @@ Object.assign(ACT,{
   socOpenPost:el=>socOpenPost(el.dataset.id),
   socPostMenu:el=>socPostMenu(el.dataset.id),
   socProfile:el=>socProfileSheet(el.dataset.id),
+socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://higolirio579-glitch.github.io/athos/`;
+  try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){}
+  try{await navigator.clipboard.writeText(txt);toast('ID copiado. É só colar para os amigos.')}catch(e){toast('Seu ID: '+fmtId(id))}},
   socFollow:el=>socToggleFollow(el.dataset.id),
   socChat:el=>socChatSheet(el.dataset.id),
   socNewClub,socClub:el=>socClubSheet(el.dataset.id),socEditMe,
