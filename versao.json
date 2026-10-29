@@ -1,6 +1,6 @@
 {
-  "code": 25,
-  "nome": "1.9.4",
+  "code": 26,
+  "nome": "1.9.5",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": ["Desafios do mês com ranking e medalhas", "Nível e XP: suba de Bronze até Lenda", "Recordes no feed com aviso para quem te segue", "Música no treino: controle o YouTube Music e o Spotify, com mini player flutuante", "Nova tela de Configurações (⚙) com tema claro, escuro ou automático"]
+  "notas": ["Aba Treino reorganizada: comece musculação, corrida, caminhada ou pedal com um toque", "Botão + Criar: ficha do zero, com IA, por foto ou modelo pronto", "Desafios, nível e XP, música no treino e Configurações"]
 }

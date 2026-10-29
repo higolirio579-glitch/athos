@@ -37,8 +37,6 @@ assert n==4, n
 src=src.replace('Usa um pouco do seu limite de uso do Claude.','${aiNote()}')
 rep("`<p class=\"hint\">Libere o uso do Claude nesta página para gerar planos alimentares.</p>`",
     "`<p class=\"hint\">${AIHOST?'Entre na aba Social para usar a IA grátis e gerar planos alimentares.':'Libere o uso do Claude nesta página para gerar planos alimentares.'}</p>`")
-rep("  html+=`<h2 style=\"margin-top:6px\">Meus treinos</h2>`;",
-    "  if(AIHOST&&!SAMPLE)html+=`<p class=\"hint\">Entre na aba Social para usar a IA grátis (montar treinos e importar a ficha por foto).</p>`;\n  html+=`<h2 style=\"margin-top:6px\">Meus treinos</h2>`;")
 rep("  /* cartão Seus dados removido */","  /* IA, conta e notificações ficam em Configurações */")
 rep("  case'rate_limited':return'Seu limite de uso do Claude foi atingido. Tente mais tarde.';",
     "  case'rate_limited':return AIHOST?'Limite grátis da IA atingido por agora. Tente mais tarde ou conecte a segunda IA no Perfil.':'Seu limite de uso do Claude foi atingido. Tente mais tarde.';\n  case'bad_key':return'A chave da IA não funcionou. Confira em Perfil.';\n  case'user_limit':return'Você já usou seus 20 usos de IA de hoje. Amanhã tem mais! Para usar além disso, conecte sua própria chave no Perfil.';\n  case'server_not_configured':return'A IA do ATHOS ainda não está configurada no servidor.';\n  case'offline':return'Sem conexão com a internet.';")

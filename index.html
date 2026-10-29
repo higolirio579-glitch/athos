@@ -342,6 +342,26 @@ main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 .ex-h .demo-i{background:var(--accent-soft);color:var(--accent-tx)}
 .ex-h .demo-i svg{width:15px;height:15px;fill:currentColor}
 @media (prefers-reduced-motion:reduce){.demo img{transition:none}}
+.go{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.go button{border:1px solid var(--cardline);background:var(--surface);border-radius:20px;padding:14px 6px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--fg);font:700 14px var(--body);box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.go .ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-tx)}
+.go .ic svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.go button.main{grid-column:span 2;flex-direction:row;justify-content:flex-start;padding:14px 16px;gap:14px;background:var(--accent);border-color:var(--accent);color:#000;font-size:16.5px;text-align:left}
+.go button.main .ic{background:rgb(0 0 0 / .12);color:#000}
+.go button.main small{display:block;font:600 12.5px var(--body);opacity:.7}
+.wk{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
+.wk b{color:var(--fg)}.wk button{border:0;background:none;color:var(--accent-tx);font:700 13.5px var(--body);padding:4px 0;flex:none}
+.sec{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.view .sec h2{margin:0!important}
+.card.tplc{flex-direction:row;align-items:center;gap:12px;padding:12px 12px 12px 16px}
+.tplc .tx{flex:1;min-width:0;border:0;background:none;text-align:left;color:inherit;padding:4px 0;font:inherit}
+.tplc .tx b{display:block;font:700 18px/1.15 var(--display);overflow-wrap:anywhere}.tplc .tx small{color:var(--muted);font-size:13px}
+.cmenu{display:flex;flex-direction:column;gap:4px}
+.cmenu button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:var(--surface);color:var(--fg);padding:12px;border-radius:16px;font:600 15.5px var(--body);text-align:left}
+.cmenu button:disabled{opacity:.55}
+.cmenu .e{width:40px;height:40px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;font-size:19px;flex:none}
+.cmenu small{display:block;color:var(--muted);font-size:12.5px;font-weight:500}
+@media (max-width:360px){.go button{font-size:13px}.go .ic{width:42px;height:42px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -720,23 +740,37 @@ function vHoje(){
   html+=`<div class="card"><div class="card-h"><span class="eyebrow">Peso corporal</span>${lw?`<span class="small muted">${esc(dlabel(lw.date))}</span>`:''}</div><div class="row between"><span><span class="num mid">${lw?fmtD(lw.kg):(p.weight?fmtD(p.weight):'—')}</span> <span class="num">kg</span>${p.targetWeight?`<span class="small muted"> · meta ${fmtD(p.targetWeight)} kg</span>`:''}</span><button class="btn sm soft" data-act="weightSheet">Registrar peso</button></div></div>`;
   return html;
 }
+const TRI={gym:'<path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/>',run:'<circle cx="15" cy="4.5" r="2"/><path d="M8 21l3-6 3 2 1 5M6 12l3-4 4 1 2 4 3 1"/>',walk:'<circle cx="13" cy="4.5" r="2"/><path d="M10 21l2-6 3 3v4M9 11l2-3 3 1 2 3M11 8l-2 6"/>',bike:'<circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="M6 16l4-8h5l3 8M10 8l4 8"/><circle cx="15" cy="4.5" r="1.5"/>',check:'<path d="M5 12l5 5 9-10"/>'};
+const triIc=k=>`<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${TRI[k]}</svg></span>`;
 function vTreino(){
   const p=S.profile;let html=`<div style="padding-top:4px"><p class="eyebrow">Musculação e cardio</p><h1>Treino</h1></div>`;
   if(S.active)html+=`<button class="btn primary block" data-act="openActive">Voltar ao treino em andamento</button>`;
-  html+=`<div class="btns"><button class="btn primary" data-act="newTemplate">+ Novo treino</button><button class="btn" data-act="start">Treino livre</button><button class="btn" data-act="checkin">Check-in</button></div>`;
-  if(SAMPLE)html+=`<div class="btns"><button class="btn soft" data-act="aiWorkout">Montar treinos com IA</button>${SAMPLE_IMG?'<button class="btn soft" data-act="importPhoto">Importar ficha por foto</button>':''}</div>`;
-  html+=runCard();
-  if(AIHOST&&!SAMPLE)html+=`<p class="hint">Entre na aba Social para usar a IA grátis (montar treinos e importar a ficha por foto).</p>`;
-  html+=`<h2 style="margin-top:6px">Meus treinos</h2>`;
-  if(!p.templates.length)html+=`<div class="empty"><b>Nenhum treino salvo ainda</b><span>Crie do zero ou adicione um dos modelos abaixo e ajuste do seu jeito.</span></div>`;
-  for(const t of p.templates){const last=sessList().find(s=>s.templateId===t.id);const gr=[...new Set(t.exercises.map(e=>e.group))].slice(0,4).join(' · ');
-    html+=`<div class="card tpl"><div class="card-h"><h3>${esc(t.name)}</h3></div><p class="meta">${t.exercises.length} exercícios${gr?' · '+esc(gr):''}<br>${last?'Último: '+esc(dlabel(last.date)):'Ainda não realizado'}</p><div class="btns"><button class="btn primary" data-act="start" data-id="${t.id}">Iniciar</button><button class="btn" data-act="editTemplate" data-id="${t.id}">Editar</button></div></div>`}
-  html+=`<details class="card"><summary style="cursor:pointer;font-weight:600">Modelos prontos (Push/Pull/Legs e Full body)</summary><div class="list" style="margin-top:8px">${MODELS.map((m,i)=>`<div class="li"><span class="t"><b>${esc(m.name)}</b><small>${m.ex.map(e=>e[0]).slice(0,3).join(', ')}…</small></span><button class="btn sm" data-act="addModel" data-i="${i}">Adicionar</button></div>`).join('')}</div></details>`;
+  const can=!!window.RUNAPI;
+  html+=`<p class="eyebrow" style="margin-top:2px">Começar agora</p><div class="go">
+   <button class="main" data-act="start">${triIc('gym')}<span>Musculação<small>Treino livre</small></span></button>
+   <button data-act="checkin">${triIc('check')}Check-in</button>
+   ${can?`<button data-act="runStart" data-type="run">${triIc('run')}Correr</button><button data-act="runStart" data-type="walk">${triIc('walk')}Caminhar</button><button data-act="runStart" data-type="bike">${triIc('bike')}Pedalar</button>`:''}</div>`;
+  const ws=weekStart(today()),we=addDays(ws,7);const wkKm=runKmBetween(ws,we);const wkT=sessList().filter(s=>!s.run&&s.date>=ws&&s.date<we).length;
+  html+=`<div class="wk"><span>${wkKm||wkT?`<b>${fmtD(wkKm)} km</b> e <b>${wkT} treino${wkT===1?'':'s'}</b> nesta semana`:'Nada registrado nesta semana ainda'}</span><button data-act="goEvo">Ver evolução</button></div>`;
+  if(!can)html+=`<p class="hint" style="margin-top:-4px">Corrida, caminhada e pedal com GPS ficam no app ATHOS para Android.</p>`;
+  html+=`<div class="sec"><h2>Meus treinos</h2><button class="btn sm soft" data-act="createMenu">+ Criar</button></div>`;
+  if(!p.templates.length)html+=`<div class="empty"><b>Nenhum treino salvo ainda</b><span>Toque em <b>+ Criar</b> para montar do zero, com IA, por foto ou a partir de um modelo pronto.</span></div>`;
+  for(const t of p.templates){const last=sessList().find(s=>s.templateId===t.id);
+    html+=`<div class="card tplc"><button class="tx" data-act="editTemplate" data-id="${t.id}" aria-label="Editar ${esc(t.name)}"><b>${esc(t.name)}</b><small>${t.exercises.length} exercício${t.exercises.length===1?'':'s'} · ${last?'último: '+esc(dlabel(last.date)):'ainda não realizado'}${t.music?' · ♪':''}</small></button><button class="btn sm soft" data-act="start" data-id="${t.id}">Iniciar</button></div>`}
   const hist=sessList().slice(0,25);
   html+=`<h2 style="margin-top:6px">Histórico</h2>`;
   html+=hist.length?`<div class="card"><div class="list">${hist.map(s=>{const x=sessStats(s);return`<button class="li" data-act="sessDetail" data-id="${s.id}"><span class="t"><b>${esc(s.name)}</b><small>${esc(dlabel(s.date))} · ${sessSub(s)}${(s.prs||[]).length?` · ${s.prs.length} recorde${s.prs.length>1?'s':''}`:''}</small></span><span class="muted">›</span></button>`}).join('')}</div></div>`:`<p class="hint">Os treinos finalizados aparecem aqui.</p>`;
   return html;
 }
+function createMenu(){const ai=!!SAMPLE,img=!!(SAMPLE&&SAMPLE_IMG);
+  const el=openSheet('Criar treino',`<div class="cmenu">
+   <button data-c="zero"><span class="e" aria-hidden="true">✏️</span><span>Do zero<small>Monte a ficha exercício por exercício</small></span></button>
+   <button data-c="ai" ${ai?'':'disabled'}><span class="e" aria-hidden="true">✨</span><span>Com IA<small>${ai?'Diga seu objetivo e a IA monta':(typeof AIHOST!=='undefined'&&AIHOST?'Entre na sua conta para usar a IA':'Disponível com a IA ligada')}</small></span></button>
+   <button data-c="foto" ${img?'':'disabled'}><span class="e" aria-hidden="true">📷</span><span>Importar por foto<small>${img?'Tire foto da ficha da academia':'Precisa da IA ligada'}</small></span></button>
+   <button data-c="modelo"><span class="e" aria-hidden="true">📋</span><span>Modelo pronto<small>Push, Pull, Legs e Full body</small></span></button></div>`,(b,w)=>{
+    b.addEventListener('click',e=>{const x=e.target.closest('[data-c]');if(!x||x.disabled)return;closeSheet(w);const c=x.dataset.c;
+      if(c==='zero')ACT.newTemplate();else if(c==='ai')ACT.aiWorkout();else if(c==='foto')ACT.importPhoto();else modelsSheet()})})}
+function modelsSheet(){openSheet('Modelos prontos',`<div class="list">${MODELS.map((m,i)=>`<div class="li"><span class="t"><b>${esc(m.name)}</b><small>${m.ex.map(e=>e[0]).slice(0,3).join(', ')}…</small></span><button class="btn sm soft" data-act="addModel" data-i="${i}">Adicionar</button></div>`).join('')}</div>`)}
 function vDieta(){
   const date=S.ui.dietDate,d=S.days[date],t=today(),p=S.profile;
   const lbl=date===t?'Hoje':date===addDays(t,-1)?'Ontem':dlabel(date);
@@ -1264,7 +1298,10 @@ const ACT={
   finish:finishSession,
   discard:()=>confirmSheet('Descartar o treino em andamento? As séries não serão salvas.','Descartar',discardActive),
   restAdj:el=>{if(REST&&!REST.over){REST.end+=num(el.dataset.n)*1000;REST.total=Math.max(5,REST.total+num(el.dataset.n));drawRest()}},
-  restSkip:()=>{REST=null;drawRest()}
+  restSkip:()=>{REST=null;drawRest()},
+  goEvo:()=>go('evolucao'),
+  createMenu:()=>createMenu(),
+  modelsSheet:()=>modelsSheet()
 };
 document.addEventListener('click',e=>{
   const tab=e.target.closest('[data-tab]');if(tab){go(tab.dataset.tab);return}
@@ -2364,8 +2401,8 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'logo',t:'Bem-vindo ao ATHOS',h:`<p>Seu app de treino, dieta e corrida, com seus amigos. Em 1 minuto eu te mostro onde fica cada coisa.</p>`},
   {tab:'perfil',ic:'target',t:'Comece pelas metas',h:`<p>No <b>Perfil</b>, toque em <b>Editar dados e metas</b> e coloque idade, altura, peso e objetivo.</p><p>Com isso o ATHOS calcula suas calorias, proteína, carbo, gordura e água do dia.</p>`},
   {tab:'hoje',ic:'hoje',t:'A tela Hoje',h:`<ul><li>O <b>anel dourado</b> mostra quantas calorias ainda restam.</li><li>A <b>chama</b> no topo conta os dias seguidos com treino ou refeição registrada.</li><li>Também dá pra marcar a <b>água</b> e o <b>peso</b> por aqui.</li></ul>`},
-  {tab:'treino',ic:'treino',t:'Seus treinos',h:`<ul><li><b>+ Novo treino</b> monta sua ficha, ou adicione um <b>modelo pronto</b>.</li><li>Toque em <b>Iniciar</b>, anote carga e repetições e marque <b>✓</b> em cada série.</li><li>O <b>descanso</b> começa sozinho e avisa quando acabar.</li><li>Recordes aparecem com destaque no final.</li></ul>`},
-  ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Na aba Treino, em <b>Corrida, caminhada e pedal</b>, toque para gravar com GPS.</p><ul><li>Mapa do percurso, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
+  {tab:'treino',ic:'treino',t:'Seus treinos',h:`<ul><li><b>Musculação</b> começa um treino livre na hora.</li><li><b>+ Criar</b> monta sua ficha: do zero, com IA, por foto ou a partir de um modelo pronto.</li><li>Toque em <b>Iniciar</b>, anote carga e repetições e marque <b>✓</b> em cada série.</li><li>O <b>descanso</b> começa sozinho e avisa quando acabar.</li><li>Recordes aparecem com destaque no final.</li></ul>`},
+  ...(and?[{tab:'treino',ic:'run',t:'Corrida com GPS',h:`<p>Na aba Treino, toque em <b>Correr</b>, <b>Caminhar</b> ou <b>Pedalar</b> para gravar com GPS.</p><ul><li>Mapa do percurso, ritmo por km e passos.</li><li>Funciona com a <b>tela bloqueada</b> e fala o ritmo a cada km.</li></ul>`}]:[]),
   {tab:'dieta',ic:'dieta',t:'Sua dieta',h:`<ul><li>Em cada refeição, toque em <b>+ Adicionar</b> e busque o alimento.</li><li>Com a IA dá pra <b>tirar foto do prato</b> ou <b>descrever</b> o que comeu (20 usos grátis por dia).</li><li>Registre a <b>água</b> no fim da página.</li></ul>`},
   {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<p>Gráficos do <b>peso</b>, da <b>carga de cada exercício</b>, das calorias e o calendário de atividade. Quanto mais você registra, mais completo fica.</p>`},
   {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Poste seus treinos e corridas e veja o <b>feed</b> de quem você segue.</li><li>Curta, comente e converse no <b>chat</b>.</li><li>Entre em <b>clubes</b> e dispute o ranking da semana.</li></ul>`},
