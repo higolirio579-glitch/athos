@@ -3513,7 +3513,8 @@ const EMO_CATS=[
 function emoRecent(){try{return JSON.parse(localStorage.getItem('athos.emo')||'[]')}catch(e){return[]}}
 function emoPush(e){try{const r=[e,...emoRecent().filter(x=>x!==e)].slice(0,24);localStorage.setItem('athos.emo',JSON.stringify(r))}catch(_){}}
 const isJumbo=t=>{const s=String(t||'').trim();if(!s||s.length>24)return false;try{return /^(\p{Extended_Pictographic}|\p{Emoji_Modifier}|\u200d|\ufe0f|\s)+$/u.test(s)&&[...s.replace(/\s/g,'')].filter(ch=>/\p{Extended_Pictographic}/u.test(ch)).length<=3}catch(e){return false}};
-const CHURL={};
+const CHURL={},CHBLOB={};
+async function chatBlobUrl(path){if(CHBLOB[path])return CHBLOB[path];const u=await chatUrl(path);const r=await fetch(u);if(!r.ok)throw new Error('http '+r.status);const bl=await r.blob();CHBLOB[path]=URL.createObjectURL(bl);return CHBLOB[path]}
 async function chatUrl(path){if(CHURL[path]&&CHURL[path].t>Date.now())return CHURL[path].u;
   const r=await SOC.sb.storage.from('chat').createSignedUrl(path,3600);if(r.error||!r.data)throw r.error||new Error('sem url');
   const u=r.data.signedUrl||r.data.signedURL;CHURL[path]={u,t:Date.now()+50*60e3};return u}
@@ -3528,7 +3529,7 @@ async function audToggle(btn){const path=btn.dataset.path,box=btn.closest('.aud'
   if(AUD.id===path&&AUD.a){if(AUD.a.paused){AUD.a.play()}else{AUD.a.pause()}return}
   if(AUD.a){try{AUD.a.pause()}catch(e){}document.querySelectorAll('.aud .pl').forEach(b=>b.textContent='▶')}
   btn.textContent='…';
-  try{const a=new Audio(await chatUrl(path));AUD.a=a;AUD.id=path;
+  try{const a=new Audio();a.preload='auto';a.src=await chatBlobUrl(path);AUD.a=a;AUD.id=path;
     const bars=[...box.querySelectorAll('.wv i')],lab=box.querySelector('small'),dur=+box.dataset.dur||0;
     a.onplay=()=>{btn.textContent='❚❚'};a.onpause=()=>{btn.textContent='▶'};
     a.ontimeupdate=()=>{const d=isFinite(a.duration)&&a.duration>0?a.duration:dur;const p=d?a.currentTime/d:0;bars.forEach((b,i)=>b.classList.toggle('on',i/bars.length<p));lab.textContent=fmtSec(a.currentTime)};
@@ -3608,18 +3609,18 @@ socChatSheet=function(convId){
     const recUi=on=>{recBox.hidden=!on;inRow.style.display=on?'none':'';sbtn.classList.toggle('rec',on);if(on){recBox.innerHTML=`<div class="chrec"><i></i><span id="recT">0:00</span><small id="recH">Solte para enviar · arraste ← para cancelar</small></div>`;inRow.style.display='flex';inRow.querySelector('.chfield').style.visibility='hidden';inRow.querySelector('[data-s=plus]').style.visibility='hidden'}else{inRow.querySelector('.chfield').style.visibility='';inRow.querySelector('[data-s=plus]').style.visibility=''}};
     const recStart=async()=>{if(REC.r)return;
       if(!navigator.mediaDevices||!window.MediaRecorder){toast('Gravar áudio não funciona neste aparelho');return}
-      try{REC.stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){toast('Libere o microfone para gravar áudio');return}
+      try{REC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true,channelCount:1,sampleRate:48000}})}catch(e){try{REC.stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e2){toast('Libere o microfone para gravar áudio');return}}
       const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'];const mt=types.find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||'';
-      REC.chunks=[];REC.cancel=false;REC.r=new MediaRecorder(REC.stream,mt?{mimeType:mt,audioBitsPerSecond:32000}:undefined);
+      REC.chunks=[];REC.cancel=false;REC.r=new MediaRecorder(REC.stream,mt?{mimeType:mt,audioBitsPerSecond:64000}:{audioBitsPerSecond:64000});
       REC.r.ondataavailable=e=>{if(e.data&&e.data.size)REC.chunks.push(e.data)};
       REC.r.onstop=async()=>{const dur=(Date.now()-REC.t0)/1000;const type=(REC.r.mimeType||mt||'audio/webm').split(';')[0];REC.stream.getTracks().forEach(t=>t.stop());REC.r=null;clearInterval(REC.timer);recUi(false);
         if(REC.cancel){toast('Áudio cancelado');return}if(dur<1){toast('Segure o microfone para gravar');return}
         const blob=new Blob(REC.chunks,{type});const ext=type.includes('mp4')?'m4a':type.includes('ogg')?'ogg':'webm';
         try{const rp=reply;reply=null;drawRep();const path=await upload(blob,ext,type);if(!await sendRow({body:'🎤 Áudio',kind:'audio',meta:{path,dur:Math.round(dur),mime:type},reply_to:rp?rp.id:null}))SOC.sb.storage.from('chat').remove([path]).catch(()=>{})}
         catch(err){toast(sbErr(err))}};
-      REC.r.start(250);REC.t0=Date.now();emoOpen=false;drawEmo();recUi(true);try{NATIVE&&NATIVE.vibrate&&0}catch(e){}
+      REC.r.start();REC.t0=Date.now();emoOpen=false;drawEmo();recUi(true);try{NATIVE&&NATIVE.vibrate&&0}catch(e){}
       REC.timer=setInterval(()=>{const s=(Date.now()-REC.t0)/1000;const t=b.querySelector('#recT');if(t)t.textContent=fmtSec(s);if(s>=120)recStop()},250)};
-    const recStop=()=>{if(REC.r&&REC.r.state!=='inactive')REC.r.stop()};
+    const recStop=()=>{const r=REC.r;if(!r||r.state==='inactive'||REC.stopping)return;REC.stopping=true;setTimeout(()=>{REC.stopping=false;try{if(r.state!=='inactive')r.stop()}catch(e){}},REC.cancel?0:300)};
     sbtn.addEventListener('pointerdown',e=>{if(sbtn.dataset.mode!=='mic')return;e.preventDefault();REC.x0=e.clientX;try{sbtn.setPointerCapture(e.pointerId)}catch(_){}recStart()});
     sbtn.addEventListener('pointermove',e=>{if(!REC.r)return;const dx=e.clientX-REC.x0;const h=b.querySelector('#recH');if(dx<-70){REC.cancel=true;if(h)h.textContent='Solte para cancelar'}else{REC.cancel=false;if(h)h.textContent='Solte para enviar · arraste ← para cancelar'}});
     const recEnd=()=>{if(REC.r)recStop()};sbtn.addEventListener('pointerup',recEnd);sbtn.addEventListener('pointercancel',()=>{REC.cancel=true;recEnd()});

@@ -1,12 +1,8 @@
 {
-  "code": 33,
-  "nome": "2.3",
+  "code": 34,
+  "nome": "2.3.1",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Chat: mande fotos (câmera ou galeria)",
-    "Chat: áudio — segure o microfone para gravar",
-    "Chat: painel de emojis e emoji grande",
-    "Veja quando a pessoa está digitando",
-    "Segure uma mensagem para reagir, responder ou apagar"
+    "Áudio do chat mais limpo, sem travar ao gravar e ao tocar"
   ]
 }
