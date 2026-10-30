@@ -42,7 +42,8 @@ import java.util.ArrayList;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3, REQ_NOTIF = 4, REQ_CAM = 5;
+    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_PERM = 3, REQ_NOTIF = 4, REQ_CAM = 5, REQ_CAM_PICK = 6;
+    private boolean pickImg, pickMulti, camOffered;
     private PermissionRequest pendingCam;
     private static final Charset UTF8 = Charset.forName("UTF-8");
     static final String HOST = "appassets.androidplatform.net";
@@ -78,7 +79,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.2 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.2.1 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -125,17 +126,14 @@ public class MainActivity extends Activity {
                 boolean img = false;
                 String[] acc = params.getAcceptTypes();
                 if (acc != null) for (String a : acc) if (a != null && a.startsWith("image")) img = true;
-                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType(img ? "image/*" : "*/*");
-                if (params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                try {
-                    startActivityForResult(Intent.createChooser(i, img ? "Escolher fotos" : "Escolher arquivo"), REQ_FILE);
-                } catch (ActivityNotFoundException e) {
-                    fileCb = null;
-                    return false;
+                pickImg = img;
+                pickMulti = params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
+                /* foto: pede a câmera antes, para mostrar "Câmera" junto com a galeria */
+                if (img && !granted(Manifest.permission.CAMERA)) {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAM_PICK);
+                    return true;
                 }
-                return true;
+                return openChooser();
             }
         });
         setContentView(web);
@@ -194,6 +192,11 @@ public class MainActivity extends Activity {
                         for (int i = 0; i < r.length; i++) r[i] = cd.getItemAt(i).getUri();
                     } else if (data.getData() != null) r = new Uri[]{data.getData()};
                 }
+                /* a câmera grava no arquivo e às vezes não devolve nada no "data" */
+                if (r == null && res == RESULT_OK && camOffered) {
+                    File f = ApkProvider.camFile(this);
+                    if (f.exists() && f.length() > 0) r = new Uri[]{ApkProvider.camUri()};
+                }
                 fileCb.onReceiveValue(r);
                 fileCb = null;
             }
@@ -214,6 +217,38 @@ public class MainActivity extends Activity {
         }
     }
 
+    boolean openChooser() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType(pickImg ? "image/*" : "*/*");
+        if (pickMulti) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        Intent ch = Intent.createChooser(i, pickImg ? "Tirar foto ou escolher" : "Escolher arquivo");
+        camOffered = false;
+        if (pickImg && granted(Manifest.permission.CAMERA)) {
+            try {
+                File f = ApkProvider.camFile(this);
+                f.delete();
+                Intent cam = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                Uri out = ApkProvider.camUri();
+                cam.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, out);
+                cam.setClipData(ClipData.newRawUri("foto", out));
+                cam.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (cam.resolveActivity(getPackageManager()) != null || Build.VERSION.SDK_INT >= 30) {
+                    ch.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cam});
+                    camOffered = true;
+                }
+            } catch (Exception e) { camOffered = false; }
+        }
+        try {
+            startActivityForResult(ch, REQ_FILE);
+        } catch (ActivityNotFoundException e) {
+            if (fileCb != null) fileCb.onReceiveValue(null);
+            fileCb = null;
+            return false;
+        }
+        return true;
+    }
+
     boolean granted(String p) { return checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED; }
 
     String permState() {
@@ -226,6 +261,10 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        if (req == REQ_CAM_PICK) {
+            if (fileCb != null && !openChooser()) { fileCb.onReceiveValue(null); fileCb = null; }
+            return;
+        }
         if (req == REQ_CAM) {
             if (pendingCam != null) {
                 if (granted(Manifest.permission.CAMERA)) pendingCam.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
