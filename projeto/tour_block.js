@@ -51,18 +51,24 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'evolucao',ic:'evolucao',t:'Sua evolução',h:`<ul><li><b>Resumo</b> compara sua semana com a anterior.</li><li><b>Corpo</b>: medidas (cintura, braço…) e <b>fotos de antes e depois</b>, guardadas numa pasta privada da sua conta (até 20).</li><li><b>Peso</b>, <b>Força</b>, <b>Corrida</b> e <b>Calorias</b> com gráficos.</li></ul>`},
   {tab:'perfil',ic:'target',t:'Nível e medalhas',h:`<ul><li>Cada treino, corrida e dia ativo dá <b>XP</b>. Suba de <b>Bronze</b> até <b>Lenda</b>.</li><li>Complete os <b>desafios do mês</b> e ganhe <b>medalhas</b>, que aparecem no seu Perfil.</li></ul>`},
   {tab:'social',ic:'social',t:'Treine com amigos',h:`<ul><li>Ache amigos pelo <b>nome</b> ou pelo <b>ID</b>. O seu fica em Social → Eu.</li><li>No topo do feed, as <b>bolinhas</b> mostram quem treinou hoje. O ponto verde é quem está <b>online</b>.</li><li><b>Dois toques</b> na foto ou no mapa para curtir.</li><li><b>Compartilhar</b> gera um card bonito para os stories do Instagram e do WhatsApp.</li><li>Na aba <b>Desafios</b>: ranking e medalhas do mês.</li></ul>`},
-  {tab:'social',ic:'chat',t:'Chat e clubes',h:`<ul><li>No <b>Chat</b>: toque numa mensagem para <b>reagir</b>, <b>responder</b> ou apagar. O <b>+</b> manda seu treino.</li><li><b>Clubes</b> têm chat, mural, ranking e <b>meta da semana</b>. Para entrar, peça e o criador aceita.</li><li>Em ⚙ → Privacidade: <b>perfil privado</b> e quem pode te mandar mensagem.</li></ul>`},
+  {tab:'social',ic:'chat',t:'Chat e clubes',h:`<ul><li>No <b>Chat</b>: mande <b>fotos</b>, <b>áudios</b> (segure o 🎤), <b>emojis</b> e seu <b>treino</b> pelo +. Segure uma mensagem para <b>reagir</b>, <b>responder</b> ou apagar.</li><li><b>Clubes</b> têm chat, mural, ranking e <b>meta da semana</b>. Para entrar, peça e o criador aceita.</li><li>Em ⚙ → Privacidade: <b>perfil privado</b> e quem pode te mandar mensagem.</li></ul>`},
   {tab:'hoje',ic:'bell',t:'Fique por dentro',h:`<ul><li>O <b>sininho</b> mostra curtidas, comentários, seguidores, mensagens e recordes dos amigos.</li><li>A <b>engrenagem ⚙</b> abre as Configurações: notificações, tema, música, privacidade e mais.</li><li>O <b>☰</b> recolhe a barra de baixo.</li></ul>`},
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 /* ---------- novidades de cada versão (para quem já usa o app) ----------
    Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
-const NEWS_V='2.2.1';
-const NEWS_ORDER=['2.2','2.2.1'];
+const NEWS_V='2.3';
+const NEWS_ORDER=['2.2','2.2.1','2.3'];
 /* passos de cada versão; quem pulou versões vê tudo o que perdeu */
+function newsByVer(v){
+  if(v==='2.2')return news22().slice(1);
+  if(v==='2.2.1')return[{tab:'dieta',ic:'photo',t:'Foto do prato na hora',h:`<p>No <b>+</b> da refeição → <b>Foto</b>: agora dá para <b>tirar a foto na hora</b> com a câmera, além de escolher da galeria. A IA identifica os alimentos e as porções.</p>`}];
+  if(v==='2.3')return[{tab:'social',ic:'chat',t:'Chat completo',h:`<ul><li>📷 <b>Fotos</b>: toque na câmera dentro da caixa de mensagem (tira na hora ou escolhe da galeria).</li><li>🎤 <b>Áudio</b>: <b>segure</b> o microfone, fale e solte. Arraste para a esquerda para cancelar.</li><li>😊 <b>Emojis</b>: toque na carinha para abrir o painel, com os seus mais usados. Mandou só emoji? Ele aparece <b>grande</b>.</li><li>✍️ Veja quando a pessoa está <b>digitando…</b></li><li><b>Segure</b> uma mensagem para reagir, responder ou apagar.</li></ul>`}];
+  return[]}
 function newsSteps(){let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}if(S.profile.newsV)seen=S.profile.newsV;
-  const cam={tab:'dieta',ic:'photo',t:'Foto do prato na hora',h:`<p>No <b>+</b> da refeição → <b>Foto</b>: agora dá para <b>tirar a foto na hora</b> com a câmera, além de escolher da galeria. A IA identifica os alimentos e as porções.</p>`,last:true};
-  if(NEWS_ORDER.indexOf(seen)>=0)return[{ic:'star',t:'Novidade do ATHOS 2.2.1',h:`<p>Uma melhoria rápida para você.</p>`},cam];
-  const all=news22().map(x=>({...x,last:false}));return[...all,cam]}
+  const from=NEWS_ORDER.indexOf(seen)+1;const vs=NEWS_ORDER.slice(from);
+  const steps=vs.flatMap(newsByVer);
+  const intro={ic:'star',t:vs.length===1?'Novidade do ATHOS '+vs[0]:'Novidades do ATHOS',h:`<p>${steps.length>2?'Separei em 1 minuto o que mudou. Bora?':'Uma melhoria rápida para você.'}</p>`};
+  return[intro,...steps.map((x,k)=>({...x,last:k===steps.length-1}))]}
 function news22(){return[
   {ic:'star',t:'Novidades do ATHOS',h:`<p>Separei em 1 minuto o que mudou. Bora?</p>`},
   {tab:'social',ic:'chat',t:'Chat novo',h:`<ul><li>Visual novo, com <b>dia</b> e <b>hora</b> de cada mensagem e <b>Visto ✓✓</b>.</li><li>Toque numa mensagem para <b>reagir</b> (❤️🔥💪), <b>responder</b>, copiar ou <b>apagar</b>. Dois toques = ❤️.</li><li>O <b>+</b> manda seu último treino ou corrida no chat.</li><li>No <b>⋮</b>: silenciar, ver perfil, denunciar ou bloquear.</li></ul>`},

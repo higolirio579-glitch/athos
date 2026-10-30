@@ -1,8 +1,12 @@
 {
-  "code": 32,
-  "nome": "2.2.1",
+  "code": 33,
+  "nome": "2.3",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Agora dá para tirar a foto na hora com a câmera (prato da IA, evolução, perfil e posts)"
+    "Chat: mande fotos (câmera ou galeria)",
+    "Chat: áudio — segure o microfone para gravar",
+    "Chat: painel de emojis e emoji grande",
+    "Veja quando a pessoa está digitando",
+    "Segure uma mensagem para reagir, responder ou apagar"
   ]
 }

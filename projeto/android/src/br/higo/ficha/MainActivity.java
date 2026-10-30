@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.2.1 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.3 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -110,11 +110,17 @@ public class MainActivity extends Activity {
             public void onPermissionRequest(final PermissionRequest r) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        boolean cam = false;
-                        for (String x : r.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(x)) cam = true;
-                        if (!cam) { r.deny(); return; }
-                        if (granted(Manifest.permission.CAMERA)) r.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                        else { pendingCam = r; requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAM); }
+                        boolean cam = false, mic = false;
+                        for (String x : r.getResources()) {
+                            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(x)) cam = true;
+                            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(x)) mic = true;
+                        }
+                        if (!cam && !mic) { r.deny(); return; }
+                        ArrayList<String> need = new ArrayList<String>();
+                        if (cam && !granted(Manifest.permission.CAMERA)) need.add(Manifest.permission.CAMERA);
+                        if (mic && !granted(Manifest.permission.RECORD_AUDIO)) need.add(Manifest.permission.RECORD_AUDIO);
+                        if (need.isEmpty()) grantMedia(r);
+                        else { pendingCam = r; requestPermissions(need.toArray(new String[0]), REQ_CAM); }
                     }
                 });
             }
@@ -217,6 +223,16 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** libera para a página só o que o Android já permitiu (câmera e/ou microfone) */
+    void grantMedia(PermissionRequest r) {
+        ArrayList<String> ok = new ArrayList<String>();
+        for (String x : r.getResources()) {
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(x) && granted(Manifest.permission.CAMERA)) ok.add(x);
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(x) && granted(Manifest.permission.RECORD_AUDIO)) ok.add(x);
+        }
+        if (ok.isEmpty()) r.deny(); else r.grant(ok.toArray(new String[0]));
+    }
+
     boolean openChooser() {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -266,11 +282,7 @@ public class MainActivity extends Activity {
             return;
         }
         if (req == REQ_CAM) {
-            if (pendingCam != null) {
-                if (granted(Manifest.permission.CAMERA)) pendingCam.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                else pendingCam.deny();
-                pendingCam = null;
-            }
+            if (pendingCam != null) { grantMedia(pendingCam); pendingCam = null; }
             return;
         }
         if (req == REQ_NOTIF) { js("window.androidNotifPerm&&window.androidNotifPerm(" + Notif.allowed(this) + ")"); return; }
