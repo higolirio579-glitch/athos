@@ -21,6 +21,7 @@ const late = (deadline: number) => { if (Date.now() > deadline - 300) throw new 
 /* ----- Gemini ----- */
 const GEM = "https://generativelanguage.googleapis.com/v1beta/models";
 let gemModels: string[] | null = null, gemAt = 0;
+const gemThink: Record<string, any> = {};
 async function gemList(key: string): Promise<string[]> {
   if (gemModels && Date.now() - gemAt < 6 * 3600e3) return gemModels;
   const r = await fetch(GEM + "?pageSize=1000", { headers: { "x-goog-api-key": key } });
@@ -48,11 +49,20 @@ async function callGemini(key: string, turns: Turn[], imgs: string[], json: bool
   for (const m of order.slice(0, 4)) {
     late(deadline);
     const b2: any = { ...body, generationConfig: { ...body.generationConfig } };
-    // resposta direta, sem "pensar" antes (bem mais rápido); se o modelo não aceitar, manda sem
-    if (fast) b2.generationConfig.thinkingConfig = /gemini-2\./.test(m) ? { thinkingBudget: 0 } : { thinkingLevel: "minimal" };
     const go = (bb: any) => fetch(`${GEM}/${m}:generateContent`, { method: "POST", headers: { "x-goog-api-key": key, "Content-Type": "application/json" }, body: JSON.stringify(bb), signal: sig(deadline) });
-    let r = await go(b2);
-    if (r.status === 400 && fast) { delete b2.generationConfig.thinkingConfig; late(deadline); r = await go(b2); }
+    let r: Response = undefined as any;
+    if (fast) {
+      // resposta direta, quase sem "pensar" (de 20 s para ~1 s); usa o menor nível que o modelo aceitar
+      const opts: any[] = gemThink[m] !== undefined ? (gemThink[m] ? [gemThink[m]] : []) : (/gemini-2\./.test(m) ? [{ thinkingBudget: 0 }] : [{ thinkingLevel: "minimal" }, { thinkingLevel: "low" }]);
+      let k = 0;
+      for (;;) {
+        if (opts[k]) b2.generationConfig.thinkingConfig = opts[k]; else delete b2.generationConfig.thinkingConfig;
+        r = await go(b2);
+        if (r.status !== 400 || k >= opts.length) break;
+        k++; late(deadline);
+      }
+      if (r.ok) gemThink[m] = opts[k] || null;
+    } else r = await go(b2);
     if (r.ok) {
       const j = await r.json(); const c = j.candidates && j.candidates[0];
       const t = c && c.content ? (c.content.parts || []).map((p: any) => p.text || "").join("") : "";
