@@ -1,8 +1,8 @@
 # ATHOS: como continuar numa sessão nova
 
-**Situação em 30/10/2026, 23:45:** a versão 2.5.1 está no ar (versionCode 38).
+**Situação em 31/10/2026, 00:30:** a versão 2.5.2 está no ar (versionCode 39), com a IA acelerada.
 
-Às 23:53 a sessão antiga faz sozinha a "IA mais rápida" e lança a 2.5.2 (versionCode 39). Antes de mexer em qualquer coisa, confira em `versao.json` qual versão está no ar.
+Antes de mexer em qualquer coisa, confira em `versao.json` qual versão está no ar.
 
 ## Onde está tudo
 
@@ -42,7 +42,18 @@
 - Código em `coach_block.js`: bolinha flutuante arrastável, personalidades, botão "salvar como ficha".
 - Biblioteca: tabela `coach_kb` com 44 textos e a busca `coach_search`.
 
+## Velocidade da IA (2.5.2)
+
+- **Gemini:** responde com o menor nível de "pensamento" que cada modelo aceita (`thinkingLevel` minimal → low; o 2.x usa `thinkingBudget` 0). Com o pensamento ligado ele levava de 17 a 25 s ou mais; sem ele, 0,5 a 1,5 s.
+- **Ordem dos motores:** texto vai primeiro para o Groq (gpt-oss-120b com reasoning_effort low); foto vai primeiro para o Gemini (Flash-Lite primeiro).
+- **Tempo máximo por motor:** 12 s para texto e 22 s para foto; o último motor tem 40 s.
+- **Fotos:** 1024 px, qualidade 0,75.
+- **Modo de teste (cabeçalho x-cron):**
+  - corpo `{}` testa os 4 motores;
+  - `{"bench":"old"|"new"}` mede um pedido real;
+  - `{"gemdiag":true}` mede cada modelo do Gemini.
+- **Medição:** pedido de treino caiu de 63 s (jeito antigo) para 2,4 a 2,6 s.
+
 ## Ideias pendentes
 
 - **Resposta da IA aparecendo enquanto é escrita (streaming)**, no Coach.
-- **Se a 2.5.2 não tiver saído:** desligar o "pensamento" do Gemini, colocar o Groq primeiro para texto, timeout de 12 s por motor e fotos com 1024 px.
