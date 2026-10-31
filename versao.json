@@ -1,10 +1,9 @@
 {
-  "code": 35,
-  "nome": "2.4",
+  "code": 36,
+  "nome": "2.4.1",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Relatório do treino: calorias gastas, intensidade e progresso",
-    "Comparação com o último treino e força em cada exercício",
-    "Calorias gastas treinando no card do Hoje"
+    "Cronômetro ⏱ nos exercícios por tempo (prancha, pular corda…)",
+    "KM só aparece em corrida, caminhada, bike e outros cardios de distância"
   ]
 }
