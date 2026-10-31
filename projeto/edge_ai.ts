@@ -210,6 +210,19 @@ Deno.serve(async (req) => {
     const { data: ok } = await adm.rpc("cron_secret_ok", { s: req.headers.get("x-cron") || "" });
     if (ok !== true) return out({ code: "forbidden" }, 403);
     let tb: any = {}; try { tb = await req.json(); } catch (_) { /* sem corpo */ }
+    if (tb && tb.gemdiag) {
+      // diagnóstico: tempo de cada modelo do Gemini, com e sem "pensamento"
+      const gk = Deno.env.get("GEMINI_KEY")!; const ms = await gemList(gk); const rows: Record<string, string> = {};
+      await Promise.all(ms.slice(0, 6).flatMap((m) => [true, false].map(async (fast) => {
+        const body: any = { contents: [{ role: "user", parts: [{ text: "Responda só com a palavra: OK" }] }], generationConfig: { temperature: 0.4 } };
+        if (fast) body.generationConfig.thinkingConfig = /gemini-2\./.test(m) ? { thinkingBudget: 0 } : { thinkingLevel: "minimal" };
+        const t0 = Date.now();
+        try { const r = await fetch(`${GEM}/${m}:generateContent`, { method: "POST", headers: { "x-goog-api-key": gk, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(25000) });
+          rows[m + (fast ? " rápido" : " pensando")] = `${r.status} ${Date.now() - t0}ms ${r.ok ? "" : (await r.text()).slice(0, 90)}`; }
+        catch (e) { rows[m + (fast ? " rápido" : " pensando")] = `erro ${Date.now() - t0}ms ${String(e).slice(0, 60)}`; }
+      })));
+      return out({ gemdiag: rows });
+    }
     if (tb && tb.bench) {
       // mede um pedido real: "old" = jeito antigo (Gemini completo pensando primeiro), "new" = jeito novo
       const legacy = tb.bench === "old";
