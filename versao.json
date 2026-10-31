@@ -1,9 +1,10 @@
 {
-  "code": 36,
-  "nome": "2.4.1",
+  "code": 37,
+  "nome": "2.5",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Cronômetro ⏱ nos exercícios por tempo (prancha, pular corda…)",
-    "KM só aparece em corrida, caminhada, bike e outros cardios de distância"
+    "Novo: Coach ATHOS 🧠, seu treinador com IA na tela Hoje",
+    "Ele conhece seus treinos, cargas, dieta e metas e monta fichas para você salvar",
+    "Escolha a personalidade: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro"
   ]
 }
