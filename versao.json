@@ -1,9 +1,9 @@
 {
-  "code": 38,
-  "nome": "2.5.1",
+  "code": 39,
+  "nome": "2.5.2",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Coach ATHOS agora é uma bolinha flutuante em todas as telas",
-    "Toque para perguntar; segure e arraste para mudar de lugar"
+    "IA muito mais rápida: Coach, montar treino e fotos respondem em poucos segundos",
+    "Fotos mais leves para enviar"
   ]
 }

@@ -106,8 +106,8 @@ async function srvRemaining(){try{const r=await sbq(SOC.sb.from('ai_usage').sele
 async function imgToB64(file){
   const url=URL.createObjectURL(file);
   try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
-    const s=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',0.85).split(',')[1]}
+    const s=Math.min(1,1024/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',0.75).split(',')[1]}
   catch(e){throw{code:'image_rejected'}}finally{URL.revokeObjectURL(url)}
 }
 async function aiCall(input,opts,json){

@@ -1771,8 +1771,8 @@ async function srvRemaining(){try{const r=await sbq(SOC.sb.from('ai_usage').sele
 async function imgToB64(file){
   const url=URL.createObjectURL(file);
   try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
-    const s=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',0.85).split(',')[1]}
+    const s=Math.min(1,1024/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',0.75).split(',')[1]}
   catch(e){throw{code:'image_rejected'}}finally{URL.revokeObjectURL(url)}
 }
 async function aiCall(input,opts,json){
@@ -2874,8 +2874,8 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 /* ---------- novidades de cada versão (para quem já usa o app) ----------
    Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
-const NEWS_V='2.5.1';
-const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1'];
+const NEWS_V='2.5.2';
+const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2'];
 /* passos de cada versão; quem pulou versões vê tudo o que perdeu */
 function newsByVer(v){
   if(v==='2.2')return news22().slice(1);
@@ -2885,6 +2885,7 @@ function newsByVer(v){
   if(v==='2.4.1')return[{tab:'treino',ic:'go',t:'Cronômetro no treino',h:`<ul><li>Exercícios por tempo (prancha, pular corda, esteira…) ganharam o botão <b>⏱</b> em cada série: toque e a contagem regressiva começa na tela.</li><li>Dá para <b>pausar</b>, <b>±15 s</b> ou <b>parar e salvar</b>. No fim apita, vibra e marca a série sozinho.</li><li>A coluna <b>KM</b> agora só aparece em cardio de distância (corrida, caminhada, esteira, bike…). O resto é só minutos.</li></ul>`}];
   if(v==='2.5')return[{tab:'hoje',ic:'star',t:'Coach ATHOS',h:`<ul><li>Seu <b>treinador com IA</b> é a <b>bolinha dourada</b> com o capacete que flutua na tela. Toque nela para perguntar; <b>segure e arraste</b> para mudar de lugar.</li><li>Ele conhece seus <b>treinos, cargas, dieta e metas</b>: pergunte “o que eu treino hoje?”, “por que minha carga travou?” ou “quanto falta de proteína?”.</li><li>Pediu um treino? Toque em <b>💾 Salvar como ficha</b> e ele vai para a aba Treino.</li><li>Escolha o <b>jeito dele falar</b>: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro (dá para trocar em ⚙ Configurações).</li></ul>`}];
   if(v==='2.5.1')return[{tab:'hoje',ic:'star',t:'Coach sempre à mão',h:`<ul><li>O <b>Coach ATHOS</b> agora é uma <b>bolinha flutuante</b> com o capacete do ATHOS, em todas as telas.</li><li><b>Toque</b> para abrir as perguntas.</li><li><b>Segure e arraste</b> para colocar onde preferir: ela gruda na borda e lembra o lugar.</li></ul>`}];
+  if(v==='2.5.2')return[{tab:'hoje',ic:'go',t:'IA muito mais rápida',h:`<ul><li>O <b>Coach</b>, <b>montar treino</b>, <b>foto do prato</b> e <b>foto da ficha</b> agora respondem em poucos segundos.</li><li>As fotos ficaram mais leves para enviar, sem perder a leitura.</li></ul>`}];
   return[]}
 function newsSteps(){let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}if(S.profile.newsV)seen=S.profile.newsV;
   const from=NEWS_ORDER.indexOf(seen)+1;const vs=NEWS_ORDER.slice(from);
