@@ -1,10 +1,9 @@
 {
-  "code": 37,
-  "nome": "2.5",
+  "code": 38,
+  "nome": "2.5.1",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Novo: Coach ATHOS 🧠, seu treinador com IA na tela Hoje",
-    "Ele conhece seus treinos, cargas, dieta e metas e monta fichas para você salvar",
-    "Escolha a personalidade: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro"
+    "Coach ATHOS agora é uma bolinha flutuante em todas as telas",
+    "Toque para perguntar; segure e arraste para mudar de lugar"
   ]
 }

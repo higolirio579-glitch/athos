@@ -142,7 +142,59 @@ function coachPersSheet(done){const cur=(coachPers()||[])[0];
 function coachCard(){if(typeof SOC==='undefined'||!SOC.user)return'';const ps=coachPers();
   return`<div class="card coach-card"><div class="hd">${coachLogo()}<span style="flex:1;min-width:0"><b>Coach ATHOS</b><small>${ps?ps[1]+' '+esc(ps[2])+' · ':''}pergunte sobre treino, dieta e evolução</small></span><button class="btn sm primary" data-act="coachOpen">Abrir</button></div>
    <div class="cq">${['O que eu treino hoje?','Quanto falta de proteína?','Monta um treino de 30 min'].map(s=>`<button data-act="coachAsk" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`}
-{const _k=kcalCard;kcalCard=function(d){const h=_k.apply(this,arguments);return d===today()?h+coachCard():h}}
+
+/* --- bolinha flutuante do Coach (arrastável, gruda na borda, posição salva) --- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+#coachFab{position:fixed;z-index:29;width:62px;height:62px;border-radius:50%;padding:0;border:0;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent;left:0;top:0;transition:transform .32s cubic-bezier(.3,.8,.25,1.2),opacity .2s;will-change:transform;user-select:none;-webkit-user-select:none}
+#coachFab.drag{transition:none}#coachFab.drag .cf-in{transform:scale(1.08)}
+#coachFab[hidden]{display:block;opacity:0;pointer-events:none}
+#coachFab .cf-in{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#2a2416,#0b0b0b 70%);border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.55),0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent);transition:transform .15s}
+#coachFab .cf-in{overflow:hidden}#coachFab .cf-in img{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.12);pointer-events:none}
+#coachFab::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:cfRing 3.2s ease-out infinite;pointer-events:none}
+@keyframes cfRing{0%{transform:scale(.85);opacity:.55}70%,100%{transform:scale(1.25);opacity:0}}
+#coachFab .cf-b{position:absolute;right:-4px;bottom:-2px;min-width:24px;height:20px;padding:0 5px;border-radius:10px;background:var(--accent);color:#141414;font:800 11px/20px var(--body);letter-spacing:.02em;border:2px solid var(--bg);pointer-events:none}
+#coachFab:active .cf-in{transform:scale(.94)}
+.cf-tip{position:fixed;z-index:29;background:var(--surface);border:1px solid var(--accent);color:var(--fg);border-radius:14px;padding:9px 12px;font:600 13.5px var(--body);box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:210px;animation:cfTip .3s ease-out}
+@keyframes cfTip{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){#coachFab::before{animation:none}#coachFab{transition:opacity .2s}}
+</style>`);
+const CFAB={el:null,x:null,y:null};
+function cfabSize(){return 62}
+function cfabClamp(x,y){const W=innerWidth,H=innerHeight,sz=cfabSize(),m=10;
+  const top=Math.max(m,(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0)+70),bot=H-sz-90;
+  return[Math.min(Math.max(m,x),W-sz-m),Math.min(Math.max(top,y),Math.max(top,bot))]}
+function cfabPlace(snap){const el=CFAB.el;if(!el)return;let x=CFAB.x,y=CFAB.y;const sz=cfabSize();
+  if(x==null){x=innerWidth-sz-12;y=innerHeight-sz-170}
+  if(snap)x=x+sz/2<innerWidth/2?12:innerWidth-sz-12;
+  [x,y]=cfabClamp(x,y);CFAB.x=x;CFAB.y=y;el.style.transform=`translate(${x}px,${y}px)`}
+function cfabSave(){try{localStorage.setItem('athos.coachFab',JSON.stringify({r:CFAB.x+cfabSize()/2>innerWidth/2,y:CFAB.y/innerHeight}))}catch(e){}}
+function cfabLoad(){try{const o=JSON.parse(localStorage.getItem('athos.coachFab')||'null');if(o){CFAB.y=o.y*innerHeight;CFAB.x=o.r?innerWidth:0}}catch(e){}}
+function cfabVisible(){if(typeof SOC==='undefined'||!SOC.user)return false;
+  if(sheets.length||document.body.classList.contains('touring'))return false;
+  const s=$('#session'),r=$('#run'),g=$('#authGate');if((s&&!s.hidden)||(r&&!r.hidden)||(g&&!g.hidden))return false;
+  if(document.getElementById('tour')||document.getElementById('xtimer'))return false;return true}
+function cfabSync(){if(!CFAB.el)return;const v=cfabVisible();if(CFAB.el.hidden===v)CFAB.el.hidden=!v;if(!v){const t=document.querySelector('.cf-tip');t&&t.remove()}}
+function cfabInit(){if(CFAB.el)return;const b=document.createElement('button');b.id='coachFab';b.setAttribute('aria-label','Abrir o Coach ATHOS');b.hidden=true;
+  const i=document.querySelector('.brand img');b.innerHTML=`<span class="cf-in">${i?`<img src="${i.src}" alt="">`:'🏋️'}</span><span class="cf-b">IA</span>`;
+  document.body.appendChild(b);CFAB.el=b;cfabLoad();cfabPlace(true);
+  let st=null;
+  b.addEventListener('pointerdown',e=>{st={px:e.clientX,py:e.clientY,x:CFAB.x,y:CFAB.y,moved:false,id:e.pointerId};try{b.setPointerCapture(e.pointerId)}catch(_){}});
+  b.addEventListener('pointermove',e=>{if(!st)return;const dx=e.clientX-st.px,dy=e.clientY-st.py;
+    if(!st.moved&&Math.hypot(dx,dy)<8)return;if(!st.moved){st.moved=true;b.classList.add('drag');const t=document.querySelector('.cf-tip');t&&t.remove()}
+    CFAB.x=st.x+dx;CFAB.y=st.y+dy;const[x,y]=cfabClamp(CFAB.x,CFAB.y);b.style.transform=`translate(${x}px,${y}px)`});
+  const end=e=>{if(!st)return;const m=st.moved;st=null;b.classList.remove('drag');
+    if(m){cfabPlace(true);cfabSave();try{NATIVE&&NATIVE.vibrate&&NATIVE.vibrate(10)}catch(_){}}else{const t=document.querySelector('.cf-tip');t&&t.remove();coachOpen()}};
+  b.addEventListener('pointerup',end);b.addEventListener('pointercancel',()=>{if(st&&st.moved){cfabPlace(true);cfabSave()}st=null;b.classList.remove('drag')});
+  b.addEventListener('click',e=>e.preventDefault());
+  addEventListener('resize',()=>{cfabLoad();cfabPlace(true)});
+  setInterval(cfabSync,400);cfabSync();
+  /* dica na primeira vez */
+  let tipped=false;try{tipped=!!localStorage.getItem('athos.coachTip')}catch(e){}
+  if(!tipped)setTimeout(()=>{if(!cfabVisible()||document.querySelector('.cf-tip'))return;try{localStorage.setItem('athos.coachTip','1')}catch(e){}
+    const t=document.createElement('div');t.className='cf-tip';t.textContent='Sou o Coach ATHOS! Toque para perguntar. Segure e arraste para me mudar de lugar.';document.body.appendChild(t);
+    const r=t.getBoundingClientRect(),right=CFAB.x>innerWidth/2;t.style.top=Math.max(70,CFAB.y-r.height-12)+'px';t.style[right?'right':'left']='12px';
+    t.onclick=()=>t.remove();setTimeout(()=>t.remove(),7000)},2500)}
+setTimeout(cfabInit,600);
 Object.assign(ACT,{coachOpen:()=>coachOpen(),coachAsk:el=>coachOpen(el.dataset.q),coachPers:()=>coachPersSheet()});
 
 /* --- Configurações: personalidade --- */
