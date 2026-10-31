@@ -1,8 +1,10 @@
 {
-  "code": 34,
-  "nome": "2.3.1",
+  "code": 35,
+  "nome": "2.4",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Áudio do chat mais limpo, sem travar ao gravar e ao tocar"
+    "Relatório do treino: calorias gastas, intensidade e progresso",
+    "Comparação com o último treino e força em cada exercício",
+    "Calorias gastas treinando no card do Hoje"
   ]
 }
