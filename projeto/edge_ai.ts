@@ -102,6 +102,68 @@ async function callGroq(key: string, turns: Turn[], imgs: string[], json: boolea
   return { text: JSON.stringify(merged), used: "Groq · " + model };
 }
 
+/* ----- NVIDIA NIM e Cloudflare Workers AI (formato OpenAI) ----- */
+const NV = "https://integrate.api.nvidia.com/v1";
+const NV_TEXT = ["nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia/nemotron-3-super-120b-a12b", "google/gemma-4-31b-it", "nvidia/llama-3.1-nemotron-70b-instruct", "meta/llama-3.3-70b-instruct", "nvidia/nemotron-nano-3-30b-a3b", "google/gemma-3-12b-it", "mistralai/mistral-7b-instruct-v0.3", "mistralai/mistral-large-2-instruct"];
+const NV_VISION = ["nvidia/nemotron-3.5-super-vl-120b-a12b", "meta/llama-3.2-90b-vision-instruct", "meta/llama-3.2-11b-vision-instruct"];
+let nvIds: Set<string> | null = null, nvAt = 0;
+let lastHttp = "";
+const nvOk: Record<string, string> = {};
+async function compatRaw(url: string, key: string, model: string, messages: any[], json: boolean, timeoutMs = 45000) {
+  const body: any = { model, messages, temperature: 0.4, max_tokens: 4096 };
+  if (json) body.response_format = { type: "json_object" };
+  const send = () => fetch(url, { method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs) });
+  let r = await send();
+  if ((r.status === 400 || r.status === 422) && json) { delete body.response_format; r = await send(); }
+  if (r.ok) { const j = await r.json(); const t = stripThink(j.choices?.[0]?.message?.content || j.result?.response || ""); if (!t) throw new AiErr("empty_completion"); return t; }
+  try { lastHttp = `${model} HTTP ${r.status} ${(await r.text()).slice(0, 160)}`; } catch (_) { lastHttp = `${model} HTTP ${r.status}`; }
+  throw new AiErr(r.status === 429 ? "rate_limited" : "upstream_error");
+}
+async function callCompat(name: string, url: string, key: string, model: string, turns: Turn[], imgs: string[], json: boolean, perCall = 3) {
+  if (imgs.length <= perCall) return { text: await compatRaw(url, key, model, groqMsgs(turns, imgs), json), used: name + " · " + model };
+  const merged: Record<string, any> = {}; const n = Math.ceil(imgs.length / perCall);
+  for (let k = 0; k < n; k++) {
+    const tt = turns.slice(); const last = tt[tt.length - 1];
+    tt[tt.length - 1] = { ...last, content: `${last.content}\n\n(Você está vendo a parte ${k + 1} de ${n} das fotos; responda só com o que aparece nelas.)` };
+    const o = parseLoose(await compatRaw(url, key, model, groqMsgs(tt, imgs.slice(k * perCall, k * perCall + perCall)), true));
+    for (const [kk, v] of Object.entries(o || {})) { if (Array.isArray(v)) merged[kk] = (merged[kk] || []).concat(v); else if (!(kk in merged)) merged[kk] = v; }
+  }
+  return { text: JSON.stringify(merged), used: name + " · " + model };
+}
+async function callNvidia(key: string, turns: Turn[], imgs: string[], json: boolean) {
+  if (!nvIds || Date.now() - nvAt > 6 * 3600e3) {
+    try { const r = await fetch(NV + "/models", { headers: { Authorization: "Bearer " + key } }); if (r.ok) { nvIds = new Set(((await r.json()).data || []).map((m: any) => m.id)); nvAt = Date.now(); } } catch (_) { /* segue */ }
+  }
+  const kind = imgs.length ? "v" : "t", list = imgs.length ? NV_VISION : NV_TEXT;
+  let cands = nvIds ? list.filter((m) => nvIds!.has(m)) : list.slice();
+  if (!cands.length) cands = list.slice();
+  if (nvOk[kind]) cands = [nvOk[kind], ...cands.filter((m) => m !== nvOk[kind])];
+  let last = "upstream_error";
+  for (const m of cands.slice(0, 6)) {
+    try { const r = await callCompat("NVIDIA", NV + "/chat/completions", key, m, turns, imgs, json, 1); nvOk[kind] = m; return r; }
+    catch (e) { last = e instanceof AiErr ? e.code : "upstream_error"; if (nvOk[kind] === m) delete nvOk[kind]; if (last === "rate_limited") break; }
+  }
+  throw new AiErr(last);
+}
+const CF_TEXT = "@cf/meta/llama-3.3-70b-instruct-fp8-fast", CF_VISION = "@cf/meta/llama-4-scout-17b-16e-instruct";
+async function callCloudflare(acc: string, key: string, turns: Turn[], imgs: string[], json: boolean) {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1/chat/completions`;
+  return await callCompat("Cloudflare", url, key, imgs.length ? CF_VISION : CF_TEXT, turns, imgs, json, 1);
+}
+
+/* ----- todos os motores, na ordem de preferência ----- */
+type Prov = { id: string; run: (turns: Turn[], imgs: string[], json: boolean, quick: boolean) => Promise<{ text: string; used: string }> };
+function providers(): Prov[] {
+  const gk = Deno.env.get("GEMINI_KEY"), qk = Deno.env.get("GROQ_KEY"), nk = Deno.env.get("NVIDIA_KEY");
+  const ca = Deno.env.get("CF_ACCOUNT_ID"), ct = Deno.env.get("CF_AI_TOKEN");
+  const out: Prov[] = [];
+  if (gk) out.push({ id: "gemini", run: (t, i, j, q) => callGemini(gk, t, i, j, q) });
+  if (qk) out.push({ id: "groq", run: (t, i, j) => callGroq(qk, t, i, j) });
+  if (nk) out.push({ id: "nvidia", run: (t, i, j) => callNvidia(nk, t, i, j) });
+  if (ca && ct) out.push({ id: "cloudflare", run: (t, i, j) => callCloudflare(ca, ct, t, i, j) });
+  return out;
+}
+
 /* ----- entrada ----- */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -109,6 +171,18 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  if (req.headers.get("x-cron")) {
+    const adm = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: ok } = await adm.rpc("cron_secret_ok", { s: req.headers.get("x-cron") || "" });
+    if (ok !== true) return out({ code: "forbidden" }, 403);
+    const res: Record<string, string> = {};
+    for (const pv of providers()) {
+      const t0 = Date.now();
+      try { const r = await pv.run([{ role: "user", content: "Responda só com a palavra: OK" }], [], false, true); res[pv.id] = `ok ${Date.now() - t0}ms · ${r.used} · ${r.text.slice(0, 20)}`; }
+      catch (e) { res[pv.id] = "erro: " + (e instanceof AiErr ? e.code : String(e).slice(0, 80)) + " · " + lastHttp; }
+    }
+    return out({ test: res });
+  }
   const auth = req.headers.get("Authorization") || "";
   const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
   const { data: u } = await userClient.auth.getUser();
@@ -127,11 +201,11 @@ Deno.serve(async (req) => {
   if (e1) return out({ code: "upstream_error" }, 500);
   if (left < 0) return out({ code: "user_limit", limit: LIMIT }, 429);
 
-  const gk = Deno.env.get("GEMINI_KEY"), qk = Deno.env.get("GROQ_KEY");
+  const provs = providers();
   const errs: string[] = [];
-  for (const prov of [gk ? "gemini" : "", qk ? "groq" : ""].filter(Boolean)) {
+  for (const pv of provs) {
     try {
-      const r = prov === "gemini" ? await callGemini(gk!, turns, imgs, !!p.json, !!p.quick) : await callGroq(qk!, turns, imgs, !!p.json);
+      const r = await pv.run(turns, imgs, !!p.json, !!p.quick);
       return out({ text: r.text, used: r.used, remaining: left, limit: LIMIT });
     } catch (e) {
       const code = e instanceof AiErr ? e.code : "upstream_error";
@@ -140,6 +214,6 @@ Deno.serve(async (req) => {
     }
   }
   await admin.rpc("ai_give_back", { p_user: uid });
-  if (!gk && !qk) return out({ code: "server_not_configured" }, 503);
+  if (!provs.length) return out({ code: "server_not_configured" }, 503);
   return out({ code: errs.length && errs.every((c) => c === "rate_limited") ? "rate_limited" : "upstream_error" }, 503);
 });
