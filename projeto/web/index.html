@@ -1322,7 +1322,7 @@ function aiWorkoutSheet(){
     b.onclick=async e=>{if(!e.target.closest('[data-s=gen]'))return;const v=id=>b.querySelector(id).value;
       const prompt=`Você é personal trainer. Monte uma divisão de treinos de musculação semanal. Objetivo: ${v('#aG')}. Dias por semana: ${v('#aD')} (crie um treino para cada dia diferente, podendo repetir a divisão). Nível: ${v('#aN')}. Local: ${v('#aL')}. Observações: ${v('#aO').slice(0,400)||'nenhuma'}. Entre 5 e 8 exercícios por treino. Nomes dos treinos em português, curtos (ex.: "Treino A — Peito e tríceps"). ${WK_JSON}`;
       b.onclick=null;b.innerHTML=thinking('Montando seus treinos… pode levar até um minuto.');
-      try{const r=await SAMPLE.json(prompt);templatesReview(b,aiToTemplates(r),el)}catch(err){const m=aiMsg(err);closeSheet(el);if(m)toast(m)}};
+      try{const r=await SAMPLE.json(prompt,{kind:'plan'});templatesReview(b,aiToTemplates(r),el)}catch(err){const m=aiMsg(err);closeSheet(el);if(m)toast(m)}};
   });
 }
 function importPhoto(){
@@ -1581,18 +1581,24 @@ function viewPlanSheet(){
       if(e.target.closest('[data-s=del]'))confirmSheet('Apagar o plano alimentar salvo?','Apagar',()=>{S.profile.plan=null;store.mark('profile');closeSheet(el);render()})};
   });
 }
+/* ajusta as porções para a refeição ficar na meta de calorias (a IA erra a conta) */
+function fitKcal(items,target){const t=items.reduce((a,it)=>a+num(it.kcal),0);if(!(t>0)||!(target>0)||Math.abs(t-target)/target<=0.03)return;
+  const f=Math.min(2.5,Math.max(0.4,target/t));
+  items.forEach(it=>{if(it.grams){const g=it.grams*f;it.grams=g<30?Math.max(1,Math.round(g)):Math.round(g/5)*5}it.kcal=r1(num(it.kcal)*f);it.p=r1(num(it.p)*f);it.c=r1(num(it.c)*f);it.f=r1(num(it.f)*f)})}
 function aiPlanSheet(){
   const g=goals();
   openSheet('Plano alimentar com IA',`<div class="picked"><b>Metas usadas</b><p>${fmtN(g.kcal)} kcal · Proteína ${fmtN(g.p)} g · Carbo ${fmtN(g.c)} g · Gordura ${fmtN(g.f)} g</p></div>
    <label class="fld"><span>Preferências e restrições</span><textarea id="pp" placeholder="Ex.: não gosto de peixe, almoço marmita no trabalho, quero algo barato e prático">${esc(S.profile.planPrefs||'')}</textarea></label>
    <label class="fld"><span>Refeições por dia</span><select id="pn"><option value="4">4 (sem ceia)</option><option value="5" selected>5</option><option value="3">3 (café, almoço, jantar)</option></select></label>
-   <button class="btn primary block" data-s="gen">Gerar plano</button><p class="hint">${aiNote()}</p>`,(b,el)=>{
+   <button class="btn primary block" data-s="gen">Gerar plano</button><p class="hint">${typeof aiNote==='function'?aiNote(PLAN_COST):'Usa um pouco do seu limite de uso da IA.'}</p>`,(b,el)=>{
     b.onclick=async e=>{if(!e.target.closest('[data-s=gen]'))return;const prefs=b.querySelector('#pp').value.trim().slice(0,500);const n=b.querySelector('#pn').value;
       const keys=n==='3'?'cafe, almoco, jantar':n==='4'?'cafe, almoco, lanche, jantar':'cafe, almoco, lanche, jantar, ceia';
       S.profile.planPrefs=prefs;
-      const prompt=`Você é nutricionista esportivo no Brasil. Monte o cardápio de UM dia com comida brasileira comum e acessível, batendo aproximadamente estas metas: ${g.kcal} kcal, ${g.p} g de proteína, ${g.c} g de carboidrato, ${g.f} g de gordura. Use as refeições: ${keys}. Para CADA refeição dê 3 opções bem diferentes entre si (alimentos diferentes, não só a quantidade), todas com calorias e macros parecidos (até 5% de diferença), de modo que o dia some as metas escolhendo qualquer uma delas. Cada opção tem de 3 a 4 itens, e cada refeição principal precisa de uma boa fonte de proteína. Preferências e restrições: ${prefs||'nenhuma'}. Responda SOMENTE com JSON compacto, sem comentários, no formato {"refeicoes":[{"refeicao":"cafe","opcoes":[{"itens":[{"nome":"Ovo cozido","gramas":100,"kcal":146,"proteina":13.3,"carbo":0.6,"gordura":9.5}]},{"itens":[]},{"itens":[]}]}],"dica":"uma dica curta"}. Os valores são do total de cada porção. Use a Tabela TACO como referência.`;
+      const SH={3:{cafe:.28,almoco:.40,jantar:.32},4:{cafe:.25,almoco:.35,lanche:.12,jantar:.28},5:{cafe:.22,almoco:.30,lanche:.14,jantar:.26,ceia:.08}}[n]||{};
+      const tgt=k=>Math.round(g.kcal*(SH[k]||0.2));const alvo=keys.split(', ').map(k=>`${k} ${tgt(k)} kcal`).join(', ');
+      const prompt=`Você é nutricionista esportivo no Brasil. Monte o cardápio de UM dia com comida brasileira comum e acessível, batendo estas metas do dia: ${g.kcal} kcal (NÃO ultrapasse), ${g.p} g de proteína, ${g.c} g de carboidrato, ${g.f} g de gordura. Use as refeições, com este alvo de calorias para cada uma: ${alvo}. Para CADA refeição dê 3 opções bem diferentes entre si (alimentos diferentes, não só a quantidade), todas com o alvo de calorias da refeição. Cada opção tem de 3 a 4 itens, e cada refeição principal precisa de uma boa fonte de proteína. No café da manhã e na ceia não use carne nem frango, e use whey em no máximo uma refeição do dia. Preferências e restrições: ${prefs||'nenhuma'}. Responda SOMENTE com JSON compacto, sem comentários, no formato {"refeicoes":[{"refeicao":"cafe","opcoes":[{"itens":[{"nome":"Ovo cozido","gramas":100,"kcal":146,"proteina":13.3,"carbo":0.6,"gordura":9.5}]},{"itens":[]},{"itens":[]}]}],"dica":"uma dica curta"}. Os valores são do total de cada porção. Use a Tabela TACO como referência.`;
       b.onclick=null;b.innerHTML=thinking('Montando seu cardápio com 3 opções por refeição… pode levar até um minuto.');
-      try{const r=await SAMPLE.json(prompt);const refs=((r&&r.refeicoes)||[]).map(x=>{const raw=Array.isArray(x.opcoes)&&x.opcoes.length?x.opcoes:[{itens:x.itens}];const options=raw.slice(0,3).map(o=>aiToItems({itens:o&&o.itens})).filter(a=>a.length);return{meal:MEAL_L[x.refeicao]?x.refeicao:'lanche',options,items:options[0]||[],sel:0}}).filter(x=>x.items.length);
+      try{const r=await SAMPLE.json(prompt,{kind:'plan'});const refs=((r&&r.refeicoes)||[]).map(x=>{const raw=Array.isArray(x.opcoes)&&x.opcoes.length?x.opcoes:[{itens:x.itens}];const options=raw.slice(0,3).map(o=>aiToItems({itens:o&&o.itens})).filter(a=>a.length);const meal=MEAL_L[x.refeicao]?x.refeicao:'lanche';options.forEach(o=>fitKcal(o,tgt(meal)));return{meal,options,items:options[0]||[],sel:0}}).filter(x=>x.items.length);
         if(!refs.length){closeSheet(el);toast('Não consegui montar o plano. Tente de novo.');return}
         S.profile.plan={refeicoes:refs,dica:String(r.dica||'').slice(0,240),created:Date.now()};store.mark('profile');closeSheet(el);render();viewPlanSheet()}
       catch(err){const m=aiMsg(err);closeSheet(el);if(m)toast(m)}};
@@ -1670,8 +1676,8 @@ window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(VIEW
 
 /* ---------- IA grátis no app Android: Gemini (principal) + Groq (reserva) ---------- */
 const AIHOST=!!(NATIVE||window.WEBAPP);
-const aiNote=()=>!AIHOST?'Usa um pouco do seu limite de uso do Claude.':(gemOn()||groqOn())?'Usa sua própria chave de IA e precisa de internet.':`Usa 1 dos seus ${SRV_LIMIT} usos de IA de hoje e precisa de internet.`;
-const SRV_LIMIT=20;
+const aiNote=(c)=>!AIHOST?'Usa um pouco do seu limite de uso do Claude.':(gemOn()||groqOn())?'Usa sua própria chave de IA e precisa de internet.':`Usa ${c||1} dos seus ${SRV_LIMIT} usos de IA de hoje e precisa de internet.`;
+const SRV_LIMIT=20,PLAN_COST=5;
 const srvOn=()=>{try{return!!(SOC.sb&&SOC.user)}catch(e){return false}};
 let AI=(AIHOST&&lsGet('ficha.ai'))||{};
 const HTTP={};let httpN=0;
@@ -1761,8 +1767,8 @@ async function groqSetup(key){
 }
 
 /* ----- IA do ATHOS (servidor, sem chave) ----- */
-async function callServer(turns,b64s,json,quick){
-  let res;try{res=await SOC.sb.functions.invoke('ai',{body:{turns,images:b64s,json:!!json,quick:!!quick}})}catch(e){throw{code:'offline'}}
+async function callServer(turns,b64s,json,quick,kind){
+  let res;try{res=await SOC.sb.functions.invoke('ai',{body:{turns,images:b64s,json:!!json,quick:!!quick,kind:kind||''}})}catch(e){throw{code:'offline'}}
   const{data,error}=res;
   if(error){let code='upstream_error';try{const ctx=error.context;if(ctx&&ctx.json){const j=await ctx.json();code=j.code||code}else if(/fetch|network/i.test(error.message||''))code='offline'}catch(e){}
     if(code==='user_limit'){AI.srvLeft=0;lsSet('ficha.ai',AI)}
@@ -1789,7 +1795,7 @@ async function aiCall(input,opts,json){
   if(!provs.length)throw{code:b64s.length?'images_unavailable':'not_granted'};
   const errs=[];
   for(const p of provs){
-    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):p==='groq'?await callGroq(turns,b64s,json):await callServer(turns,b64s,json,quick)}
+    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):p==='groq'?await callGroq(turns,b64s,json):await callServer(turns,b64s,json,quick,opts.kind)}
     catch(e){if(e.code==='offline'||e.code==='refused'||e.code==='image_rejected')throw e;errs.push(e)}
   }
   if(errs.some(e=>e.code==='user_limit')&&errs.every(e=>e.code==='user_limit'||e.code==='rate_limited'))throw{code:'user_limit'};
@@ -2890,7 +2896,7 @@ function newsByVer(v){
   if(v==='2.5')return[{tab:'hoje',ic:'star',t:'Coach ATHOS',h:`<ul><li>Seu <b>treinador com IA</b> é a <b>bolinha dourada</b> com o capacete que flutua na tela. Toque nela para perguntar; <b>segure e arraste</b> para mudar de lugar.</li><li>Ele conhece seus <b>treinos, cargas, dieta e metas</b>: pergunte “o que eu treino hoje?”, “por que minha carga travou?” ou “quanto falta de proteína?”.</li><li>Pediu um treino? Toque em <b>💾 Salvar como ficha</b> e ele vai para a aba Treino.</li><li>Escolha o <b>jeito dele falar</b>: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro (dá para trocar em ⚙ Configurações).</li></ul>`}];
   if(v==='2.5.1')return[{tab:'hoje',ic:'star',t:'Coach sempre à mão',h:`<ul><li>O <b>Coach ATHOS</b> agora é uma <b>bolinha flutuante</b> com o capacete do ATHOS, em todas as telas.</li><li><b>Toque</b> para abrir as perguntas.</li><li><b>Segure e arraste</b> para colocar onde preferir: ela gruda na borda e lembra o lugar.</li></ul>`}];
   if(v==='2.5.2')return[{tab:'hoje',ic:'go',t:'IA muito mais rápida',h:`<ul><li>O <b>Coach</b>, <b>montar treino</b>, <b>foto do prato</b> e <b>foto da ficha</b> agora respondem em poucos segundos.</li><li>As fotos ficaram mais leves para enviar, sem perder a leitura.</li></ul>`}];
-  if(v==='2.5.3')return[{tab:'dieta',ic:'go',t:'3 opções por refeição',h:`<ul><li>No <b>Plano alimentar com IA</b>, cada refeição agora vem com <b>3 opções diferentes</b>, com calorias parecidas.</li><li>Toque em <b>Opção 1, 2 ou 3</b> para escolher. O total do dia e o botão <b>Adicionar o plano inteiro</b> usam a opção marcada.</li><li>Planos antigos continuam funcionando. Para ganhar as opções, toque em <b>Gerar outro</b>.</li></ul>`}];
+  if(v==='2.5.3')return[{tab:'dieta',ic:'go',t:'3 opções por refeição',h:`<ul><li>No <b>Plano alimentar com IA</b>, cada refeição agora vem com <b>3 opções diferentes</b>, com calorias parecidas.</li><li>Toque em <b>Opção 1, 2 ou 3</b> para escolher. O total do dia e o botão <b>Adicionar o plano inteiro</b> usam a opção marcada.</li><li>As porções são ajustadas para o plano <b>não passar da sua meta de calorias</b>.</li><li>Cada plano gerado usa <b>5 dos seus 20 usos de IA</b> do dia.</li><li>Planos antigos continuam funcionando. Para ganhar as opções, toque em <b>Gerar outro</b>.</li></ul>`}];
   return[]}
 function newsSteps(){let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}if(S.profile.newsV)seen=S.profile.newsV;
   const from=NEWS_ORDER.indexOf(seen)+1;const vs=NEWS_ORDER.slice(from);

@@ -1,8 +1,8 @@
 
 /* ---------- IA grátis no app Android: Gemini (principal) + Groq (reserva) ---------- */
 const AIHOST=!!(NATIVE||window.WEBAPP);
-const aiNote=()=>!AIHOST?'Usa um pouco do seu limite de uso do Claude.':(gemOn()||groqOn())?'Usa sua própria chave de IA e precisa de internet.':`Usa 1 dos seus ${SRV_LIMIT} usos de IA de hoje e precisa de internet.`;
-const SRV_LIMIT=20;
+const aiNote=(c)=>!AIHOST?'Usa um pouco do seu limite de uso do Claude.':(gemOn()||groqOn())?'Usa sua própria chave de IA e precisa de internet.':`Usa ${c||1} dos seus ${SRV_LIMIT} usos de IA de hoje e precisa de internet.`;
+const SRV_LIMIT=20,PLAN_COST=5;
 const srvOn=()=>{try{return!!(SOC.sb&&SOC.user)}catch(e){return false}};
 let AI=(AIHOST&&lsGet('ficha.ai'))||{};
 const HTTP={};let httpN=0;
@@ -92,8 +92,8 @@ async function groqSetup(key){
 }
 
 /* ----- IA do ATHOS (servidor, sem chave) ----- */
-async function callServer(turns,b64s,json,quick){
-  let res;try{res=await SOC.sb.functions.invoke('ai',{body:{turns,images:b64s,json:!!json,quick:!!quick}})}catch(e){throw{code:'offline'}}
+async function callServer(turns,b64s,json,quick,kind){
+  let res;try{res=await SOC.sb.functions.invoke('ai',{body:{turns,images:b64s,json:!!json,quick:!!quick,kind:kind||''}})}catch(e){throw{code:'offline'}}
   const{data,error}=res;
   if(error){let code='upstream_error';try{const ctx=error.context;if(ctx&&ctx.json){const j=await ctx.json();code=j.code||code}else if(/fetch|network/i.test(error.message||''))code='offline'}catch(e){}
     if(code==='user_limit'){AI.srvLeft=0;lsSet('ficha.ai',AI)}
@@ -120,7 +120,7 @@ async function aiCall(input,opts,json){
   if(!provs.length)throw{code:b64s.length?'images_unavailable':'not_granted'};
   const errs=[];
   for(const p of provs){
-    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):p==='groq'?await callGroq(turns,b64s,json):await callServer(turns,b64s,json,quick)}
+    try{return p==='gemini'?await callGemini(turns,b64s,json,quick):p==='groq'?await callGroq(turns,b64s,json):await callServer(turns,b64s,json,quick,opts.kind)}
     catch(e){if(e.code==='offline'||e.code==='refused'||e.code==='image_rejected')throw e;errs.push(e)}
   }
   if(errs.some(e=>e.code==='user_limit')&&errs.every(e=>e.code==='user_limit'||e.code==='rate_limited'))throw{code:'user_limit'};

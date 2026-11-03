@@ -33,3 +33,27 @@ revoke execute on function public.ai_take(uuid, int) from public, anon, authenti
 revoke execute on function public.ai_give_back(uuid) from public, anon, authenticated;
 grant execute on function public.ai_take(uuid, int) to service_role;
 grant execute on function public.ai_give_back(uuid) to service_role;
+
+-- ===== 2.5.3: pedidos que gastam mais de 1 uso (plano alimentar = 5) =====
+-- reserva p_cost usos de uma vez; devolve quantos restam, ou -1 se não sobrar o suficiente (e não gasta nada)
+create or replace function public.ai_take_n(p_user uuid, p_limit int, p_cost int) returns int
+language plpgsql security definer set search_path = public as $$
+declare d date := (now() at time zone 'America/Sao_Paulo')::date; v int;
+begin
+  insert into public.ai_usage (user_id, day, n) select p_user, d, p_cost where p_cost <= p_limit
+  on conflict (user_id, day) do update set n = public.ai_usage.n + p_cost where public.ai_usage.n + p_cost <= p_limit
+  returning n into v;
+  if v is null then return -1; end if;
+  return p_limit - v;
+end $$;
+
+create or replace function public.ai_give_back_n(p_user uuid, p_cost int) returns void
+language sql security definer set search_path = public as $$
+  update public.ai_usage set n = greatest(n - p_cost, 0)
+   where user_id = p_user and day = (now() at time zone 'America/Sao_Paulo')::date;
+$$;
+
+revoke execute on function public.ai_take_n(uuid, int, int) from public, anon, authenticated;
+revoke execute on function public.ai_give_back_n(uuid, int) from public, anon, authenticated;
+grant execute on function public.ai_take_n(uuid, int, int) to service_role;
+grant execute on function public.ai_give_back_n(uuid, int) to service_role;

@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const LIMIT = 20;
+const PLAN_COST = 5; // gerar plano alimentar gasta 5 usos (quem decide é o servidor)
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -265,7 +266,8 @@ Deno.serve(async (req) => {
   if (JSON.stringify(turns).length > 60000 || imgs.reduce((a, s) => a + s.length, 0) > 9_000_000) return out({ code: "prompt_too_large" }, 413);
 
   const admin = createClient(url, service);
-  const { data: left, error: e1 } = await admin.rpc("ai_take", { p_user: uid, p_limit: LIMIT });
+  const cost = p.kind === "plan" ? PLAN_COST : 1;
+  const { data: left, error: e1 } = await admin.rpc("ai_take_n", { p_user: uid, p_limit: LIMIT, p_cost: cost });
   if (e1) return out({ code: "upstream_error" }, 500);
   if (left < 0) return out({ code: "user_limit", limit: LIMIT }, 429);
 
@@ -275,9 +277,9 @@ Deno.serve(async (req) => {
     const r = await runChain(provs, turns, imgs, !!p.json, !!p.quick, errs);
     if (r) return out({ text: r.text, used: r.used, remaining: left, limit: LIMIT });
   } catch (e) {
-    if (e instanceof AiErr && e.code === "refused") { await admin.rpc("ai_give_back", { p_user: uid }); return out({ code: "refused" }, 422); }
+    if (e instanceof AiErr && e.code === "refused") { await admin.rpc("ai_give_back_n", { p_user: uid, p_cost: cost }); return out({ code: "refused" }, 422); }
   }
-  await admin.rpc("ai_give_back", { p_user: uid });
+  await admin.rpc("ai_give_back_n", { p_user: uid, p_cost: cost });
   if (!provs.length) return out({ code: "server_not_configured" }, 503);
   return out({ code: errs.length && errs.every((c) => c.endsWith(":rate_limited")) ? "rate_limited" : "upstream_error" }, 503);
 });

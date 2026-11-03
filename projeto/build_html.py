@@ -33,7 +33,7 @@ print('ok',len(src))
 
 # ---------- IA grátis com Gemini (só no APK) ----------
 n=src.count('Usa um pouco do seu limite de uso do Claude.')
-assert n==4, n
+assert n==3, n
 src=src.replace('Usa um pouco do seu limite de uso do Claude.','${aiNote()}')
 rep("`<p class=\"hint\">Libere o uso do Claude nesta página para gerar planos alimentares.</p>`",
     "`<p class=\"hint\">${AIHOST?'Entre na aba Social para usar a IA grátis e gerar planos alimentares.':'Libere o uso do Claude nesta página para gerar planos alimentares.'}</p>`")
