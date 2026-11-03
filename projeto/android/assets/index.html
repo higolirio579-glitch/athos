@@ -1567,12 +1567,16 @@ function profileSheet(){
     b.onclick=e=>{if(!e.target.closest('[data-s=save]'))return;read();const hadW=S.profile.weight;S.profile={...S.profile,...p};if(p.weight&&p.weight!==hadW&&p.weight!==curWeight()){ensureDay(today()).weight=p.weight;store.mark('d-'+today())}store.mark('profile');closeSheet(el);render();toast('Dados salvos')};
   });
 }
-function planToHtml(plan){return plan.refeicoes.map((r,i)=>{const t=mealTotals(r.items);return`<div class="card" style="gap:8px"><div class="card-h"><h3>${esc(MEAL_L[r.meal]||r.meal)}</h3><span class="small muted">${fmtN(t.kcal)} kcal</span></div><div class="small">${r.items.map(it=>`${esc(it.name)}${it.grams?` — ${fmtN(it.grams)} g`:''}`).join('<br>')}</div><button class="btn sm soft" data-pm="${i}">Adicionar ao dia de hoje</button></div>`}).join('')}
+function planToHtml(plan){return plan.refeicoes.map((r,i)=>{const t=mealTotals(r.items);const ops=r.options&&r.options.length>1?`<div style="display:flex;gap:6px">${r.options.map((_,k)=>`<button class="btn sm ${(r.sel||0)===k?'primary':'soft'}" data-op="${i}:${k}">Opção ${k+1}</button>`).join('')}</div>`:'';return`<div class="card" style="gap:8px"><div class="card-h"><h3>${esc(MEAL_L[r.meal]||r.meal)}</h3><span class="small muted">${fmtN(t.kcal)} kcal</span></div>${ops}<div class="small">${r.items.map(it=>`${esc(it.name)}${it.grams?` — ${fmtN(it.grams)} g`:''}`).join('<br>')}</div><button class="btn sm soft" data-pm="${i}">Adicionar ao dia de hoje</button></div>`}).join('')}
 function applyPlanMeal(r){addItems(today(),r.meal,r.items.map(it=>({...clone(it),id:newId('f')})))}
 function viewPlanSheet(){
-  const plan=S.profile.plan;if(!plan)return;const tot=plan.refeicoes.reduce((a,r)=>{const t=mealTotals(r.items);return{kcal:a.kcal+t.kcal,p:a.p+t.p,c:a.c+t.c,f:a.f+t.f}},{kcal:0,p:0,c:0,f:0});
-  openSheet('Meu plano alimentar',`<p><b class="num" style="font-size:22px">${fmtN(tot.kcal)} kcal</b> <span class="muted small">· P ${fmtN(tot.p)} g · C ${fmtN(tot.c)} g · G ${fmtN(tot.f)} g</span></p>${plan.dica?`<p class="hint">${esc(plan.dica)}</p>`:''}${planToHtml(plan)}<button class="btn primary block" data-s="all">Adicionar o plano inteiro hoje</button><button class="btn danger block" data-s="del">Apagar plano</button>`,(b,el)=>{
-    b.onclick=e=>{const pm=e.target.closest('[data-pm]');if(pm){applyPlanMeal(plan.refeicoes[+pm.dataset.pm]);pm.disabled=true;pm.textContent='Adicionado';return}
+  const plan=S.profile.plan;if(!plan)return;
+  const body=()=>{const tot=plan.refeicoes.reduce((a,r)=>{const t=mealTotals(r.items);return{kcal:a.kcal+t.kcal,p:a.p+t.p,c:a.c+t.c,f:a.f+t.f}},{kcal:0,p:0,c:0,f:0});
+    return`<p><b class="num" style="font-size:22px">${fmtN(tot.kcal)} kcal</b> <span class="muted small">· P ${fmtN(tot.p)} g · C ${fmtN(tot.c)} g · G ${fmtN(tot.f)} g</span></p>${plan.dica?`<p class="hint">${esc(plan.dica)}</p>`:''}${plan.refeicoes.some(r=>r.options&&r.options.length>1)?'<p class="hint">Escolha uma das 3 opções de cada refeição. O total acima e o botão do plano inteiro usam a opção marcada.</p>':''}${planToHtml(plan)}<button class="btn primary block" data-s="all">Adicionar o plano inteiro hoje</button><button class="btn danger block" data-s="del">Apagar plano</button>`};
+  openSheet('Meu plano alimentar','',(b,el)=>{
+    b.innerHTML=body();
+    b.onclick=e=>{const op=e.target.closest('[data-op]');if(op){const[i,k]=op.dataset.op.split(':').map(Number);const r=plan.refeicoes[i];if(r&&r.options&&r.options[k]){r.sel=k;r.items=r.options[k];store.mark('profile');b.innerHTML=body()}return}
+      const pm=e.target.closest('[data-pm]');if(pm){applyPlanMeal(plan.refeicoes[+pm.dataset.pm]);pm.disabled=true;pm.textContent='Adicionado';return}
       if(e.target.closest('[data-s=all]')){plan.refeicoes.forEach(applyPlanMeal);closeSheet(el);go('dieta');toast('Plano adicionado ao dia');return}
       if(e.target.closest('[data-s=del]'))confirmSheet('Apagar o plano alimentar salvo?','Apagar',()=>{S.profile.plan=null;store.mark('profile');closeSheet(el);render()})};
   });
@@ -1586,9 +1590,9 @@ function aiPlanSheet(){
     b.onclick=async e=>{if(!e.target.closest('[data-s=gen]'))return;const prefs=b.querySelector('#pp').value.trim().slice(0,500);const n=b.querySelector('#pn').value;
       const keys=n==='3'?'cafe, almoco, jantar':n==='4'?'cafe, almoco, lanche, jantar':'cafe, almoco, lanche, jantar, ceia';
       S.profile.planPrefs=prefs;
-      const prompt=`Você é nutricionista esportivo no Brasil. Monte o cardápio de UM dia com comida brasileira comum e acessível, batendo aproximadamente estas metas: ${g.kcal} kcal, ${g.p} g de proteína, ${g.c} g de carboidrato, ${g.f} g de gordura. Use as refeições: ${keys}. Cada refeição principal precisa de uma boa fonte de proteína. Preferências e restrições: ${prefs||'nenhuma'}. Responda SOMENTE com JSON no formato {"refeicoes":[{"refeicao":"cafe","itens":[{"nome":"Ovo cozido","gramas":100,"kcal":146,"proteina":13.3,"carbo":0.6,"gordura":9.5}]}],"dica":"uma dica curta"}. Os valores são do total de cada porção. Use a Tabela TACO como referência.`;
-      b.onclick=null;b.innerHTML=thinking('Montando seu cardápio… pode levar até um minuto.');
-      try{const r=await SAMPLE.json(prompt);const refs=((r&&r.refeicoes)||[]).map(x=>({meal:MEAL_L[x.refeicao]?x.refeicao:'lanche',items:aiToItems({itens:x.itens})})).filter(x=>x.items.length);
+      const prompt=`Você é nutricionista esportivo no Brasil. Monte o cardápio de UM dia com comida brasileira comum e acessível, batendo aproximadamente estas metas: ${g.kcal} kcal, ${g.p} g de proteína, ${g.c} g de carboidrato, ${g.f} g de gordura. Use as refeições: ${keys}. Para CADA refeição dê 3 opções bem diferentes entre si (alimentos diferentes, não só a quantidade), todas com calorias e macros parecidos (até 5% de diferença), de modo que o dia some as metas escolhendo qualquer uma delas. Cada opção tem de 3 a 4 itens, e cada refeição principal precisa de uma boa fonte de proteína. Preferências e restrições: ${prefs||'nenhuma'}. Responda SOMENTE com JSON compacto, sem comentários, no formato {"refeicoes":[{"refeicao":"cafe","opcoes":[{"itens":[{"nome":"Ovo cozido","gramas":100,"kcal":146,"proteina":13.3,"carbo":0.6,"gordura":9.5}]},{"itens":[]},{"itens":[]}]}],"dica":"uma dica curta"}. Os valores são do total de cada porção. Use a Tabela TACO como referência.`;
+      b.onclick=null;b.innerHTML=thinking('Montando seu cardápio com 3 opções por refeição… pode levar até um minuto.');
+      try{const r=await SAMPLE.json(prompt);const refs=((r&&r.refeicoes)||[]).map(x=>{const raw=Array.isArray(x.opcoes)&&x.opcoes.length?x.opcoes:[{itens:x.itens}];const options=raw.slice(0,3).map(o=>aiToItems({itens:o&&o.itens})).filter(a=>a.length);return{meal:MEAL_L[x.refeicao]?x.refeicao:'lanche',options,items:options[0]||[],sel:0}}).filter(x=>x.items.length);
         if(!refs.length){closeSheet(el);toast('Não consegui montar o plano. Tente de novo.');return}
         S.profile.plan={refeicoes:refs,dica:String(r.dica||'').slice(0,240),created:Date.now()};store.mark('profile');closeSheet(el);render();viewPlanSheet()}
       catch(err){const m=aiMsg(err);closeSheet(el);if(m)toast(m)}};
@@ -2874,8 +2878,8 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 /* ---------- novidades de cada versão (para quem já usa o app) ----------
    Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
-const NEWS_V='2.5.2';
-const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2'];
+const NEWS_V='2.5.3';
+const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2','2.5.3'];
 /* passos de cada versão; quem pulou versões vê tudo o que perdeu */
 function newsByVer(v){
   if(v==='2.2')return news22().slice(1);
@@ -2886,6 +2890,7 @@ function newsByVer(v){
   if(v==='2.5')return[{tab:'hoje',ic:'star',t:'Coach ATHOS',h:`<ul><li>Seu <b>treinador com IA</b> é a <b>bolinha dourada</b> com o capacete que flutua na tela. Toque nela para perguntar; <b>segure e arraste</b> para mudar de lugar.</li><li>Ele conhece seus <b>treinos, cargas, dieta e metas</b>: pergunte “o que eu treino hoje?”, “por que minha carga travou?” ou “quanto falta de proteína?”.</li><li>Pediu um treino? Toque em <b>💾 Salvar como ficha</b> e ele vai para a aba Treino.</li><li>Escolha o <b>jeito dele falar</b>: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro (dá para trocar em ⚙ Configurações).</li></ul>`}];
   if(v==='2.5.1')return[{tab:'hoje',ic:'star',t:'Coach sempre à mão',h:`<ul><li>O <b>Coach ATHOS</b> agora é uma <b>bolinha flutuante</b> com o capacete do ATHOS, em todas as telas.</li><li><b>Toque</b> para abrir as perguntas.</li><li><b>Segure e arraste</b> para colocar onde preferir: ela gruda na borda e lembra o lugar.</li></ul>`}];
   if(v==='2.5.2')return[{tab:'hoje',ic:'go',t:'IA muito mais rápida',h:`<ul><li>O <b>Coach</b>, <b>montar treino</b>, <b>foto do prato</b> e <b>foto da ficha</b> agora respondem em poucos segundos.</li><li>As fotos ficaram mais leves para enviar, sem perder a leitura.</li></ul>`}];
+  if(v==='2.5.3')return[{tab:'dieta',ic:'go',t:'3 opções por refeição',h:`<ul><li>No <b>Plano alimentar com IA</b>, cada refeição agora vem com <b>3 opções diferentes</b>, com calorias parecidas.</li><li>Toque em <b>Opção 1, 2 ou 3</b> para escolher. O total do dia e o botão <b>Adicionar o plano inteiro</b> usam a opção marcada.</li><li>Planos antigos continuam funcionando. Para ganhar as opções, toque em <b>Gerar outro</b>.</li></ul>`}];
   return[]}
 function newsSteps(){let seen='';try{seen=localStorage.getItem('athos.news')||''}catch(e){}if(S.profile.newsV)seen=S.profile.newsV;
   const from=NEWS_ORDER.indexOf(seen)+1;const vs=NEWS_ORDER.slice(from);
