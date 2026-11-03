@@ -1,9 +1,10 @@
 {
-  "code": 39,
-  "nome": "2.5.2",
+  "code": 40,
+  "nome": "2.5.3",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "IA muito mais rápida: Coach, montar treino e fotos respondem em poucos segundos",
-    "Fotos mais leves para enviar"
+    "Plano alimentar com 3 opções diferentes por refeição",
+    "O plano respeita a sua meta de calorias",
+    "Mensagens de erro da IA mais claras"
   ]
 }
