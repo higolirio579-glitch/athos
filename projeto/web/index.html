@@ -1884,6 +1884,17 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .r-exp{position:absolute;right:12px;top:10px;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center}
 .r-exp svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .r-body{position:relative;flex:1 1 auto;min-height:0}
+#cdown{position:fixed;inset:0;z-index:1000;background:radial-gradient(circle at 50% 45%,rgba(233,182,64,.22),rgba(0,0,0,0) 62%),#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#F2F2F0;animation:cdIn .2s ease-out}
+#cdown.out{opacity:0;transition:opacity .25s}
+#cdown .cd-t{font:700 18px var(--body);color:#8C929C;margin:0}
+#cdown .cd-n{height:300px;width:100%;display:grid;place-items:center;overflow:visible}
+#cdown .cd-n b{font:800 220px/1 var(--display);color:var(--accent);animation:cdPop 1s ease-out both;filter:drop-shadow(0 0 34px rgba(233,182,64,.45))}
+#cdown .cd-n b.go{font-size:120px;color:#F2F2F0}
+#cdown .cd-h{font:600 17px var(--body);color:#8C929C;margin:0}
+#cdown .cd-x{position:absolute;bottom:calc(32px + env(safe-area-inset-bottom,0px));min-width:160px;background:#16171A;color:#F2F2F0;border:1.5px solid #2A2C31}
+@keyframes cdIn{from{opacity:0}}
+@keyframes cdPop{0%{transform:scale(1.5);opacity:0}25%{transform:scale(1);opacity:1}85%{opacity:1}100%{transform:scale(.85);opacity:.15}}
+@media (prefers-reduced-motion:reduce){#cdown .cd-n b{animation:none}}
 .mtypes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mtype{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px;border-radius:16px;border:2px solid var(--line);background:var(--surface);color:var(--fg);text-align:left;font:inherit}
 .mtype[aria-pressed=true]{border-color:var(--accent)}
@@ -1956,12 +1967,22 @@ function mapTypeSheet(){const cur=mapType();
 function estSteps(type,dist){if(type==='bike')return 0;const h=(S.profile.height||170)/100;return dist/(type==='run'?h*0.65:h*0.415)}
 const voiceOn=()=>lsGet('ficha.voice')!==false;
 
+/* contagem 3, 2, 1 antes de começar a gravar */
+function runCountdown(type){return new Promise(res=>{
+  const el=document.createElement('div');el.id='cdown';el.setAttribute('role','dialog');el.setAttribute('aria-label','Contagem para começar');
+  el.innerHTML=`<p class="cd-t">${esc(RUN_T[type]||'Atividade')}</p><div class="cd-n" aria-live="assertive"><b>3</b></div><p class="cd-h">Prepare-se</p><button class="btn cd-x" type="button">Cancelar</button>`;
+  document.body.appendChild(el);let n=3,tm=null,done=false;const b=el.querySelector('.cd-n');
+  const end=ok=>{if(done)return;done=true;clearTimeout(tm);el.classList.add('out');setTimeout(()=>el.remove(),250);res(ok)};
+  el.querySelector('.cd-x').onclick=()=>end(false);
+  const tick=()=>{n--;if(n>0){b.innerHTML=`<b>${n}</b>`;tm=setTimeout(tick,1000)}else{b.innerHTML='<b class="go">VAI!</b>';el.querySelector('.cd-h').textContent='Gravando';try{NATIVE&&NATIVE.vibrate&&NATIVE.vibrate()}catch(e){}tm=setTimeout(()=>end(true),650)}};
+  tm=setTimeout(tick,1000)})}
 async function runBegin(type){
   if(RUN.on){openRun();return}
   if(S.active){toast('Finalize o treino de academia em andamento primeiro');return}
   const p=await askPerms();
   if(!p.loc){openSheet('Permissão de localização',`<p>Sem acesso à localização o app não consegue desenhar o percurso nem medir a distância.</p><p class="hint">Abra as configurações do Android › Apps › ATHOS › Permissões › Localização e escolha “Permitir durante o uso do app”.</p><button class="btn primary block" data-close>Entendi</button>`);return}
   if(!NATIVE.gpsOn()){openSheet('Ligue a localização',`<p>O GPS do celular está desligado. Ligue a localização para gravar o percurso.</p><div class="btns"><button class="btn" data-close>Cancelar</button><button class="btn primary" data-s="go">Abrir configurações</button></div>`,(b,el)=>{b.querySelector('[data-s=go]').onclick=()=>{closeSheet(el);NATIVE.openLocationSettings()}});return}
+  if(!(await runCountdown(type)))return;
   if(!NATIVE.runStart(type,voiceOn())){toast('Não consegui iniciar o GPS. Tente de novo.');return}
   RUN.on=true;RUN.type=type;RUN.st=null;
   if(!p.fine)toast('Localização aproximada: a distância pode sair imprecisa. Permita a localização precisa.');
