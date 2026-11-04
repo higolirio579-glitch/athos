@@ -8,9 +8,8 @@ select rolname, rolconfig from pg_roles
 where rolname in ('anon','authenticated','authenticator','service_role','postgres') order by rolname;
 
 -- 2) Consulta que demora demais é cortada (evita uma consulta lenta segurar conexão do pool)
-alter role anon          set statement_timeout = '5s';
-alter role authenticated set statement_timeout = '10s';
-alter role service_role  set statement_timeout = '60s';   -- limpeza diária e IA
+-- (anon já tem 3s e authenticated 8s, padrões do Supabase: mais rígidos que o necessário, então ficam como estão)
+alter role service_role  set statement_timeout = '60s';   -- limpeza diária e IA (hoje não tem limite)
 
 -- 3) Transação aberta e parada é encerrada (conexão ociosa "presa" dentro de transação)
 alter role anon          set idle_in_transaction_session_timeout = '15s';
