@@ -5,8 +5,10 @@
 // Protegida por um segredo gerado e guardado dentro do banco (athos_private.settings). "Verify JWT" desligado.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
+// Cliente criado uma vez por instância (HTTP/PostgREST, sem conexão Postgres própria).
+const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+
 Deno.serve(async (req) => {
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: ok } = await admin.rpc("cron_secret_ok", { s: req.headers.get("x-cron") || "" });
   if (ok !== true) return new Response("forbidden", { status: 403 });
   const { data: folders, error } = await admin.rpc("pp_expired");

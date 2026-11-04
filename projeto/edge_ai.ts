@@ -2,6 +2,15 @@
 // Segredos necessários: GEMINI_KEY e/ou GROQ_KEY. Limite: 20 usos por pessoa por dia.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
+// Cliente do banco criado UMA vez por instância da função e reaproveitado entre pedidos.
+// O supabase-js fala com o banco por HTTP (PostgREST, que já usa o pooler do Supabase): não abre conexão Postgres própria.
+const NOSESS = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
+let _adm: ReturnType<typeof createClient> | null = null;
+function adminClient() {
+  if (!_adm) _adm = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, NOSESS);
+  return _adm;
+}
+
 const LIMIT = 20;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -212,11 +221,8 @@ async function runChain(provs: Prov[], turns: Turn[], imgs: string[], json: bool
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return out({ code: "invalid_request" }, 405);
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   if (req.headers.get("x-cron")) {
-    const adm = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const adm = adminClient();
     const { data: ok } = await adm.rpc("cron_secret_ok", { s: req.headers.get("x-cron") || "" });
     if (ok !== true) return out({ code: "forbidden" }, 403);
     let tb: any = {}; try { tb = await req.json(); } catch (_) { /* sem corpo */ }
@@ -252,8 +258,9 @@ Deno.serve(async (req) => {
     return out({ test: res });
   }
   const auth = req.headers.get("Authorization") || "";
-  const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
-  const { data: u } = await userClient.auth.getUser();
+  const jwt = auth.replace(/^Bearer\s+/i, "");
+  if (!jwt) return out({ code: "not_logged" }, 401);
+  const { data: u } = await adminClient().auth.getUser(jwt);
   if (!u || !u.user) return out({ code: "not_logged" }, 401);
   const uid = u.user.id;
 
@@ -264,7 +271,7 @@ Deno.serve(async (req) => {
   if (!turns.length || turns[turns.length - 1].role !== "user") return out({ code: "invalid_request" }, 400);
   if (JSON.stringify(turns).length > 60000 || imgs.reduce((a, s) => a + s.length, 0) > 9_000_000) return out({ code: "prompt_too_large" }, 413);
 
-  const admin = createClient(url, service);
+  const admin = adminClient();
   const { data: left, error: e1 } = await admin.rpc("ai_take", { p_user: uid, p_limit: LIMIT });
   if (e1) return out({ code: "upstream_error" }, 500);
   if (left < 0) return out({ code: "user_limit", limit: LIMIT }, 429);
