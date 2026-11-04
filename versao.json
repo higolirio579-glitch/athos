@@ -1,9 +1,1 @@
-{
-  "code": 41,
-  "nome": "2.5.4",
-  "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
-  "notas": [
-    "Reforços de segurança no app",
-    "Backup do Android desligado e links da atualização mais protegidos"
-  ]
-}
+{"code":42,"nome":"2.5.5","apk":"https://higolirio579-glitch.github.io/athos/ATHOS.apk","notas":["Nova tela de carregamento do ATHOS"]}
