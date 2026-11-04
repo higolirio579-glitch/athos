@@ -87,10 +87,11 @@ window.addEventListener('online',()=>schedulePush(0));
 document.addEventListener('visibilitychange',()=>{if(!SOC.user)return;if(document.visibilityState==='visible'){pullAll(false);schedulePush(0)}else{if(Object.keys(SYNC.meta.pend).length)pushPending()}});
 
 /* ----- tela de cadastro ----- */
-function gateEl(){let g=$('#authGate');if(!g){g=document.createElement('section');g.id='authGate';if(window.splashOff)setTimeout(window.splashOff,120);g.setAttribute('aria-label','Entrar no ATHOS');document.body.appendChild(g);g.addEventListener('click',gateClick);g.addEventListener('submit',e=>{e.preventDefault();gateSubmit()});g.addEventListener('input',gateInput)}return g}
+function gateEl(){let g=$('#authGate');if(!g){g=document.createElement('section');g.id='authGate';g.setAttribute('aria-label','Entrar no ATHOS');document.body.appendChild(g);g.addEventListener('click',gateClick);g.addEventListener('submit',e=>{e.preventDefault();gateSubmit()});g.addEventListener('input',gateInput)}return g}
 function pwField(id,label,ac,ph){return`<label class="fld"><span>${label}</span><div class="pw"><input id="${id}" type="password" autocomplete="${ac}" placeholder="${ph||''}" required><button type="button" data-g="eye" data-for="${id}">Mostrar</button></div></label>`}
 function msg(){return(ACC.err?`<p class="err" role="alert">${esc(ACC.err)}</p>`:'')+(ACC.ok?`<p class="ok" role="status">${esc(ACC.ok)}</p>`:'')}
 function drawGate(){
+  if(ACC.ready&&ACC.view!=='loading'&&window.splashOff)window.splashOff();
   const g=gateEl();const busy=ACC.busy?'disabled':'';let h='';
   const hero=`<div class="hero">${logoSrc()?`<img src="${logoSrc()}" alt="">`:''}<h1>ATHOS</h1><p>Treino, dieta e corrida, com seus amigos.</p></div>`;
   if(ACC.view==='loading')h=`${hero}${thinking('Abrindo…')}`;
@@ -127,7 +128,7 @@ function drawGate(){
   g.innerHTML=`<div class="in">${h}</div>`;g.hidden=false;document.body.classList.add('locked');
 }
 function keepDraw(){const g=$('#authGate');const vals={};if(g)g.querySelectorAll('input').forEach(i=>{if(i.id)vals[i.id]=i.type==='checkbox'?i.checked:i.value});drawGate();for(const id in vals){const i=$('#'+id);if(i){if(i.type==='checkbox')i.checked=vals[id];else i.value=vals[id]}}}
-function hideGate(){const g=$('#authGate');if(g)g.hidden=true;if(!sheets.length&&$('#session').hidden&&(!$('#run')||$('#run').hidden))document.body.classList.remove('locked')}
+function hideGate(){if(window.splashOff)window.splashOff();const g=$('#authGate');if(g)g.hidden=true;if(!sheets.length&&$('#session').hidden&&(!$('#run')||$('#run').hidden))document.body.classList.remove('locked')}
 function setView(v){ACC.view=v;ACC.err='';ACC.ok='';drawGate();const f=$('#authGate input');if(f&&!/verify|reset/.test(v))setTimeout(()=>{try{f.focus()}catch(e){}},50);if(/verify|reset/.test(v))setTimeout(()=>{const c=$('#gCode');if(c)c.focus()},50)}
 let coolT=null;function startCool(){ACC.cool=60;clearInterval(coolT);coolT=setInterval(()=>{ACC.cool--;const b=$('#authGate [data-g=resend]');if(b){b.disabled=ACC.cool>0;b.textContent=ACC.cool>0?`Reenviar código em ${ACC.cool}s`:'Reenviar código'}if(ACC.cool<=0)clearInterval(coolT)},1000)}
 function pwScore(p){let s=0;if(p.length>=8)s++;if(p.length>=12)s++;if(/[a-z]/i.test(p)&&/\d/.test(p))s++;if(/[^a-z0-9]/i.test(p))s++;return s}
