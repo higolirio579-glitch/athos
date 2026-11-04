@@ -19,6 +19,28 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #authGate .code{font:700 30px/1 var(--display);letter-spacing:.45em;text-align:center;padding:14px 8px;font-variant-numeric:tabular-nums}
 #authGate .terms{font-size:13.5px;color:var(--muted)}#authGate .terms input{width:20px;height:20px;flex:none;margin-top:1px}
 #authGate .meter{height:5px;border-radius:9px;background:var(--surface2);overflow:hidden}#authGate .meter i{display:block;height:100%;transition:width .2s}
+/* login: sempre escuro, na cor da marca, continuando a tela de carregamento */
+#authGate{--bg:#000;--surface:#16171A;--surface2:#1F2125;--line:#2A2C31;--cardline:#2A2C31;--fg:#F2F2F0;--muted:#8C929C;--accent:#E9B640;--accent-ink:#000;--accent-tx:#F0C45E;color-scheme:dark;color:var(--fg);background:#000}
+#authGate>.in{min-height:100%;gap:16px}
+#authGate .hero{position:relative;padding:22px 0 8px;gap:12px}
+#authGate .hero:before{content:"";position:absolute;left:50%;top:-40px;width:420px;height:420px;margin-left:-210px;border-radius:50%;background:radial-gradient(circle,rgba(233,182,64,.2),rgba(233,182,64,0) 64%);pointer-events:none}
+#authGate .hero img{position:relative;width:96px;height:96px;border-radius:24px;box-shadow:none;filter:drop-shadow(0 0 22px rgba(233,182,64,.35))}
+#authGate .hero h1{position:relative;font:800 52px/1 var(--display);letter-spacing:.2em;padding-left:.2em;margin:4px 0 0}
+#authGate .hero p{position:relative;margin:0;font-size:15px}
+#authGate>.in>form{width:100%}
+#authGate[data-v=login]>.in,#authGate[data-v=loading]>.in,#authGate[data-v=offline]>.in{justify-content:center}
+#authGate[data-v=login] .hero{padding-bottom:20px}
+#authGate:not([data-v=login]):not([data-v=loading]):not([data-v=offline]) .hero img{width:64px;height:64px;border-radius:16px}
+#authGate:not([data-v=login]):not([data-v=loading]):not([data-v=offline]) .hero h1{font-size:34px}
+#authGate:not([data-v=login]):not([data-v=loading]):not([data-v=offline]) .hero:before{width:280px;height:280px;margin-left:-140px;top:-60px}
+#authGate .fld span{color:var(--muted);font-weight:600;font-size:14px}
+#authGate .fld input,#authGate input.code{background:var(--surface);border:1.5px solid var(--line);color:var(--fg);min-height:54px;box-sizing:border-box}
+#authGate .fld input:focus,#authGate input.code:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(233,182,64,.18)}
+#authGate .btn.primary{background:var(--accent);color:#000;border:0;min-height:56px;font-weight:800;font-size:17px}
+#authGate .btn.primary:active{background:#C99A2E}
+#authGate .btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line);min-height:52px;border-radius:14px;font-weight:700;font-size:16px}
+#authGate .btn:focus-visible,#authGate .link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#authGate .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .sync.wait b{background:var(--warn)}
 </style>`);
 
@@ -96,12 +118,12 @@ function drawGate(){
   const hero=`<div class="hero">${logoSrc()?`<img src="${logoSrc()}" alt="">`:''}<h1>ATHOS</h1><p>Treino, dieta e corrida, com seus amigos.</p></div>`;
   if(ACC.view==='loading')h=`${hero}${thinking('Abrindo…')}`;
   else if(ACC.view==='offline')h=`${hero}<p class="err">Sem conexão. Conecte à internet para entrar ou criar sua conta.</p><button class="btn primary block" data-g="retry">Tentar de novo</button>`;
-  else if(ACC.view==='login')h=`${hero}<form class="in" style="gap:12px" novalidate><h2>Entrar</h2>${msg()}
+  else if(ACC.view==='login')h=`${hero}<form class="in" style="gap:12px" novalidate><h2 class="sr">Entrar</h2>${msg()}
     <label class="fld"><span>E-mail</span><input id="gEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="${esc(ACC.email)}" placeholder="voce@email.com" required></label>
     ${pwField('gPass','Senha','current-password')}
     <div style="text-align:right;margin-top:-4px"><button type="button" class="link" data-g="v" data-v="forgot">Esqueci minha senha</button></div>
-    <button class="btn primary block" type="submit" ${busy}>${ACC.busy?'Entrando…':'Entrar'}</button></form>
-    <p class="alt">Não tem conta? <button class="link" data-g="v" data-v="signup">Criar conta</button></p>`;
+    <button class="btn primary block" type="submit" ${busy}>${ACC.busy?'Entrando…':'Entrar'}</button>
+    <button type="button" class="btn ghost block" data-g="v" data-v="signup">Criar conta</button></form>`;
   else if(ACC.view==='signup')h=`${hero}<form class="in" style="gap:12px" novalidate><h2>Criar conta</h2>${msg()}
     <label class="fld"><span>Nome</span><input id="gName" autocomplete="name" value="${esc(ACC.name)}" placeholder="Como quer ser chamado" required maxlength="60"></label>
     <label class="fld"><span>E-mail</span><input id="gEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" value="${esc(ACC.email)}" placeholder="voce@email.com" required></label>
@@ -125,7 +147,7 @@ function drawGate(){
     ${pwField('gPass','Nova senha','new-password','Mínimo 8 caracteres')}${pwField('gPass2','Confirmar nova senha','new-password')}
     <button class="btn primary block" type="submit" ${busy}>${ACC.busy?'Salvando…':'Salvar nova senha'}</button></form>
     <p class="alt"><button class="link" data-g="resend" ${ACC.cool>0?'disabled':''}>${ACC.cool>0?`Reenviar código em ${ACC.cool}s`:'Reenviar código'}</button> · <button class="link" data-g="v" data-v="login">Cancelar</button></p>`;
-  g.innerHTML=`<div class="in">${h}</div>`;g.hidden=false;document.body.classList.add('locked');
+  g.dataset.v=ACC.view;g.innerHTML=`<div class="in">${h}</div>`;g.hidden=false;document.body.classList.add('locked');
 }
 function keepDraw(){const g=$('#authGate');const vals={};if(g)g.querySelectorAll('input').forEach(i=>{if(i.id)vals[i.id]=i.type==='checkbox'?i.checked:i.value});drawGate();for(const id in vals){const i=$('#'+id);if(i){if(i.type==='checkbox')i.checked=vals[id];else i.value=vals[id]}}}
 function hideGate(){if(window.splashOff)window.splashOff();const g=$('#authGate');if(g)g.hidden=true;if(!sheets.length&&$('#session').hidden&&(!$('#run')||$('#run').hidden))document.body.classList.remove('locked')}

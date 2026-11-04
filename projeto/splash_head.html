@@ -3,7 +3,7 @@
 #splash:before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(233,182,64,.24),rgba(233,182,64,0) 66%);animation:splGlow 2.6s ease-in-out infinite}
 #splash img{position:relative;width:108px;height:108px;border-radius:27px;filter:drop-shadow(0 0 26px rgba(233,182,64,.38));animation:splPulse 2.6s ease-in-out infinite}
 #splash b{position:relative;margin-top:24px;font:800 48px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.22em;padding-left:.22em;color:#F2F2F0}
-#splash p{position:relative;margin:12px 0 0;font:600 12.5px system-ui,-apple-system,sans-serif;letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;color:#9298A3}
+#splash p{position:relative;margin:12px 0 0;font:500 15px system-ui,-apple-system,sans-serif;color:#8C929C;max-width:30ch;text-align:center}
 #splash .bar{position:relative;margin-top:44px;width:132px;height:3px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
 #splash .bar:after{content:"";position:absolute;top:0;bottom:0;left:0;width:46%;border-radius:3px;background:linear-gradient(90deg,rgba(233,182,64,0),#E9B640,rgba(233,182,64,0));animation:splBar 1.3s ease-in-out infinite}
 @keyframes splIn{from{opacity:0}to{opacity:1}}@keyframes splOut{to{opacity:0}}
@@ -11,4 +11,4 @@
 @keyframes splPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
 @keyframes splBar{from{transform:translateX(-100%)}to{transform:translateX(220%)}}
 @media (prefers-reduced-motion:reduce){#splash:before,#splash img,#splash .bar:after{animation:none}}</style>
-<script>(function(){var d=document.createElement("div");d.id="splash";d.setAttribute("aria-hidden","true");d.innerHTML='<img src="{{LOGO}}" alt=""><b>ATHOS</b><p>Treino · Dieta · Corrida</p><div class="bar"></div>';document.documentElement.appendChild(d);window.splashOff=function(){var e=document.getElementById("splash");if(!e)return;e.classList.add("out");setTimeout(function(){var x=document.getElementById("splash");if(x)x.remove()},320)};setTimeout(window.splashOff,15000)})()</script>
+<script>(function(){var d=document.createElement("div");d.id="splash";d.setAttribute("aria-hidden","true");d.innerHTML='<img src="{{LOGO}}" alt=""><b>ATHOS</b><p>Treino, dieta e corrida, com seus amigos.</p><div class="bar"></div>';document.documentElement.appendChild(d);window.splashOff=function(){var e=document.getElementById("splash");if(!e)return;e.classList.add("out");setTimeout(function(){var x=document.getElementById("splash");if(x)x.remove()},320)};setTimeout(window.splashOff,15000)})()</script>
