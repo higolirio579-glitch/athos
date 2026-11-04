@@ -1,10 +1,9 @@
 {
-  "code": 40,
-  "nome": "2.5.3",
+  "code": 41,
+  "nome": "2.5.4",
   "apk": "https://higolirio579-glitch.github.io/athos/ATHOS.apk",
   "notas": [
-    "Plano alimentar com 3 opções diferentes por refeição",
-    "O plano respeita a sua meta de calorias",
-    "Mensagens de erro da IA mais claras"
+    "Reforços de segurança no app",
+    "Backup do Android desligado e links da atualização mais protegidos"
   ]
 }
