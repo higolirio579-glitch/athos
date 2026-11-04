@@ -423,6 +423,7 @@ button.card{font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer
 .mrow .e{width:42px;height:42px;border-radius:13px;background:var(--surface2);display:grid;place-items:center;font-size:20px;flex:none}
 .mrow .t{flex:1;min-width:0}.mrow .t b{display:block}.mrow .t small{color:var(--muted);font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrow .k{font:800 17px var(--display);white-space:nowrap}.mrow .k small{font-size:12px;color:var(--muted)}
+.cardio-out{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;background:var(--surface2);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}.cardio-out .big{font:800 34px/1 var(--display);color:var(--accent)}.cardio-out .big small{font-size:16px;color:var(--muted)}
 .mrow .plus{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--accent);background:transparent;color:var(--accent-tx);font:800 21px/1 var(--body);flex:none}
 .items{margin:-4px 0 8px 54px;display:flex;flex-direction:column;gap:2px}
 .items button{display:flex;justify-content:space-between;gap:10px;border:0;background:none;color:var(--muted);font:500 13.5px var(--body);padding:6px 0;text-align:left}
@@ -714,6 +715,7 @@ function sessStats(s){let vol=0,sets=0;const g=new Set();for(const x of s.exerci
 /* calorias gastas no treino (estimativa pelo MET, descontando o que o corpo gastaria parado) */
 function sessKcal(s){if(!s)return{kcal:0,met:0,lvl:''};if(s.run)return{kcal:Math.round(num(s.run.kcal)),met:0,lvl:''};
   const kg=num(curWeight())||75,x=sessStats(s);const totMin=Math.max(1,x.dur/60000);
+  if(s.cardio)return{kcal:Math.round(num(s.cardio.kcal)),met:num(s.cardio.met),lvl:s.cardio.lvlName||''};
   if(s.checkin){const m=s.dur?num(s.dur):Math.min(90,totMin);return{kcal:Math.round(4*kg*m/60),met:5,lvl:'Moderada'}}
   let cMin=0,cKm=0,sets=0;const rirs=[];
   let oKcal=0,oMin=0;
@@ -789,6 +791,7 @@ const km2=m=>(m/1000).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFra
 function speedOrPace(r){return r.type==='bike'?`${fmtD(r.moving?r.dist/r.moving*3.6:0)} km/h`:`${fmtPace(r.dist?r.moving/(r.dist/1000):0)}/km`}
 function sessSub(s,withDur){
   if(s.run){const r=s.run;return`${km2(r.dist)} km · ${speedOrPace(r)}${withDur?' · '+fmtDur(r.moving*1000).replace(/^00:/,''):''}${r.steps?' · '+fmtN(r.steps)+' passos':''}`}
+  if(s.cardio){const c=s.cardio;return[c.dist?fmtD(c.dist)+' km':'',c.lvlName||'',fmtN(c.kcal)+' kcal',withDur?fmtN(c.min)+' min':''].filter(Boolean).join(' · ')}
   const x=sessStats(s);return(s.checkin?'Check-in':`${x.sets} séries · ${fmtN(x.vol)} kg`)+(withDur?' · '+fmtDur(x.dur).replace(/^00:/,''):'');
 }
 function routeSvg(pts){
@@ -891,7 +894,7 @@ function vHoje(){
   <button class="card wcard" data-act="weightSheet"><small class="muted">Peso</small>${lw||p.weight?`<span class="bignum">${fmtD(lw?lw.kg:p.weight)}<small> kg</small></span>${dl!=null?`<span class="trend ${dl>0?'up2':''}">${dl>0?'↑':'↓'} ${fmtD(Math.abs(dl))} kg na semana</span>`:`<small class="muted">${lw?esc(dlabel(lw.date)):'toque para registrar'}</small>`}${spark}`:`<span class="bignum">—</span><span class="btn sm soft" style="align-self:flex-start">Registrar peso</span>`}</button></div>`;
   return html;
 }
-const TRI={gym:'<path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/>',run:'<circle cx="15" cy="4.5" r="2"/><path d="M8 21l3-6 3 2 1 5M6 12l3-4 4 1 2 4 3 1"/>',walk:'<circle cx="13" cy="4.5" r="2"/><path d="M10 21l2-6 3 3v4M9 11l2-3 3 1 2 3M11 8l-2 6"/>',bike:'<circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="M6 16l4-8h5l3 8M10 8l4 8"/><circle cx="15" cy="4.5" r="1.5"/>',check:'<path d="M5 12l5 5 9-10"/>'};
+const TRI={gym:'<path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/>',run:'<circle cx="15" cy="4.5" r="2"/><path d="M8 21l3-6 3 2 1 5M6 12l3-4 4 1 2 4 3 1"/>',walk:'<circle cx="13" cy="4.5" r="2"/><path d="M10 21l2-6 3 3v4M9 11l2-3 3 1 2 3M11 8l-2 6"/>',bike:'<circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="M6 16l4-8h5l3 8M10 8l4 8"/><circle cx="15" cy="4.5" r="1.5"/>',check:'<path d="M5 12l5 5 9-10"/>',cardio:'<path d="M3 18h13l5-9"/><path d="M7 18l2-6h6"/><circle cx="14" cy="5" r="2"/>'};
 const triIc=k=>`<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${TRI[k]}</svg></span>`;
 function vTreino(){
   const p=S.profile;let html=`<div style="padding-top:4px"><h1>Treino</h1></div>`;
@@ -900,6 +903,7 @@ function vTreino(){
   html+=`<p class="eyebrow" style="margin-top:2px">Começar agora</p><div class="go">
    <button class="main" data-act="start">${triIc('gym')}<span>Musculação<small>Treino livre</small></span></button>
    <button data-act="checkin">${triIc('check')}Check-in</button>
+   <button data-act="cardio">${triIc('cardio')}Esteira e bike</button>
    ${can?`<button data-act="runStart" data-type="run">${triIc('run')}Correr</button><button data-act="runStart" data-type="walk">${triIc('walk')}Caminhar</button><button data-act="runStart" data-type="bike">${triIc('bike')}Pedalar</button>`:''}</div>`;
   const ws=weekStart(today()),we=addDays(ws,7);const wkKm=runKmBetween(ws,we);const wkT=sessList().filter(s=>!s.run&&s.date>=ws&&s.date<we).length;
   html+=`<div class="wk"><span>${wkKm||wkT?`<b>${fmtD(wkKm)} km</b> e <b>${wkT} treino${wkT===1?'':'s'}</b> nesta semana`:'Nada registrado nesta semana ainda'}</span><button data-act="goEvo">Ver evolução</button></div>`;
@@ -1557,6 +1561,38 @@ function checkinSheet(){
   });
 }
 
+/* ---------- cardio na máquina: tempo + ritmo/intensidade, o app estima as calorias ---------- */
+const CARDIO=[['esteira','Esteira'],['bike','Bike ergométrica'],['eliptico','Elíptico'],['escada','Escada'],['remo','Remo'],['corda','Pular corda'],['natacao','Natação'],['outro','Outro']];
+const CARDIO_MET={bike:[3.5,6.8,8.8,11],eliptico:[4,5,7,9],escada:[5,7,9,11],remo:[4.8,7,8.5,12],corda:[8.3,9.8,11.8,12.3],natacao:[5.8,8.3,9.8,10.5],outro:[3.5,5,7,9]};
+const CARDIO_LVL=['Leve','Moderada','Forte','Muito forte'];
+function paceToKmh(t){const m=String(t||'').trim().match(/^(\d{1,2})(?:[:'.,](\d{1,2}))?$/);if(!m)return 0;const min=+m[1]+(m[2]?+m[2]/60:0);return min>0?60/min:0}
+function cardioCalc(c){const kg=num(curWeight())||75,min=num(c.min);if(!(min>0))return null;let met=0,dist=0,kmh=0;
+  if(c.kind==='esteira'){kmh=num(c.kmh)||paceToKmh(c.pace);if(!(kmh>0))return null;const v=kmh*1000/60,g=Math.max(0,Math.min(25,num(c.incl)))/100;
+    const vo2=kmh<8?0.1*v+1.8*v*g+3.5:0.2*v+0.9*v*g+3.5;met=vo2/3.5;dist=kmh*min/60}
+  else if(c.kind==='bike'&&num(c.watts)>0){met=(1.8*num(c.watts)*6.12/kg+7)/3.5}
+  else met=(CARDIO_MET[c.kind]||CARDIO_MET.outro)[c.lvl||1];
+  met=Math.max(2,Math.min(16,met));return{met:Math.round(met*10)/10,kcal:Math.round((met-1)*kg*min/60),dist:Math.round(dist*100)/100,kmh:Math.round(kmh*10)/10}}
+function cardioSheet(){
+  const c={kind:'esteira',min:'30',kmh:'',pace:'',incl:'',lvl:1,watts:''};
+  openSheet('Esteira, bike e outros','',(b,el)=>{
+    const fields=()=>c.kind==='esteira'?`<div class="grid2"><label class="fld"><span>Velocidade (km/h)</span><input id="xKmh" inputmode="decimal" placeholder="Ex.: 9" value="${esc(c.kmh)}"></label><label class="fld"><span>ou Ritmo (min/km)</span><input id="xPace" inputmode="decimal" placeholder="Ex.: 6:30" value="${esc(c.pace)}"></label></div><label class="fld"><span>Inclinação (%)</span><input id="xIncl" inputmode="decimal" placeholder="0" value="${esc(c.incl)}"></label>`
+      :`<p class="eyebrow" style="margin:4px 0 -2px">Intensidade</p><div class="chips" id="xLvl">${CARDIO_LVL.map((l,i)=>`<button class="chip" data-l="${i}" aria-pressed="${c.lvl===i}">${l}</button>`).join('')}</div>${c.kind==='bike'?`<label class="fld"><span>Potência (W), se a bike mostrar</span><input id="xW" inputmode="numeric" placeholder="Opcional" value="${esc(c.watts)}"></label>`:''}`;
+    const out=()=>{const r=cardioCalc(c);const o=b.querySelector('#xOut');if(!o)return;o.innerHTML=r?`<span class="big">≈ ${fmtN(r.kcal)}<small> kcal</small></span><span class="small muted">${r.dist?fmtD(r.dist)+' km · ':''}${c.kind==='esteira'?fmtD(r.kmh)+' km/h · ':''}esforço ${fmtD(r.met)} MET</span>`:'<span class="small muted">Preencha o tempo'+(c.kind==='esteira'?' e a velocidade ou o ritmo':'')+'.</span>';b.querySelector('[data-s=ok]').disabled=!r};
+    const draw=()=>{b.innerHTML=`<div class="chips" id="xK">${CARDIO.map(([k,n])=>`<button class="chip" data-k="${k}" aria-pressed="${c.kind===k}">${n}</button>`).join('')}</div>
+      <label class="fld"><span>Tempo (min)</span><input id="xMin" inputmode="numeric" value="${esc(c.min)}"></label>${fields()}
+      <div class="cardio-out" id="xOut"></div><p class="hint">Estimativa pelo seu peso (${fmtD(num(curWeight())||75)} kg), sem contar o que você gastaria parado.</p>
+      <button class="btn primary block" data-s="ok">Registrar</button>`;out()};
+    draw();
+    b.oninput=e=>{const id=e.target.id;if(id==='xMin')c.min=e.target.value;if(id==='xKmh'){c.kmh=e.target.value;if(c.kmh)c.pace=''}if(id==='xPace'){c.pace=e.target.value;if(c.pace)c.kmh=''}if(id==='xIncl')c.incl=e.target.value;if(id==='xW')c.watts=e.target.value;
+      if(id==='xKmh'&&c.kmh){const p=b.querySelector('#xPace');if(p)p.value=''}if(id==='xPace'&&c.pace){const k=b.querySelector('#xKmh');if(k)k.value=''}out()};
+    b.onclick=e=>{const k=e.target.closest('[data-k]');if(k){c.kind=k.dataset.k;draw();return}const l=e.target.closest('[data-l]');if(l){c.lvl=+l.dataset.l;b.querySelectorAll('#xLvl .chip').forEach(x=>x.setAttribute('aria-pressed',x===l));out();return}
+      if(e.target.closest('[data-s=ok]')){const r=cardioCalc(c);if(!r)return;const min=num(c.min),now=Date.now(),name=(CARDIO.find(x=>x[0]===c.kind)||[])[1]||'Cardio';
+        const lvlName=c.kind==='esteira'?(r.kmh>=8?'Corrida':'Caminhada'):(c.kind==='bike'&&num(c.watts)>0?num(c.watts)+' W':CARDIO_LVL[c.lvl]);
+        const s={id:newId('s'),date:today(),ts:now-min*60000,end:now,name,checkin:true,exercises:[],note:'',cardio:{kind:c.kind,min,kmh:r.kmh||null,incl:num(c.incl)||null,lvl:c.lvl,lvlName,watts:num(c.watts)||null,dist:r.dist||null,met:r.met,kcal:r.kcal}};
+        S.sessions[s.id]=s;store.mark(s.id,0);closeSheet(el);render();toast(`${name} registrada · ≈ ${fmtN(r.kcal)} kcal`)}};
+  });
+}
+
 /* ---------- peso, perfil, plano ---------- */
 function weightSheet(){
   const t=today();openSheet('Registrar peso',`<div class="grid2"><label class="fld"><span>Data</span><input id="wD" type="date" value="${t}" max="${t}"></label><label class="fld"><span>Peso (kg)</span><input id="wK" inputmode="decimal" placeholder="${esc(curWeight()||'')}" value=""></label></div><button class="btn primary block" data-s="ok">Salvar</button>`,(b,el)=>{
@@ -1642,7 +1678,7 @@ function wipe(){confirmSheet('Apagar TODOS os treinos, refeições, pesos e meta
 const ACT={
   openActive,minActive:closeActive,
   start:el=>startSession(el.dataset.id||null),
-  checkin:checkinSheet,
+  checkin:checkinSheet,cardio:()=>cardioSheet(),
   newTemplate:()=>templateSheet(null),
   editTemplate:el=>templateSheet(el.dataset.id),
   addModel:el=>{const m=MODELS[+el.dataset.i];const t={id:newId('t'),name:m.name,exercises:m.ex.map(([n,s,r])=>{const x=matchEx(n);return{name:x.name,group:x.group,type:x.type,sets:s,reps:r}})};S.profile.templates.push(t);store.mark('profile');render();toast('Modelo adicionado aos seus treinos')},
@@ -1884,6 +1920,17 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .r-exp{position:absolute;right:12px;top:10px;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center}
 .r-exp svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .r-body{position:relative;flex:1 1 auto;min-height:0}
+#cdown{position:fixed;inset:0;z-index:1000;background:radial-gradient(circle at 50% 45%,rgba(233,182,64,.22),rgba(0,0,0,0) 62%),#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#F2F2F0;animation:cdIn .2s ease-out}
+#cdown.out{opacity:0;transition:opacity .25s}
+#cdown .cd-t{font:700 18px var(--body);color:#8C929C;margin:0}
+#cdown .cd-n{height:300px;width:100%;display:grid;place-items:center;overflow:visible}
+#cdown .cd-n b{font:800 220px/1 var(--display);color:var(--accent);animation:cdPop 1s ease-out both;filter:drop-shadow(0 0 34px rgba(233,182,64,.45))}
+#cdown .cd-n b.go{font-size:120px;color:#F2F2F0}
+#cdown .cd-h{font:600 17px var(--body);color:#8C929C;margin:0}
+#cdown .cd-x{position:absolute;bottom:calc(32px + env(safe-area-inset-bottom,0px));min-width:160px;background:#16171A;color:#F2F2F0;border:1.5px solid #2A2C31}
+@keyframes cdIn{from{opacity:0}}
+@keyframes cdPop{0%{transform:scale(1.5);opacity:0}25%{transform:scale(1);opacity:1}85%{opacity:1}100%{transform:scale(.85);opacity:.15}}
+@media (prefers-reduced-motion:reduce){#cdown .cd-n b{animation:none}}
 .mtypes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mtype{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px;border-radius:16px;border:2px solid var(--line);background:var(--surface);color:var(--fg);text-align:left;font:inherit}
 .mtype[aria-pressed=true]{border-color:var(--accent)}
@@ -1956,12 +2003,22 @@ function mapTypeSheet(){const cur=mapType();
 function estSteps(type,dist){if(type==='bike')return 0;const h=(S.profile.height||170)/100;return dist/(type==='run'?h*0.65:h*0.415)}
 const voiceOn=()=>lsGet('ficha.voice')!==false;
 
+/* contagem 3, 2, 1 antes de começar a gravar */
+function runCountdown(type){return new Promise(res=>{
+  const el=document.createElement('div');el.id='cdown';el.setAttribute('role','dialog');el.setAttribute('aria-label','Contagem para começar');
+  el.innerHTML=`<p class="cd-t">${esc(RUN_T[type]||'Atividade')}</p><div class="cd-n" aria-live="assertive"><b>3</b></div><p class="cd-h">Prepare-se</p><button class="btn cd-x" type="button">Cancelar</button>`;
+  document.body.appendChild(el);let n=3,tm=null,done=false;const b=el.querySelector('.cd-n');
+  const end=ok=>{if(done)return;done=true;clearTimeout(tm);el.classList.add('out');setTimeout(()=>el.remove(),250);res(ok)};
+  el.querySelector('.cd-x').onclick=()=>end(false);
+  const tick=()=>{n--;if(n>0){b.innerHTML=`<b>${n}</b>`;tm=setTimeout(tick,1000)}else{b.innerHTML='<b class="go">VAI!</b>';el.querySelector('.cd-h').textContent='Gravando';try{NATIVE&&NATIVE.vibrate&&NATIVE.vibrate()}catch(e){}tm=setTimeout(()=>end(true),650)}};
+  tm=setTimeout(tick,1000)})}
 async function runBegin(type){
   if(RUN.on){openRun();return}
   if(S.active){toast('Finalize o treino de academia em andamento primeiro');return}
   const p=await askPerms();
   if(!p.loc){openSheet('Permissão de localização',`<p>Sem acesso à localização o app não consegue desenhar o percurso nem medir a distância.</p><p class="hint">Abra as configurações do Android › Apps › ATHOS › Permissões › Localização e escolha “Permitir durante o uso do app”.</p><button class="btn primary block" data-close>Entendi</button>`);return}
   if(!NATIVE.gpsOn()){openSheet('Ligue a localização',`<p>O GPS do celular está desligado. Ligue a localização para gravar o percurso.</p><div class="btns"><button class="btn" data-close>Cancelar</button><button class="btn primary" data-s="go">Abrir configurações</button></div>`,(b,el)=>{b.querySelector('[data-s=go]').onclick=()=>{closeSheet(el);NATIVE.openLocationSettings()}});return}
+  if(!(await runCountdown(type)))return;
   if(!NATIVE.runStart(type,voiceOn())){toast('Não consegui iniciar o GPS. Tente de novo.');return}
   RUN.on=true;RUN.type=type;RUN.st=null;
   if(!p.fine)toast('Localização aproximada: a distância pode sair imprecisa. Permita a localização precisa.');
@@ -3002,8 +3059,8 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 /* ---------- novidades de cada versão (para quem já usa o app) ----------
    Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
-const NEWS_V='2.5.7';
-const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2','2.5.3','2.5.7'];
+const NEWS_V='2.5.8';
+const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2','2.5.3','2.5.7','2.5.8'];
 /* passos de cada versão; quem pulou versões vê tudo o que perdeu */
 function newsByVer(v){
   if(v==='2.2')return news22().slice(1);
@@ -3014,6 +3071,7 @@ function newsByVer(v){
   if(v==='2.5')return[{tab:'hoje',ic:'star',t:'Coach ATHOS',h:`<ul><li>Seu <b>treinador com IA</b> é a <b>bolinha dourada</b> com o capacete que flutua na tela. Toque nela para perguntar; <b>segure e arraste</b> para mudar de lugar.</li><li>Ele conhece seus <b>treinos, cargas, dieta e metas</b>: pergunte “o que eu treino hoje?”, “por que minha carga travou?” ou “quanto falta de proteína?”.</li><li>Pediu um treino? Toque em <b>💾 Salvar como ficha</b> e ele vai para a aba Treino.</li><li>Escolha o <b>jeito dele falar</b>: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro (dá para trocar em ⚙ Configurações).</li></ul>`}];
   if(v==='2.5.1')return[{tab:'hoje',ic:'star',t:'Coach sempre à mão',h:`<ul><li>O <b>Coach ATHOS</b> agora é uma <b>bolinha flutuante</b> com o capacete do ATHOS, em todas as telas.</li><li><b>Toque</b> para abrir as perguntas.</li><li><b>Segure e arraste</b> para colocar onde preferir: ela gruda na borda e lembra o lugar.</li></ul>`}];
   if(v==='2.5.2')return[{tab:'hoje',ic:'go',t:'IA muito mais rápida',h:`<ul><li>O <b>Coach</b>, <b>montar treino</b>, <b>foto do prato</b> e <b>foto da ficha</b> agora respondem em poucos segundos.</li><li>As fotos ficaram mais leves para enviar, sem perder a leitura.</li></ul>`}];
+  if(v==='2.5.8')return[{tab:'treino',ic:'run',t:'Esteira, bike e mais',h:`<ul><li>Em <b>Treino</b>, toque em <b>Esteira e bike</b> para registrar cardio feito na máquina.</li><li>Coloque o <b>tempo</b> e a <b>velocidade ou o ritmo</b> (esteira), ou a <b>intensidade</b> (bike, elíptico, escada, remo, corda, natação).</li><li>O app calcula <b>quantas calorias você gastou</b>, pelo seu peso.</li></ul>`},{tab:'treino',ic:'go',t:'Contagem 3, 2, 1',h:`<ul><li>Antes de <b>correr, caminhar ou pedalar</b> com GPS, aparece uma contagem <b>3, 2, 1</b> para você se preparar.</li><li>Dá para <b>cancelar</b> durante a contagem.</li></ul>`}];
   if(v==='2.5.7')return[{tab:'treino',ic:'run',t:'Corrida de cara nova',h:`<ul><li>O <b>mapa ocupa a tela inteira</b> e os números ficam num cartão embaixo, com o <b>ritmo agora em dourado</b>.</li><li>O <b>botão dourado do meio</b> pausa e retoma. Voz fica à esquerda e Finalizar à direita.</li><li>Toque na <b>setinha do cartão</b> para ver só os números, bem grandes.</li><li>No botão de <b>camadas</b>, escolha o mapa: Padrão, Satélite, Híbrido ou Relevo.</li></ul>`},{tab:'hoje',ic:'hoje',t:'Telas mais limpas',h:`<ul><li>Na aba <b>Hoje</b>, o anel de calorias vem primeiro.</li><li>A bolinha do <b>Coach ATHOS</b> ficou menor e fica no canto de baixo, sem tampar os botões.</li><li>Na <b>Dieta</b>, o botão <b>Gerar plano com IA</b> e os <b>+</b> das refeições ficaram em dourado.</li><li>A tela de <b>entrar</b> também ganhou um visual novo.</li></ul>`}];
   if(v==='2.5.3')return[{tab:'dieta',ic:'go',t:'3 opções por refeição',h:`<ul><li>No <b>Plano alimentar com IA</b>, cada refeição agora vem com <b>3 opções diferentes</b>, com calorias parecidas.</li><li>Toque em <b>Opção 1, 2 ou 3</b> para escolher. O total do dia e o botão <b>Adicionar o plano inteiro</b> usam a opção marcada.</li><li>As porções são ajustadas para o plano <b>não passar da sua meta de calorias</b>.</li><li>Planos antigos continuam funcionando. Para ganhar as opções, toque em <b>Gerar outro</b>.</li></ul>`}];
   return[]}
