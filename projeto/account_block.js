@@ -46,6 +46,8 @@ function syncChip(){const el=$('#sync');if(!el||!SOC.user)return;const n=Object.
 function schedulePush(ms){clearTimeout(SYNC.timer);SYNC.timer=setTimeout(pushPending,ms==null?1500:ms);syncChip()}
 async function pushPending(){
   if(!SOC.user||SYNC.pushing)return;const keys=Object.keys(SYNC.meta.pend);if(!keys.length){syncChip();return}
+  // nunca manda um perfil vazio antes de conferir a nuvem nesta abertura do app
+  if(!SYNC.pulledOnce&&SYNC.meta.pend.profile&&profEmpty(S.profile)){const i=keys.indexOf('profile');if(i>=0)keys.splice(i,1);if(!keys.length){syncChip();return}}
   SYNC.pushing=true;const stamp={...SYNC.meta.pend};
   try{
     for(let i=0;i<keys.length;i+=40){const part=keys.slice(i,i+40);
@@ -55,8 +57,17 @@ async function pushPending(){
   }catch(e){SYNC.pushing=false;syncChip();setTimeout(()=>schedulePush(0),20000);return}
   SYNC.pushing=false;syncChip();if(Object.keys(SYNC.meta.pend).length)schedulePush(500);
 }
+// perfil "vazio" = sem fichas, sem plano e sem dados do corpo (aparelho recém-conectado)
+function profEmpty(p){p=p||{};return!(p.templates||[]).length&&!p.plan&&!p.age&&!p.weight}
+const PROF_FLAGS=['newsV','tourDone','tourV','termsV'];
 function applyRow(r){
-  if(SYNC.meta.pend[r.key])return false;const k=r.key,d=r.data;
+  const k=r.key,d=r.data;
+  // proteção: um aparelho novo marcou o perfil (tutorial, termos, novidades) antes de baixar o da nuvem.
+  // Em vez de ignorar a nuvem e depois apagá-la com um perfil vazio, junta: dados da nuvem + só esses avisos locais.
+  if(k==='profile'&&SYNC.meta.pend.profile&&!r.deleted&&d&&profEmpty(S.profile)&&!profEmpty(d)){
+    const keep={};for(const f of PROF_FLAGS)if(S.profile[f]!=null)keep[f]=S.profile[f];
+    const p=clone(d);delete p.kind;delete p.ts;S.profile={...clone(DEF_PROFILE),...p,...keep};return true}
+  if(SYNC.meta.pend[k])return false;
   if(k==='profile'){if(r.deleted||!d)return false;const p=clone(d);delete p.kind;delete p.ts;S.profile={...clone(DEF_PROFILE),...p};return true}
   if(k.startsWith('d-')){const date=k.slice(2);if(r.deleted||!d)delete S.days[date];else S.days[date]=d;return true}
   if(r.deleted||!d)delete S.sessions[k];else S.sessions[k]=d;return true;
@@ -68,7 +79,7 @@ async function pullAll(full){
       if(!full&&SYNC.meta.last)q=q.gt('updated_at',SYNC.meta.last);
       const r=await q;if(r.error)throw r.error;for(const row of r.data){if(applyRow(row))changed=true;if(!maxT||row.updated_at>maxT)maxT=row.updated_at}
       if(r.data.length<500)break;from+=500}
-    SYNC.meta.last=maxT;saveMeta();if(changed){flushLocal();schedule()}
+    SYNC.meta.last=maxT;saveMeta();SYNC.pulledOnce=true;if(changed){flushLocal();schedule()}
   }catch(e){}
   SYNC.pulling=false;
 }
