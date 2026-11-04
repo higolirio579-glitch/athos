@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://shvphmajljvlnqlhryfw.supabase.co https://*.openstreetmap.org https://*.openfoodfacts.org https://cdn.jsdelivr.net; media-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co; font-src 'self' data:; connect-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co wss://shvphmajljvlnqlhryfw.supabase.co https://higolirio579-glitch.github.io https://world.openfoodfacts.org https://generativelanguage.googleapis.com https://api.groq.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"><script>document.addEventListener('securitypolicyviolation',function(e){try{var a=JSON.parse(localStorage.getItem('athos.csp')||'[]');a.push(e.violatedDirective+' '+e.blockedURI);localStorage.setItem('athos.csp',JSON.stringify(a.slice(-20)));}catch(x){}})</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>try{if(window.Android&&Android.isDark())document.documentElement.setAttribute('data-theme','dark');else document.documentElement.setAttribute('data-theme','light')}catch(e){}</script><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>#splash{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:splIn .4s ease .35s both;overflow:hidden}
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://shvphmajljvlnqlhryfw.supabase.co https://*.openstreetmap.org https://server.arcgisonline.com https://*.tile.opentopomap.org https://*.openfoodfacts.org https://cdn.jsdelivr.net; media-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co; font-src 'self' data:; connect-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co wss://shvphmajljvlnqlhryfw.supabase.co https://higolirio579-glitch.github.io https://world.openfoodfacts.org https://generativelanguage.googleapis.com https://api.groq.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"><script>document.addEventListener('securitypolicyviolation',function(e){try{var a=JSON.parse(localStorage.getItem('athos.csp')||'[]');a.push(e.violatedDirective+' '+e.blockedURI);localStorage.setItem('athos.csp',JSON.stringify(a.slice(-20)));}catch(x){}})</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>try{if(window.Android&&Android.isDark())document.documentElement.setAttribute('data-theme','dark');else document.documentElement.setAttribute('data-theme','light')}catch(e){}</script><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>#splash{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:splIn .4s ease .35s both;overflow:hidden}
 #splash.out{animation:splOut .3s ease forwards;pointer-events:none}
 #splash:before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(233,182,64,.24),rgba(233,182,64,0) 66%);animation:splGlow 2.6s ease-in-out infinite}
 #splash img{position:relative;width:108px;height:108px;border-radius:27px;filter:drop-shadow(0 0 26px rgba(233,182,64,.38));animation:splPulse 2.6s ease-in-out infinite}
@@ -1875,19 +1875,47 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .r-h .ttl{flex:1;min-width:0}.r-h h2{font-size:21px}
 .r-map{position:relative;flex:1 1 auto;min-height:max(200px,34vh)}
 #runMap{position:absolute;inset:0;background:var(--surface2)}
-.r-center{position:absolute;right:12px;bottom:12px;z-index:500}
+#run .r-map{position:absolute;inset:0;min-height:0}
+#run{--r-card:#121315}
+.r-fabs{position:absolute;right:14px;top:14px;z-index:500;display:flex;flex-direction:column;gap:10px}
+.r-fab{width:50px;height:50px;border-radius:50%;border:0;background:rgb(10 10 11 / .88);color:#F2F2F0;display:grid;place-items:center;box-shadow:0 4px 14px rgb(0 0 0 / .35)}
+.r-fab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.r-fab[aria-pressed=true]{background:var(--accent);color:#000}
+.r-exp{position:absolute;right:12px;top:10px;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center}
+.r-exp svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.r-body{position:relative;flex:1 1 auto;min-height:0}
+.mtypes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mtype{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px;border-radius:16px;border:2px solid var(--line);background:var(--surface);color:var(--fg);text-align:left;font:inherit}
+.mtype[aria-pressed=true]{border-color:var(--accent)}
+.mtype i{display:block;width:100%;aspect-ratio:16/10;border-radius:10px;margin-bottom:4px}
+.mtype small{color:var(--muted);font-size:12.5px}
+.mt-osm i{background:linear-gradient(135deg,#2a2d33 0 30%,#3a3e46 30% 34%,#2a2d33 34% 62%,#3a3e46 62% 66%,#2a2d33 66%)}
+.mt-sat i{background:radial-gradient(circle at 30% 40%,#4d6b3a,transparent 40%),radial-gradient(circle at 75% 70%,#2f4a2a,transparent 45%),linear-gradient(135deg,#3d5a34,#24381f)}
+.mt-hyb i{background:linear-gradient(135deg,transparent 0 46%,#e8e2c8 46% 50%,transparent 50%),radial-gradient(circle at 30% 40%,#4d6b3a,transparent 40%),linear-gradient(135deg,#3d5a34,#24381f)}
+.mt-topo i{background:repeating-radial-gradient(circle at 60% 60%,#d9c9a3 0 6px,#c4b088 6px 8px)}
+#run .r-stats{position:absolute;left:12px;right:12px;bottom:12px;z-index:600;background:var(--r-card);border:1px solid var(--line);border-radius:20px;padding:14px 16px 12px;box-shadow:0 10px 30px rgb(0 0 0 / .45);gap:8px;max-width:none}
+#run .r-stats>.grid3:nth-child(4),#run .r-stats>#rSplit{display:none}
+#run .r-big .num{font-size:64px}
+#run[data-mode=num] .r-map{visibility:hidden}
+#run[data-mode=num] .r-stats{inset:0;border-radius:0;border:0;box-shadow:none;justify-content:space-evenly;padding:20px 22px;background:var(--bg)}
+#run[data-mode=num] .r-big{justify-content:center}
+#run[data-mode=num] .r-big .num{font-size:120px}#run[data-mode=num] .r-big .r-unit{font-size:40px}
+#run[data-mode=num] .r-stats>.grid3:nth-child(3) .stat .num{font-size:52px}
+#run[data-mode=num] .r-stats>.grid3:nth-child(4){display:grid}
+#run[data-mode=num] .r-stats>#rSplit{display:block;text-align:center;font-size:16px}
+#run[data-mode=num] .r-stats .stat{text-align:center}
 .r-wait{position:absolute;left:12px;top:12px;z-index:500;background:var(--surface);color:var(--fg);padding:6px 10px;border-radius:9px;font-weight:600;font-size:13px;box-shadow:0 2px 8px rgb(0 0 0 / .15)}
 .r-stats{display:flex;flex-direction:column;gap:12px;padding-block:12px;flex:none}
 .r-big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .r-big .num{font-size:100px;line-height:.82;letter-spacing:-.01em}.r-big .r-unit{font-size:30px;color:var(--muted)}
-.r-stats>.grid3:nth-child(2) .stat .num{font-size:38px}.r-stats>.grid3:nth-child(2) .stat small{font-size:14px}.r-stats>.grid3:nth-child(3) .stat .num{font-size:22px;color:var(--muted)}.r-stats>.grid3:nth-child(3){opacity:.9}
+.r-stats>.grid3:nth-child(3) .stat .num{font-size:34px}.r-stats>.grid3:nth-child(3) .stat small{font-size:13.5px}.r-stats>.grid3:nth-child(4) .stat .num{font-size:24px;color:var(--muted)}
 .r-ctl{flex:none;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .r-ctl .in{max-width:580px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .r-ctl .btn{min-height:56px;font-size:17px}
 .leaflet-container{font-family:var(--body);background:var(--surface2)}
-:root[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}}
-@media (max-height:700px){.r-big .num{font-size:72px}.r-stats>.grid3:nth-child(2) .stat .num{font-size:34px}.r-stats>.grid3:nth-child(3){display:none}.r-stats{gap:8px;padding-block:8px}}
+:root[data-theme="dark"] .tl-osm{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tl-osm{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}}
+@media (max-height:700px){#run .r-big .num{font-size:52px}.r-stats>.grid3:nth-child(3) .stat .num{font-size:28px}#run[data-mode=num] .r-big .num{font-size:96px}}
 </style>`);
 const RUN={on:false,type:'run',n:0,pts:[],st:null,map:null,line:null,dot:null,follow:true,poll:null,first:true};
 window.RUNAPI=!!(NATIVE&&NATIVE.runStart);
@@ -1895,7 +1923,19 @@ const PERMW={};let permN=0;
 window.androidPermDone=(id,res)=>{const f=PERMW[id];if(f){delete PERMW[id];f(res||{})}};
 function askPerms(){return new Promise(r=>{const id='p'+(++permN);PERMW[id]=r;try{NATIVE.runPermissions(id)}catch(e){delete PERMW[id];r({})}})}
 const accentColor=()=>getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#1F4FDE';
-function osmLayer(){return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'})}
+function osmLayer(){return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap',className:'tl-osm'})}
+const ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/';
+const MAPT=[['osm','Padrão','Ruas, no tema do app'],['sat','Satélite','Foto aérea'],['hyb','Híbrido','Foto aérea com nomes das ruas'],['topo','Relevo','Morros e subidas']];
+const mapType=()=>{const v=lsGet('athos.mapType');return MAPT.some(m=>m[0]===v)?v:'osm'};
+function mapLayer(t){
+  if(t==='sat')return L.tileLayer(ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
+  if(t==='hyb')return L.layerGroup([L.tileLayer(ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}),L.tileLayer(ESRI+'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}),L.tileLayer(ESRI+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19})]);
+  if(t==='topo')return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap · © OpenStreetMap'});
+  return osmLayer()}
+function setMapType(t){lsSet('athos.mapType',t);if(RUN.map){try{RUN.map.removeLayer(RUN.tiles)}catch(e){}RUN.tiles=mapLayer(t).addTo(RUN.map);try{RUN.tiles.bringToBack()}catch(e){}}const b=$('#rLayer');if(b)b.setAttribute('aria-pressed',t!=='osm')}
+function mapTypeSheet(){const cur=mapType();
+  openSheet('Tipo de mapa',`<div class="mtypes">${MAPT.map(m=>`<button class="mtype mt-${m[0]}" data-mt="${m[0]}" aria-pressed="${cur===m[0]}"><i aria-hidden="true"></i><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`,(b,el)=>{
+    b.onclick=e=>{const x=e.target.closest('[data-mt]');if(!x)return;setMapType(x.dataset.mt);closeSheet(el);document.body.classList.add('locked')}})}
 function estSteps(type,dist){if(type==='bike')return 0;const h=(S.profile.height||170)/100;return dist/(type==='run'?h*0.65:h*0.415)}
 const voiceOn=()=>lsGet('ficha.voice')!==false;
 
@@ -1915,13 +1955,13 @@ function runEl(){let el=$('#run');if(!el){el=document.createElement('section');e
 function openRun(){
   const el=runEl(),bike=RUN.type==='bike';el.hidden=false;document.body.classList.add('locked');$('#activebar').hidden=true;
   el.innerHTML=`<header class="r-h"><div class="wrap"><button class="icon-btn" data-act="runMin" aria-label="Minimizar">⌄</button><div class="ttl"><p class="eyebrow" id="rGps">Procurando GPS</p><h2>${RUN_T[RUN.type]}</h2></div><button class="chip" id="rVoice" data-act="runVoice" aria-pressed="${voiceOn()}">Voz ${voiceOn()?'ligada':'desligada'}</button></div></header>
-  <div class="r-map"><div id="runMap"></div><button class="btn sm r-center" data-act="runCenter">Centralizar</button><div class="r-wait" id="rWait">Procurando sinal do GPS… fique em lugar aberto.</div></div>
-  <div class="wrap r-stats">
+  <div class="r-body"><div class="r-map"><div id="runMap"></div><div class="r-fabs"><button class="r-fab" data-act="runLayer" id="rLayer" aria-label="Trocar tipo de mapa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button><button class="r-fab" data-act="runCenter" aria-label="Centralizar no meu local"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button></div><div class="r-wait" id="rWait">Procurando sinal do GPS… fique em lugar aberto.</div></div>
+  <div class="wrap r-stats"><button class="r-exp" data-act="runMode" aria-label="Alternar números grandes e mapa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
     <div class="r-big"><span class="num" id="rDist">0,00</span><span class="num r-unit">km</span><span class="chip warn" id="rPaused" hidden>Pausado</span></div>
     <div class="grid3"><div class="stat"><span class="num" id="rTime">00:00</span><small>tempo</small></div><div class="stat"><span class="num" id="rPace">—</span><small>${bike?'km/h médio':'ritmo médio'}</small></div><div class="stat"><span class="num" id="rNow">—</span><small>${bike?'km/h agora':'ritmo agora'}</small></div></div>
     <div class="grid3">${bike?'':`<div class="stat"><span class="num" id="rSteps">0</span><small id="rStepsL">passos</small></div><div class="stat"><span class="num" id="rCad">—</span><small>passos/min</small></div>`}<div class="stat"><span class="num" id="rElev">+0</span><small>m de subida</small></div></div>
     <p class="small muted" id="rSplit">${bike?'':'Parcial aparece a cada quilômetro.'}</p>
-  </div>
+  </div></div>
   <div class="r-ctl"><div class="in"><button class="btn" id="rPause" data-act="runPause">Pausar</button><button class="btn primary" data-act="runFinish">Finalizar</button></div></div>`;
   initRunMap();RUN.n=0;RUN.pts=[];RUN.first=true;runPoll();
 }
@@ -1929,7 +1969,7 @@ function initRunMap(){
   if(RUN.map){try{RUN.map.remove()}catch(e){}RUN.map=null}
   if(!window.L){$('#runMap').innerHTML='<p class="hint" style="padding:16px">Mapa indisponível.</p>';return}
   RUN.map=L.map('runMap',{zoomControl:false}).setView([-14.2,-51.9],4);RUN.map.attributionControl.setPrefix(false);
-  osmLayer().addTo(RUN.map);RUN.lcase=L.polyline([],{color:'#000',weight:9,opacity:.35}).addTo(RUN.map);RUN.line=L.polyline([],{color:accentColor(),weight:6,opacity:1}).addTo(RUN.map);RUN.dot=null;RUN.follow=true;
+  RUN.tiles=mapLayer(mapType()).addTo(RUN.map);{const b=$('#rLayer');if(b)b.setAttribute('aria-pressed',mapType()!=='osm')}RUN.lcase=L.polyline([],{color:'#000',weight:9,opacity:.35}).addTo(RUN.map);RUN.line=L.polyline([],{color:accentColor(),weight:6,opacity:1}).addTo(RUN.map);RUN.dot=null;RUN.follow=true;
   RUN.map.on('dragstart',()=>{RUN.follow=false});setTimeout(()=>{try{RUN.map.invalidateSize()}catch(e){}},120);
 }
 function runPoll(){
@@ -2015,6 +2055,8 @@ window.mountRouteMap=function(box,pts){
     runMin:runMinimize,
     runPause:()=>{if(!RUN.st)return;if(RUN.st.paused)NATIVE.runResume();else NATIVE.runPause();runPoll()},
     runVoice:el=>{const v=!voiceOn();lsSet('ficha.voice',v);try{NATIVE.runVoice(v)}catch(e){}el.setAttribute('aria-pressed',v);el.textContent='Voz '+(v?'ligada':'desligada')},
+    runMode:()=>{const el=$('#run');if(!el)return;el.dataset.mode=el.dataset.mode==='num'?'map':'num';if(el.dataset.mode==='map')setTimeout(()=>{try{RUN.map.invalidateSize()}catch(e){}},60)},
+    runLayer:()=>mapTypeSheet(),
     runCenter:()=>{RUN.follow=true;if(RUN.map&&RUN.pts.length)RUN.map.setView(RUN.pts[RUN.pts.length-1],Math.max(RUN.map.getZoom(),16))},
     runFinish:()=>openSheet('Finalizar atividade?',`<p>${RUN.st?`${km2(RUN.st.dist)} km em ${fmtDur(RUN.st.moving*1000).replace(/^00:/,'')}.`:''} Salvar no histórico?</p><div class="btns"><button class="btn" data-close>Continuar gravando</button></div><div class="btns"><button class="btn danger" data-s="no">Descartar</button><button class="btn primary" data-s="yes">Salvar</button></div>`,(b,el)=>{
       b.onclick=e=>{const x=e.target.closest('[data-s]');if(!x)return;if(x.dataset.s==='no'){b.innerHTML=`<p>Descartar esta atividade? O percurso gravado será perdido.</p><div class="btns"><button class="btn" data-close>Voltar</button><button class="btn danger" data-s="really">Descartar</button></div>`;return}
