@@ -87,7 +87,7 @@ window.addEventListener('online',()=>schedulePush(0));
 document.addEventListener('visibilitychange',()=>{if(!SOC.user)return;if(document.visibilityState==='visible'){pullAll(false);schedulePush(0)}else{if(Object.keys(SYNC.meta.pend).length)pushPending()}});
 
 /* ----- tela de cadastro ----- */
-function gateEl(){let g=$('#authGate');if(!g){g=document.createElement('section');g.id='authGate';g.setAttribute('aria-label','Entrar no ATHOS');document.body.appendChild(g);g.addEventListener('click',gateClick);g.addEventListener('submit',e=>{e.preventDefault();gateSubmit()});g.addEventListener('input',gateInput)}return g}
+function gateEl(){let g=$('#authGate');if(!g){g=document.createElement('section');g.id='authGate';if(window.splashOff)setTimeout(window.splashOff,120);g.setAttribute('aria-label','Entrar no ATHOS');document.body.appendChild(g);g.addEventListener('click',gateClick);g.addEventListener('submit',e=>{e.preventDefault();gateSubmit()});g.addEventListener('input',gateInput)}return g}
 function pwField(id,label,ac,ph){return`<label class="fld"><span>${label}</span><div class="pw"><input id="${id}" type="password" autocomplete="${ac}" placeholder="${ph||''}" required><button type="button" data-g="eye" data-for="${id}">Mostrar</button></div></label>`}
 function msg(){return(ACC.err?`<p class="err" role="alert">${esc(ACC.err)}</p>`:'')+(ACC.ok?`<p class="ok" role="status">${esc(ACC.ok)}</p>`:'')}
 function drawGate(){
