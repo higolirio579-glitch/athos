@@ -145,12 +145,12 @@ function coachCard(){if(typeof SOC==='undefined'||!SOC.user)return'';const ps=co
 
 /* --- bolinha flutuante do Coach (arrastável, gruda na borda, posição salva) --- */
 document.head.insertAdjacentHTML('beforeend',`<style>
-#coachFab{position:fixed;z-index:29;width:62px;height:62px;border-radius:50%;padding:0;border:0;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent;left:0;top:0;transition:transform .32s cubic-bezier(.3,.8,.25,1.2),opacity .2s;will-change:transform;user-select:none;-webkit-user-select:none}
+#coachFab{position:fixed;z-index:29;width:52px;height:52px;border-radius:50%;padding:0;border:0;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent;left:0;top:0;transition:transform .32s cubic-bezier(.3,.8,.25,1.2),opacity .2s;will-change:transform;user-select:none;-webkit-user-select:none}
 #coachFab.drag{transition:none}#coachFab.drag .cf-in{transform:scale(1.08)}
 #coachFab[hidden]{display:block;opacity:0;pointer-events:none}
 #coachFab .cf-in{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#2a2416,#0b0b0b 70%);border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.55),0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent);transition:transform .15s}
 #coachFab .cf-in{overflow:hidden}#coachFab .cf-in img{width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.12);pointer-events:none}
-#coachFab::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:cfRing 3.2s ease-out infinite;pointer-events:none}
+#coachFab::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:cfRing 3.2s ease-out 3;pointer-events:none}
 @keyframes cfRing{0%{transform:scale(.85);opacity:.55}70%,100%{transform:scale(1.25);opacity:0}}
 #coachFab .cf-b{position:absolute;right:-4px;bottom:-2px;min-width:24px;height:20px;padding:0 5px;border-radius:10px;background:var(--accent);color:#141414;font:800 11px/20px var(--body);letter-spacing:.02em;border:2px solid var(--bg);pointer-events:none}
 #coachFab:active .cf-in{transform:scale(.94)}
@@ -159,13 +159,13 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @media (prefers-reduced-motion:reduce){#coachFab::before{animation:none}#coachFab{transition:opacity .2s}}
 </style>`);
 const CFAB={el:null,x:null,y:null};
-function cfabSize(){return 62}
+function cfabSize(){return 52}
 function cfabClamp(x,y){const W=innerWidth,H=innerHeight,sz=cfabSize(),m=10;
-  const top=Math.max(m,(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0)+70),bot=H-sz-90;
+  let top=Math.max(m,(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0)+70),bot=H-sz-96;top=bot;
   return[Math.min(Math.max(m,x),W-sz-m),Math.min(Math.max(top,y),Math.max(top,bot))]}
 function cfabPlace(snap){const el=CFAB.el;if(!el)return;let x=CFAB.x,y=CFAB.y;const sz=cfabSize();
   if(x==null){x=innerWidth-sz-12;y=innerHeight-sz-170}
-  if(snap)x=x+sz/2<innerWidth/2?12:innerWidth-sz-12;
+  if(snap)x=x+sz/2<innerWidth/2?8:innerWidth-sz-8;
   [x,y]=cfabClamp(x,y);CFAB.x=x;CFAB.y=y;el.style.transform=`translate(${x}px,${y}px)`}
 function cfabSave(){try{localStorage.setItem('athos.coachFab',JSON.stringify({r:CFAB.x+cfabSize()/2>innerWidth/2,y:CFAB.y/innerHeight}))}catch(e){}}
 function cfabLoad(){try{const o=JSON.parse(localStorage.getItem('athos.coachFab')||'null');if(o){CFAB.y=o.y*innerHeight;CFAB.x=o.r?innerWidth:0}}catch(e){}}

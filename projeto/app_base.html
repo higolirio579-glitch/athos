@@ -403,7 +403,7 @@ button.card{font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer
 .mrow .e{width:42px;height:42px;border-radius:13px;background:var(--surface2);display:grid;place-items:center;font-size:20px;flex:none}
 .mrow .t{flex:1;min-width:0}.mrow .t b{display:block}.mrow .t small{color:var(--muted);font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrow .k{font:800 17px var(--display);white-space:nowrap}.mrow .k small{font-size:12px;color:var(--muted)}
-.mrow .plus{width:38px;height:38px;border-radius:50%;border:0;background:var(--accent-soft);color:var(--accent-tx);font:800 21px/1 var(--body);flex:none}
+.mrow .plus{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--accent);background:transparent;color:var(--accent-tx);font:800 21px/1 var(--body);flex:none}
 .items{margin:-4px 0 8px 54px;display:flex;flex-direction:column;gap:2px}
 .items button{display:flex;justify-content:space-between;gap:10px;border:0;background:none;color:var(--muted);font:500 13.5px var(--body);padding:6px 0;text-align:left}
 .items button b{color:var(--fg);font-weight:500;min-width:0;overflow-wrap:anywhere}
@@ -478,6 +478,7 @@ button.card{font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer
   <span>Treino em andamento</span><span class="num" id="abTime">00:00</span>
 </button>
 
+<style>.card.metas1{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;border:1.5px solid var(--accent);color:var(--fg);font:inherit;cursor:pointer}.card.metas1 .t{flex:1;display:flex;flex-direction:column;gap:3px}.card.metas1 b{font-size:15.5px}.card.metas1 small{color:var(--muted);font-size:13px}.card.metas1 .go{flex:none;width:auto;display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:14px;padding:9px 14px;border-radius:12px}</style>
 <div class="tabbar"><button class="tbmenu" id="tbClose" aria-label="Recolher menu" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><nav aria-label="Seções">
   <button class="tab" data-tab="hoje"><svg viewBox="0 0 24 24"><path d="M3.5 15a8.5 8.5 0 1 1 17 0"/><path d="M12 15l4.5-4.5"/><path d="M8 19h8"/></svg>Hoje</button>
   <button class="tab" data-tab="treino"><svg viewBox="0 0 24 24"><path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/></svg>Treino</button>
@@ -850,8 +851,8 @@ function vHoje(){
   html+=`<div class="wkstrip" role="list" aria-label="Sua semana">${['S','T','Q','Q','S','S','D'].map((l,i)=>{const d=addDays(ws,i),on=isActive(d);return`<div role="listitem" class="${on?'on':''}${d===t?' td':''}${d>t?' fut':''}" aria-label="${esc(dlabel(d,{weekday:'long'}))}${on?': ativo':''}"><i>${on?'✓':''}</i>${l}</div>`}).join('')}</div>`;
   const bs=Math.max(bestStreak(),st.n);
   html+=`<p class="hint" style="margin-top:-4px">${st.n?`🔥 <b style="color:var(--fg)">${st.n} ${st.n===1?'dia seguido':'dias seguidos'}</b>${bs>st.n?` · seu recorde é ${bs}`:' · seu recorde!'}`:'Registre um treino ou refeição hoje para começar sua sequência.'}${!st.on&&st.n&&h>=20?` · faltam ${24-h}h para manter`:''}</p>`;
-  if(!p.age||!p.height||!curWeight())html+=`<div class="card" style="border-color:var(--accent)"><h3>Configure suas metas</h3><p class="hint">Com idade, altura e peso eu calculo calorias, macros e água para o seu objetivo.</p><button class="btn primary" data-act="profileSheet">Preencher dados</button></div>`;
   html+=kcalCard(t);
+  if(!p.age||!p.height||!curWeight())html+=`<button class="card metas1" data-act="profileSheet"><span class="t"><b>Configure suas metas</b><small>Idade, altura e peso para calcular calorias, macros e água</small></span><span class="go">Preencher</span></button>`;
   // treino de hoje
   const IC='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5v5M6 6.5v11M18 6.5v11M21.5 9.5v5M6 12h12"/></svg>';
   if(S.active)html+=`<div class="card nexttr"><span class="ic">${IC}</span><span class="t"><small>Treino em andamento</small><b>${esc(S.active.name)}</b></span><button class="btn primary sm" data-act="openActive">Voltar</button></div>`;
@@ -917,7 +918,7 @@ function vDieta(){
   html+=`<div class="card wrow"><span aria-hidden="true" style="font-size:22px">💧</span><span style="flex:1;min-width:0"><b>${fmtD(ml/1000)} de ${fmtD(wg/1000)} L</b><div class="bar w" style="margin-top:6px"><i style="width:${pct(ml,wg)}%"></i></div></span><button class="btn sm wbtn" data-act="water" data-ml="-250" data-date="${date}" aria-label="Tirar 250 ml">−</button><button class="btn sm wbtn" data-act="water" data-ml="250" data-date="${date}">+250</button></div>`;
   html+=`<div class="card"><div class="card-h"><h3>Plano alimentar</h3></div>`;
   if(p.plan){const tot=p.plan.refeicoes.reduce((a,r)=>a+mealTotals(r.items).kcal,0);html+=`<p>${p.plan.refeicoes.length} refeições · cerca de ${fmtN(tot)} kcal por dia</p><div class="btns"><button class="btn" data-act="viewPlan">Ver plano</button>${SAMPLE?'<button class="btn soft" data-act="aiPlan">Gerar outro</button>':''}</div>`}
-  else html+=SAMPLE?`<p class="hint">A IA monta um cardápio de um dia dentro das suas metas, com comida brasileira do dia a dia.</p><button class="btn soft" data-act="aiPlan">Gerar plano com IA</button>`:`<p class="hint">Libere o uso do Claude nesta página para gerar planos alimentares.</p>`;
+  else html+=SAMPLE?`<p class="hint">A IA monta um cardápio de um dia dentro das suas metas, com comida brasileira do dia a dia.</p><button class="btn primary block" data-act="aiPlan">Gerar plano com IA</button>`:`<p class="hint">Libere o uso do Claude nesta página para gerar planos alimentares.</p>`;
   html+=`</div>`;
   return html;
 }
