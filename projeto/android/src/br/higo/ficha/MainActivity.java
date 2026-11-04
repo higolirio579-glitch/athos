@@ -46,6 +46,19 @@ public class MainActivity extends Activity {
     private boolean pickImg, pickMulti, camOffered;
     private PermissionRequest pendingCam;
     private static final Charset UTF8 = Charset.forName("UTF-8");
+    /* só abre links http(s), e-mail, telefone, mensagem, mapa e WhatsApp */
+    static boolean okScheme(Uri u) {
+        String sc = u == null ? null : u.getScheme();
+        if (sc == null) return false;
+        sc = sc.toLowerCase();
+        return sc.equals("https") || sc.equals("http") || sc.equals("mailto") || sc.equals("tel") || sc.equals("sms") || sc.equals("geo") || sc.equals("whatsapp");
+    }
+
+    /* a atualização só pode vir do site oficial do ATHOS, por https */
+    static boolean okUpdateUrl(String url) {
+        try { Uri u = Uri.parse(url); return "https".equals(u.getScheme()) && "higolirio579-glitch.github.io".equals(u.getHost()); } catch (Exception e) { return false; }
+    }
+
     static final String HOST = "appassets.androidplatform.net";
     private WebView web;
     private ValueCallback<Uri[]> fileCb;
@@ -79,14 +92,14 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.3 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.4 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, String url) {
                 Uri u = Uri.parse(url);
                 if (HOST.equals(u.getHost())) return false;
-                try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception e) { }
+                if (okScheme(u)) { try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception e) { } }
                 return true;
             }
 
@@ -661,7 +674,7 @@ public class MainActivity extends Activity {
         public void openUrl(final String url) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { }
+                    try { Uri ou = Uri.parse(url); if (okScheme(ou)) startActivity(new Intent(Intent.ACTION_VIEW, ou).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { }
                 }
             });
         }
@@ -674,7 +687,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void updateDownload(final String url) {
-            if (updBusy) return;
+            if (updBusy || !okUpdateUrl(url)) return;
             updBusy = true;
             new Thread(new Runnable() {
                 public void run() {
@@ -691,6 +704,7 @@ public class MainActivity extends Activity {
                             int st = c.getResponseCode();
                             if (st >= 300 && st < 400 && c.getHeaderField("Location") != null) {
                                 u = new URL(new URL(u), c.getHeaderField("Location")).toString();
+                                if (!okUpdateUrl(u)) throw new IOException("destino nao permitido");
                                 c.disconnect();
                                 continue;
                             }
