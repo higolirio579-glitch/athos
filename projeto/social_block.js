@@ -423,7 +423,7 @@ Object.assign(ACT,{
   socPostMenu:el=>socPostMenu(el.dataset.id),
   socProfile:el=>socProfileSheet(el.dataset.id),
 socSharePost:el=>{const p=findPost(el.dataset.id);if(p)shareCard(postCardData(p))},
-socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://higolirio579-glitch.github.io/athos/`;
+socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://athos-app.github.io/baixar/`;
   try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){}
   try{await navigator.clipboard.writeText(txt);toast('ID copiado. É só colar para os amigos.')}catch(e){toast('Seu ID: '+fmtId(id))}},
   socFollow:el=>socToggleFollow(el.dataset.id),

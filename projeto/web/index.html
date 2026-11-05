@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://shvphmajljvlnqlhryfw.supabase.co https://*.openstreetmap.org https://server.arcgisonline.com https://*.tile.opentopomap.org https://*.openfoodfacts.org https://cdn.jsdelivr.net; media-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co; font-src 'self' data:; connect-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co wss://shvphmajljvlnqlhryfw.supabase.co https://higolirio579-glitch.github.io https://world.openfoodfacts.org https://generativelanguage.googleapis.com https://api.groq.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"><script>document.addEventListener('securitypolicyviolation',function(e){try{var a=JSON.parse(localStorage.getItem('athos.csp')||'[]');a.push(e.violatedDirective+' '+e.blockedURI);localStorage.setItem('athos.csp',JSON.stringify(a.slice(-20)));}catch(x){}})</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>#splash{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:splIn .4s ease .35s both;overflow:hidden}
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://shvphmajljvlnqlhryfw.supabase.co https://*.openstreetmap.org https://server.arcgisonline.com https://*.tile.opentopomap.org https://*.openfoodfacts.org https://cdn.jsdelivr.net; media-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co; font-src 'self' data:; connect-src 'self' blob: data: https://shvphmajljvlnqlhryfw.supabase.co wss://shvphmajljvlnqlhryfw.supabase.co https://higolirio579-glitch.github.io https://athos-app.github.io https://world.openfoodfacts.org https://generativelanguage.googleapis.com https://api.groq.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"><script>document.addEventListener('securitypolicyviolation',function(e){try{var a=JSON.parse(localStorage.getItem('athos.csp')||'[]');a.push(e.violatedDirective+' '+e.blockedURI);localStorage.setItem('athos.csp',JSON.stringify(a.slice(-20)));}catch(x){}})</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>#splash{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:splIn .4s ease .35s both;overflow:hidden}
 #splash.out{animation:splOut .3s ease forwards;pointer-events:none}
 #splash:before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(233,182,64,.24),rgba(233,182,64,0) 66%);animation:splGlow 2.6s ease-in-out infinite}
 #splash img{position:relative;width:108px;height:108px;border-radius:27px;filter:drop-shadow(0 0 26px rgba(233,182,64,.38));animation:splPulse 2.6s ease-in-out infinite}
@@ -2568,7 +2568,7 @@ Object.assign(ACT,{
   socPostMenu:el=>socPostMenu(el.dataset.id),
   socProfile:el=>socProfileSheet(el.dataset.id),
 socSharePost:el=>{const p=findPost(el.dataset.id);if(p)shareCard(postCardData(p))},
-socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://higolirio579-glitch.github.io/athos/`;
+socShareId:async()=>{const id=SOC.me&&SOC.me.public_id;if(!id)return;const txt=`Me segue no ATHOS! Meu ID é ${fmtId(id)}. Baixe em https://athos-app.github.io/baixar/`;
   try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){}
   try{await navigator.clipboard.writeText(txt);toast('ID copiado. É só colar para os amigos.')}catch(e){toast('Seu ID: '+fmtId(id))}},
   socFollow:el=>socToggleFollow(el.dataset.id),
@@ -2833,7 +2833,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #updGate .bar{height:10px;border-radius:9px;background:var(--surface2);overflow:hidden}
 #updGate .bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
 </style>`);
-const UPD={url:'https://higolirio579-glitch.github.io/athos/versao.json',checked:0,info:null,state:'idle',pct:0,el:null};
+const UPD={urls:['https://athos-app.github.io/versao.json','https://higolirio579-glitch.github.io/athos/versao.json'],url:'',checked:0,info:null,state:'idle',pct:0,el:null};
 function updMine(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 function updSaved(){try{return JSON.parse(localStorage.getItem('athos.upd')||'null')}catch(e){return null}}
 async function updCheck(force){
@@ -2841,7 +2841,7 @@ async function updCheck(force){
   if(!force&&Date.now()-UPD.checked<15*60e3)return'skip';
   UPD.checked=Date.now();
   try{
-    const r=await fetch(UPD.url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return'error';
+    let r=null;for(const u of UPD.urls){try{r=await fetch(u+'?t='+Date.now(),{cache:'no-store'});if(r.ok){UPD.url=u;break}}catch(e){r=null}}if(!r||!r.ok)return'error';
     const v=await r.json();const mine=updMine();
     if(!v||!(v.code>mine)||!v.apk){try{localStorage.removeItem('athos.upd')}catch(e){}if(UPD.el)updHide();return'none'}
     UPD.info=v;try{localStorage.setItem('athos.upd',JSON.stringify(v))}catch(e){}

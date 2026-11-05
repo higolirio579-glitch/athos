@@ -10,7 +10,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #updGate .bar{height:10px;border-radius:9px;background:var(--surface2);overflow:hidden}
 #updGate .bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
 </style>`);
-const UPD={url:'https://higolirio579-glitch.github.io/athos/versao.json',checked:0,info:null,state:'idle',pct:0,el:null};
+const UPD={urls:['https://athos-app.github.io/versao.json','https://higolirio579-glitch.github.io/athos/versao.json'],url:'',checked:0,info:null,state:'idle',pct:0,el:null};
 function updMine(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 function updSaved(){try{return JSON.parse(localStorage.getItem('athos.upd')||'null')}catch(e){return null}}
 async function updCheck(force){
@@ -18,7 +18,7 @@ async function updCheck(force){
   if(!force&&Date.now()-UPD.checked<15*60e3)return'skip';
   UPD.checked=Date.now();
   try{
-    const r=await fetch(UPD.url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return'error';
+    let r=null;for(const u of UPD.urls){try{r=await fetch(u+'?t='+Date.now(),{cache:'no-store'});if(r.ok){UPD.url=u;break}}catch(e){r=null}}if(!r||!r.ok)return'error';
     const v=await r.json();const mine=updMine();
     if(!v||!(v.code>mine)||!v.apk){try{localStorage.removeItem('athos.upd')}catch(e){}if(UPD.el)updHide();return'none'}
     UPD.info=v;try{localStorage.setItem('athos.upd',JSON.stringify(v))}catch(e){}

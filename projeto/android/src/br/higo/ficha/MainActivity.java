@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
 
     /* a atualização só pode vir do site oficial do ATHOS, por https */
     static boolean okUpdateUrl(String url) {
-        try { Uri u = Uri.parse(url); return "https".equals(u.getScheme()) && "higolirio579-glitch.github.io".equals(u.getHost()); } catch (Exception e) { return false; }
+        try { Uri u = Uri.parse(url); String h = u.getHost(); return "https".equals(u.getScheme()) && ("higolirio579-glitch.github.io".equals(h) || "athos-app.github.io".equals(h)); } catch (Exception e) { return false; }
     }
 
     static final String HOST = "appassets.androidplatform.net";
@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.8 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.9 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
