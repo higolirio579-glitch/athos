@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Baixar o ATHOS</title>
+<meta name="description" content="Baixe o ATHOS grátis: treino, dieta e corrida num app só, com Coach de IA.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="../icon-192.png">
+<meta property="og:title" content="ATHOS: treino, dieta e corrida">
+<meta property="og:description" content="Baixe grátis para Android ou use no iPhone pelo site.">
+<meta property="og:image" content="https://higolirio579-glitch.github.io/athos/icon-512.png">
+<style>
+@font-face{font-family:"BC";font-weight:700;font-display:swap;src:url(../fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"BC";font-weight:800;font-display:swap;src:url(../fonts/barlow-condensed-latin-800-normal.woff2) format("woff2")}
+@font-face{font-family:"B";font-weight:400;font-display:swap;src:url(../fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"B";font-weight:600;font-display:swap;src:url(../fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"B";font-weight:700;font-display:swap;src:url(../fonts/barlow-latin-700-normal.woff2) format("woff2")}
+:root{--bg:#000;--card:#111214;--card2:#17181B;--line:#26282D;--fg:#F2F2F0;--muted:#959BA5;--gold:#E9B640;--gold2:#F6CF6A;--gold3:#B8862A;
+  --d:"BC","Arial Narrow",system-ui,sans-serif;--b:"B",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.55 var(--b);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+
+/* topo */
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:9px}
+.brand b{font:800 22px/1 var(--d);letter-spacing:.2em}
+.top nav a{color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;margin-left:18px}
+.top nav a:hover{color:var(--fg)}
+
+/* herói */
+.hero{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:40px 0 70px}
+.hero:before{content:"";position:absolute;right:-8%;top:-10%;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(233,182,64,.22),rgba(233,182,64,0) 65%);pointer-events:none;z-index:0}
+.hero>*{position:relative;z-index:1}
+h1{font:800 clamp(56px,9vw,104px)/.9 var(--d);margin:0 0 18px;letter-spacing:-.005em;text-wrap:balance}
+h1 .g{display:block;color:var(--gold)}
+.lead{font-size:clamp(18px,2.2vw,21px);color:#C9CCD2;max-width:34ch;margin:0 0 30px}
+.dl{display:inline-flex;align-items:center;gap:14px;text-decoration:none;color:#000;background:radial-gradient(circle at 30% 25%,var(--gold2),var(--gold) 55%,var(--gold3));padding:18px 30px 18px 24px;border-radius:20px;box-shadow:0 14px 40px rgba(233,182,64,.32),inset 0 -3px 0 rgba(0,0,0,.18);transition:transform .15s}
+.dl:hover{transform:translateY(-2px)}.dl:active{transform:scale(.98)}
+.dl svg{width:34px;height:34px;flex:none}
+.dl span{display:flex;flex-direction:column;line-height:1.05}
+.dl b{font:800 26px/1 var(--d)}
+.dl small{font:600 14px/1.3 var(--b);opacity:.8;margin-top:4px}
+.alt{margin:18px 0 0;color:var(--muted);font-size:15.5px}
+.alt a{color:var(--gold);font-weight:700;text-decoration:none}
+.meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:14.5px}
+.meta b{color:var(--fg);font-weight:700}
+
+/* telas do app */
+.phones{position:relative;height:560px}
+.ph{position:absolute;width:250px;border-radius:34px;padding:8px;background:#0b0b0c;border:1px solid #2a2c31;box-shadow:0 30px 70px rgba(0,0,0,.7)}
+.ph img{border-radius:27px;width:100%}
+.ph.a{left:50%;top:0;transform:translateX(-50%);z-index:3}
+.ph.b{left:4%;top:70px;transform:rotate(-7deg);z-index:2;opacity:.9}
+.ph.c{right:4%;top:70px;transform:rotate(7deg);z-index:2;opacity:.9}
+
+/* seções */
+section{padding:70px 0;border-top:1px solid var(--line)}
+h2{font:800 clamp(38px,5.5vw,56px)/.95 var(--d);margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 34px;max-width:52ch}
+
+/* passos de instalação: é uma sequência, então vai numerado */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px}
+.steps li:before{content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--gold);color:#000;font:800 22px/1 var(--d);margin-bottom:14px}
+.steps b{display:block;font:700 22px/1.1 var(--d);margin-bottom:6px}
+.steps p{margin:0;color:#BEC2C9;font-size:15.5px}
+.note{margin-top:18px;background:var(--card2);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));border-radius:18px;padding:16px 18px;color:#C9CCD2;font-size:15.5px}
+.note b{color:var(--gold)}
+
+/* iPhone */
+.ios{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+.ios ol{margin:0;padding-left:22px;color:#C9CCD2}
+.ios ol li{margin:8px 0}
+.ios .go{display:inline-block;margin-top:18px;border:1.5px solid var(--gold);color:var(--gold);text-decoration:none;font-weight:700;padding:12px 20px;border-radius:14px}
+
+/* funções */
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.feat div{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px}
+.feat h3{font:800 28px/1 var(--d);margin:0 0 8px}
+.feat h3 em{font-style:normal;color:var(--gold)}
+.feat p{margin:0;color:#BEC2C9;font-size:16px}
+
+/* final */
+.end{text-align:center;padding:80px 0 60px}
+.end img{width:84px;height:84px;margin:0 auto 18px;border-radius:22px;filter:drop-shadow(0 0 24px rgba(233,182,64,.35))}
+.end h2{margin-bottom:24px}
+footer{color:var(--muted);font-size:14px;text-align:center;padding:26px 0 40px;border-top:1px solid var(--line)}
+footer a{color:var(--muted)}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-top:18px;gap:10px}
+  .hero:before{right:-40%;top:-6%;width:520px;height:520px}
+  .phones{height:470px;margin-top:20px}
+  .ph{width:205px}.ph.b{left:0}.ph.c{right:0}
+  .steps{grid-template-columns:1fr 1fr}
+  .ios,.feat{grid-template-columns:1fr}
+  .top nav{display:none}
+  .dl{width:100%;justify-content:center}
+}
+@media (max-width:460px){.steps{grid-template-columns:1fr}.phones{height:420px}.ph{width:180px}}
+@media (prefers-reduced-motion:reduce){.dl{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><img src="../icon-192.png" alt=""><b>ATHOS</b></a>
+    <nav><a href="#instalar">Como instalar</a><a href="#iphone">iPhone</a><a href="#funcoes">Funções</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Treino, dieta e corrida <span class="g">num app só.</span></h1>
+        <p class="lead">Ficha de treino, plano alimentar com IA, corrida com GPS e seus amigos treinando junto. Grátis.</p>
+        <a class="dl" href="../ATHOS.apk" download="ATHOS.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>
+          <span><b>Baixar para Android</b><small id="ver">Arquivo APK · grátis</small></span>
+        </a>
+        <p class="alt">Tem iPhone? <a href="#iphone">Use pelo site</a>, sem instalar nada.</p>
+        <div class="meta"><span><b>Android 7</b> ou mais novo</span><span>Seus dados ficam <b>salvos na sua conta</b></span></div>
+      </div>
+      <div class="phones" aria-hidden="true">
+        <div class="ph b"><img src="img/novo-hoje.jpg" alt="" loading="lazy"></div>
+        <div class="ph c"><img src="img/cardio-1.jpg" alt="" loading="lazy"></div>
+        <div class="ph a"><img src="img/novo-corrida.jpg" alt=""></div>
+      </div>
+    </div>
+
+    <section id="instalar">
+      <h2>Como instalar no Android</h2>
+      <p class="sub">Leva menos de um minuto. O ATHOS ainda não está na Play Store, então o Android pede algumas confirmações.</p>
+      <ol class="steps">
+        <li><b>Baixe o arquivo</b><p>Toque em <strong>Baixar para Android</strong>. Se o navegador perguntar, confirme o download.</p></li>
+        <li><b>Abra o ATHOS.apk</b><p>Toque na notificação do download ou abra o arquivo em <strong>Downloads</strong>.</p></li>
+        <li><b>Permita a instalação</b><p>Se aparecer "fontes desconhecidas", toque em <strong>Configurações</strong> e ative <strong>Permitir desta fonte</strong>. Depois volte.</p></li>
+        <li><b>Instale e entre</b><p>Toque em <strong>Instalar</strong>, abra o app e crie sua conta com seu e-mail.</p></li>
+      </ol>
+      <p class="note"><b>Apareceu o aviso do Play Protect?</b> Ele aparece em todo app instalado fora da Play Store. Toque em <strong>Mais detalhes</strong> e depois em <strong>Instalar mesmo assim</strong>.</p>
+      <p class="note"><b>Já tem o ATHOS?</b> Não precisa baixar de novo: o app avisa sozinho quando sai versão nova, e instala por cima sem perder nada.</p>
+    </section>
+
+    <section id="iphone">
+      <div class="ios">
+        <div>
+          <h2>No iPhone</h2>
+          <p class="sub" style="margin-bottom:0">O ATHOS funciona direto pelo Safari, como um app, com ícone na tela inicial.</p>
+        </div>
+        <div>
+          <ol>
+            <li>Abra o site do ATHOS no <strong>Safari</strong>.</li>
+            <li>Toque no botão <strong>Compartilhar</strong> (o quadrado com a seta para cima).</li>
+            <li>Escolha <strong>Adicionar à Tela de Início</strong> e toque em <strong>Adicionar</strong>.</li>
+          </ol>
+          <a class="go" href="../">Abrir o ATHOS no navegador</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="funcoes">
+      <h2>O que tem no ATHOS</h2>
+      <p class="sub">Tudo que você usava em vários apps, num lugar só.</p>
+      <div class="feat">
+        <div><h3>Coach <em>ATHOS</em></h3><p>Uma IA que monta sua ficha de treino e seu plano alimentar, com 3 opções por refeição dentro das suas calorias.</p></div>
+        <div><h3>Corrida com <em>GPS</em></h3><p>Contagem 3, 2, 1, mapa em tela cheia com satélite, ritmo ao vivo e números grandes para ler correndo.</p></div>
+        <div><h3>Esteira e <em>bike</em></h3><p>Coloque o tempo e o ritmo do aparelho e o app calcula quantas calorias você gastou.</p></div>
+        <div><h3>Treine com <em>amigos</em></h3><p>Feed, desafios, clubes e chat. Compartilhe seus treinos e acompanhe a evolução de quem treina com você.</p></div>
+      </div>
+    </section>
+
+    <div class="end">
+      <img src="../icon-192.png" alt="">
+      <h2>Bora treinar?</h2>
+      <a class="dl" href="../ATHOS.apk" download="ATHOS.apk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>
+        <span><b>Baixar para Android</b><small>Arquivo APK · grátis</small></span>
+      </a>
+    </div>
+  </main>
+</div>
+<footer><div class="wrap">ATHOS · Dúvidas: <a href="mailto:athos.app01@gmail.com">athos.app01@gmail.com</a></div></footer>
+<script>
+fetch('../versao.json?t='+Date.now()).then(r=>r.json()).then(v=>{if(v&&v.nome)document.getElementById('ver').textContent='Versão '+v.nome+' · grátis'}).catch(()=>{});
+</script>
+</body>
+</html>
