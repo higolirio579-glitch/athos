@@ -74,6 +74,16 @@ h2{font:800 clamp(38px,5.5vw,56px)/.95 var(--d);margin:0 0 12px}
 .note{margin-top:18px;background:var(--card2);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));border-radius:18px;padding:16px 18px;color:#C9CCD2;font-size:15.5px}
 .note b{color:var(--gold)}
 
+/* vídeo */
+.watch{display:inline-flex;align-items:center;gap:12px;margin-top:16px;color:var(--fg);text-decoration:none;font-weight:700;font-size:17px;padding:10px 18px 10px 10px;border:1.5px solid color-mix(in srgb,var(--gold) 55%,var(--line));border-radius:999px;background:rgba(233,182,64,.06)}
+.watch:hover{border-color:var(--gold)}
+.watch .pl{width:38px;height:38px;border-radius:50%;background:var(--gold);display:grid;place-items:center}
+.watch .pl svg{width:18px;height:18px;fill:#000;margin-left:2px}
+.watch small{color:var(--muted);font-weight:600;font-size:14px}
+.vid{display:grid;grid-template-columns:1fr 360px;gap:50px;align-items:center}
+.vframe{border-radius:40px;padding:10px;background:#0b0b0c;border:1px solid #2a2c31;box-shadow:0 30px 70px rgba(0,0,0,.7),0 0 70px rgba(233,182,64,.15)}
+.vframe video{display:block;width:100%;aspect-ratio:9/16;border-radius:32px;background:#000}
+.dl.sm{padding:14px 22px 14px 18px;border-radius:16px}.dl.sm svg{width:26px;height:26px}.dl.sm b{font-size:22px}
 /* iPhone */
 .ios{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
 .ios ol{margin:0;padding-left:22px;color:#C9CCD2}
@@ -100,7 +110,10 @@ footer a{color:var(--muted)}
   .phones{height:470px;margin-top:20px}
   .ph{width:205px}.ph.b{left:0}.ph.c{right:0}
   .steps{grid-template-columns:1fr 1fr}
-  .ios,.feat{grid-template-columns:1fr}
+  .ios,.feat,.vid{grid-template-columns:1fr}
+  .vframe{max-width:340px;margin:0 auto}
+  .vid .dl.sm{display:none}
+  .watch{width:100%;justify-content:center}
   .top nav{display:none}
   .dl{width:100%;justify-content:center}
 }
@@ -112,7 +125,7 @@ footer a{color:var(--muted)}
 <div class="wrap">
   <header class="top">
     <a class="brand" href="./"><img src="../icon-192.png" alt=""><b>ATHOS</b></a>
-    <nav><a href="#instalar">Como instalar</a><a href="#iphone">iPhone</a><a href="#funcoes">Funções</a></nav>
+    <nav><a href="#video">Vídeo</a><a href="#instalar">Como instalar</a><a href="#iphone">iPhone</a><a href="#funcoes">Funções</a></nav>
   </header>
 
   <main>
@@ -124,6 +137,7 @@ footer a{color:var(--muted)}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>
           <span><b>Baixar para Android</b><small id="ver">Arquivo APK · grátis</small></span>
         </a>
+        <a class="watch" href="#video"><span class="pl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l10.6-6.8a1 1 0 0 0 0-1.72L9.5 4.34A1 1 0 0 0 8 5.2z"/></svg></span>Assista como instalar <small>35 s</small></a>
         <p class="alt">Tem iPhone? <a href="#iphone">Use pelo site</a>, sem instalar nada.</p>
         <div class="meta"><span><b>Android 7</b> ou mais novo</span><span>Seus dados ficam <b>salvos na sua conta</b></span></div>
       </div>
@@ -133,6 +147,15 @@ footer a{color:var(--muted)}
         <div class="ph a"><img src="img/novo-corrida.jpg" alt=""></div>
       </div>
     </div>
+
+    <section id="video" class="vid">
+      <div>
+        <h2>Veja em 35 segundos</h2>
+        <p class="sub">O passo a passo completo: baixar, permitir a instalação, passar pelo aviso do Play Protect e entrar no app. Toque no vídeo para ligar o som.</p>
+        <a class="dl sm" href="../ATHOS.apk" download="ATHOS.apk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg><span><b>Baixar para Android</b></span></a>
+      </div>
+      <div class="vframe"><video src="como-baixar.mp4" poster="img/video-capa.jpg" controls playsinline muted loop preload="metadata" aria-label="Vídeo: como baixar e instalar o ATHOS"></video></div>
+    </section>
 
     <section id="instalar">
       <h2>Como instalar no Android</h2>
