@@ -319,7 +319,7 @@ socChatSheet=function(convId){
           if(a.dataset.a==='rep'){reply=m;drawRep();ta.focus()}
           if(a.dataset.a==='view')photoViewer(m.meta.path,m.user_id===SOC.user.id?'Você':pName(m.user_id),new Date(m.created_at).toLocaleString('pt-BR',{dateStyle:'medium',timeStyle:'short'}));
           if(a.dataset.a==='copy'){try{await navigator.clipboard.writeText(m.body);toast('Texto copiado')}catch(_){toast('Não consegui copiar')}}
-          if(a.dataset.a==='rep2')socReport({user_id:m.user_id,reason:null});
+          if(a.dataset.a==='rep2')socReport({user_id:m.user_id,message_id:m.id,reason:null});
           if(a.dataset.a==='del')confirmSheet('Apagar esta mensagem para todos?','Apagar',async()=>{try{await sbq(SOC.sb.from('messages').delete().eq('id',m.id));if(m.meta&&m.meta.path)SOC.sb.storage.from('chat').remove([m.meta.path]).catch(()=>{});list=list.filter(x=>x.id!==m.id);draw();loadConvs()}catch(err){toast(sbErr(err))}})}})};
     const shareMenu=()=>{const ss=Object.values(S.sessions||{}).filter(s=>s&&s.date).sort((a,b)=>(b.end||b.ts||0)-(a.end||a.ts||0)||(a.date<b.date?1:-1)).slice(0,6);
       openSheet('Compartilhar no chat',ss.length?`<p class="hint">Escolha o treino ou a corrida para mandar.</p><div class="mact">${ss.map(s=>`<button data-sid="${esc(s.id)}"><span style="font-size:22px">${s.run?(s.run.type==='bike'?'🚴':s.run.type==='walk'?'🚶':'🏃'):'🏋️'}</span><span style="flex:1;min-width:0"><b style="display:block">${esc(s.name||(s.run?'Corrida':'Treino'))}</b><small class="muted">${esc(dlabel(s.date,{day:'numeric',month:'short'}))} · ${esc(sessSub(s,true))}</small></span></button>`).join('')}</div>`
@@ -445,7 +445,7 @@ socClubSheet=function(id,tab){const c=(SOC.clubs||[]).find(x=>x.id===id);if(!c)r
         if(s==='leave')confirmSheet(`Sair do clube “${c.name}”? Para voltar, vai precisar pedir de novo.`,'Sair',async()=>{try{await sbq(SOC.sb.from('club_members').delete().eq('club_id',id).eq('user_id',SOC.user.id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs();toast('Você saiu do clube')}catch(err){toast(sbErr(err))}});
         if(s==='del')confirmSheet(`Apagar o clube “${c.name}” e o chat dele? Não dá para desfazer.`,'Apagar',async()=>{try{await sbq(SOC.sb.from('clubs').delete().eq('id',id));closeSheet(el);SOC.clubs=null;loadClubs();loadConvs();toast('Clube apagado')}catch(err){toast(sbErr(err))}});
         if(s==='edit')socNewClub(c);
-        if(s==='report')socReport({user_id:c.owner,reason:null});
+        if(s==='report')socReport({user_id:c.owner,club_id:c.id,reason:null});
         if(s==='chat'){const cv=await sbq(SOC.sb.from('conversations').select('id').eq('club_id',id));if(!cv.length){toast('Chat ainda não disponível');return}closeSheet(el);await loadConvs();socChatSheet(cv[0].id)}
         if(s==='invite'){const txt=`Bora treinar comigo! Entre no clube “${c.name}” no ATHOS: abra Social → Clubes e procure por “${c.name}”.`;
           try{if(navigator.share){await navigator.share({title:'ATHOS',text:txt});return}}catch(_){return}

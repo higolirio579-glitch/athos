@@ -52,7 +52,7 @@ const SB_URL='https://shvphmajljvlnqlhryfw.supabase.co',SB_KEY='sb_publishable_h
 const SOC={sb:null,user:null,me:null,sub:'feed',feedMode:'seguindo',feed:null,loading:false,prof:{},likeN:{},myLikes:new Set(),cmtN:{},following:new Set(),followers:0,
   convs:null,unread:0,openConv:null,clubs:null,myClubs:new Set(),people:null,pq:'',rank:null,authMode:'entrar',err:'',inbox:null};
 function once(k,fn){if(SOC['_'+k])return;SOC['_'+k]=1;Promise.resolve().then(fn).finally(()=>{SOC['_'+k]=0})}
-async function sbq(p){const r=await p;if(r.error)throw r.error;return r.data}
+async function sbq(p){const r=await p;if(r.error){if(/conta_suspensa/.test(r.error.message||''))toast('Sua conta está suspensa pela moderação e não pode publicar agora.');throw r.error}return r.data}
 function sbErr(e){const m=String((e&&(e.message||e.error_description))||e||'');
   if(/Invalid login/i.test(m))return'E-mail ou senha incorretos.';if(/already registered|already exists/i.test(m))return'Já existe uma conta com esse e-mail. Use “Entrar”.';
   if(/Password should be/i.test(m))return'A senha precisa ter pelo menos 6 caracteres.';if(/valid email|invalid format/i.test(m))return'Esse e-mail não parece válido.';
