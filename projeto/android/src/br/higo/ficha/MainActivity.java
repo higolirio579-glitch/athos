@@ -39,6 +39,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
@@ -92,7 +93,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.10 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.11 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -531,6 +532,30 @@ public class MainActivity extends Activity {
             });
         }
 
+        @JavascriptInterface
+        public void suppSet(String json) {
+            try {
+                JSONObject o = new JSONObject(json);
+                JSONArray L = o.optJSONArray("list");
+                if (L == null) L = new JSONArray();
+                android.content.SharedPreferences.Editor e = Notif.prefs(MainActivity.this).edit().putString("supps", L.toString());
+                String d = o.optString("date", "");
+                JSONArray done = o.optJSONArray("done");
+                if (done != null) for (int k = 0; k < done.length(); k++) e.putString("supp_done_" + done.optString(k), d);
+                e.apply();
+                SuppReceiver.scheduleAll(MainActivity.this);
+                if (L.length() > 0 && Build.VERSION.SDK_INT >= 33 && !granted("android.permission.POST_NOTIFICATIONS")) {
+                    runOnUiThread(new Runnable() { public void run() { try { requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 4410); } catch (Exception x) { } } });
+                }
+            } catch (Exception e) { }
+        }
+        @JavascriptInterface
+        public String suppPending() {
+            android.content.SharedPreferences p = Notif.prefs(MainActivity.this);
+            String v = p.getString("supp_pending", "[]");
+            p.edit().putString("supp_pending", "[]").apply();
+            return v;
+        }
         @JavascriptInterface
         public void notifState(String json) {
             try {

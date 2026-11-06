@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="br.higo.ficha" android:versionCode="47" android:versionName="2.5.10">
+    package="br.higo.ficha" android:versionCode="48" android:versionName="2.5.11">
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -40,6 +40,13 @@
             android:exported="false" android:grantUriPermissions="true" />
         <service android:name=".AthosJob" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
         <receiver android:name=".RestReceiver" android:exported="false" />
+        <receiver android:name=".SuppReceiver" android:exported="false" />
+        <receiver android:name=".SuppBoot" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <service android:name=".MediaListener" android:label="ATHOS (música no treino)" android:exported="false"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter>
