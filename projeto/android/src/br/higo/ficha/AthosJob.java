@@ -21,6 +21,7 @@ public class AthosJob extends JobService {
     public boolean onStartJob(final JobParameters params) {
         new Thread(new Runnable() {
             public void run() {
+                try { Steps.sample(AthosJob.this); } catch (Exception e) { }
                 try { reminders(AthosJob.this); } catch (Exception e) { }
                 try { social(AthosJob.this); } catch (Exception e) { }
                 try { photoWarn(AthosJob.this); } catch (Exception e) { }

@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
-        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.11 (br.higo.ficha; uso pessoal)");
+        s.setUserAgentString(s.getUserAgentString() + " ATHOS/2.5.12 (br.higo.ficha; uso pessoal)");
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -291,6 +291,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        if (req == 4420) { if (web != null) web.evaluateJavascript("window.stepsPermDone&&window.stepsPermDone()", null); return; }
         if (req == REQ_CAM_PICK) {
             if (fileCb != null && !openChooser()) { fileCb.onReceiveValue(null); fileCb = null; }
             return;
@@ -532,6 +533,19 @@ public class MainActivity extends Activity {
             });
         }
 
+        @JavascriptInterface
+        public String stepsGet() {
+            Steps.sample(MainActivity.this);
+            return Steps.json(MainActivity.this);
+        }
+        @JavascriptInterface
+        public void stepsAsk() {
+            runOnUiThread(new Runnable() { public void run() {
+                if (Build.VERSION.SDK_INT >= 29 && !granted(Manifest.permission.ACTIVITY_RECOGNITION)) {
+                    try { requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 4420); } catch (Exception e) { }
+                } else web.evaluateJavascript("window.stepsPermDone&&window.stepsPermDone()", null);
+            } });
+        }
         @JavascriptInterface
         public void suppSet(String json) {
             try {

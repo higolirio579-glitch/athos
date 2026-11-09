@@ -3059,8 +3059,8 @@ function tourSteps(){const and=!!NATIVE;return[
   {tab:'hoje',ic:'go',t:'Tudo pronto!',h:`<p>Seus dados ficam salvos na sua conta, em qualquer aparelho. Para rever este tutorial: <b>⚙ Configurações → Ajuda</b>.</p><p>Bora configurar suas metas e começar?</p>`,last:true}]}
 /* ---------- novidades de cada versão (para quem já usa o app) ----------
    Ao lançar mudança visível: troque NEWS_V e os passos de newsSteps(), e atualize tourSteps(). */
-const NEWS_V='2.5.11';
-const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2','2.5.3','2.5.7','2.5.8','2.5.11'];
+const NEWS_V='2.5.12';
+const NEWS_ORDER=['2.2','2.2.1','2.3','2.4','2.4.1','2.5','2.5.1','2.5.2','2.5.3','2.5.7','2.5.8','2.5.11','2.5.12'];
 /* passos de cada versão; quem pulou versões vê tudo o que perdeu */
 function newsByVer(v){
   if(v==='2.2')return news22().slice(1);
@@ -3071,6 +3071,7 @@ function newsByVer(v){
   if(v==='2.5')return[{tab:'hoje',ic:'star',t:'Coach ATHOS',h:`<ul><li>Seu <b>treinador com IA</b> é a <b>bolinha dourada</b> com o capacete que flutua na tela. Toque nela para perguntar; <b>segure e arraste</b> para mudar de lugar.</li><li>Ele conhece seus <b>treinos, cargas, dieta e metas</b>: pergunte “o que eu treino hoje?”, “por que minha carga travou?” ou “quanto falta de proteína?”.</li><li>Pediu um treino? Toque em <b>💾 Salvar como ficha</b> e ele vai para a aba Treino.</li><li>Escolha o <b>jeito dele falar</b>: Motivador, Técnico, Parceiro, Linha dura ou Zoeiro (dá para trocar em ⚙ Configurações).</li></ul>`}];
   if(v==='2.5.1')return[{tab:'hoje',ic:'star',t:'Coach sempre à mão',h:`<ul><li>O <b>Coach ATHOS</b> agora é uma <b>bolinha flutuante</b> com o capacete do ATHOS, em todas as telas.</li><li><b>Toque</b> para abrir as perguntas.</li><li><b>Segure e arraste</b> para colocar onde preferir: ela gruda na borda e lembra o lugar.</li></ul>`}];
   if(v==='2.5.2')return[{tab:'hoje',ic:'go',t:'IA muito mais rápida',h:`<ul><li>O <b>Coach</b>, <b>montar treino</b>, <b>foto do prato</b> e <b>foto da ficha</b> agora respondem em poucos segundos.</li><li>As fotos ficaram mais leves para enviar, sem perder a leitura.</li></ul>`}];
+  if(v==='2.5.12')return[{tab:'hoje',ic:'hoje',t:'Contador de passos',h:`<ul><li>Na tela <b>Hoje</b> aparece quantos <b>passos</b> você deu no dia, com a distância e as calorias estimadas.</li><li>${NATIVE?'O ATHOS usa o sensor do celular: conta mesmo com o app fechado e quase não gasta bateria. Na primeira vez, toque no cartão para <b>permitir</b>.':'Os passos são contados pelo app no Android e aparecem aqui pela sua conta.'}</li><li>Toque no cartão para ver os <b>últimos 7 dias</b> e escolher sua <b>meta diária</b>.</li></ul>`}];
   if(v==='2.5.11')return[{tab:'dieta',ic:'dieta',t:'Seus suplementos',h:`<ul><li>Na aba <b>Dieta</b>, no cartão <b>Suplementos</b>, cadastre o que você toma: creatina, whey e outros.</li><li>Escolha os <b>horários</b>: o app te lembra${NATIVE?' com uma notificação. Dá para tocar em <b>Tomei</b> na própria notificação':' na tela Hoje quando passar da hora'}.</li><li>Ao marcar <b>Tomei</b>, as calorias e a proteína entram sozinhas na dieta do dia.</li><li>Cada suplemento mostra quantos <b>dias seguidos</b> você tomou.</li></ul>`}];
   if(v==='2.5.8')return[{tab:'treino',ic:'run',t:'Esteira, bike e mais',h:`<ul><li>Em <b>Treino</b>, toque em <b>Esteira e bike</b> para registrar cardio feito na máquina.</li><li>Coloque o <b>tempo</b> e a <b>velocidade ou o ritmo</b> (esteira), ou a <b>intensidade</b> (bike, elíptico, escada, remo, corda, natação).</li><li>O app calcula <b>quantas calorias você gastou</b>, pelo seu peso.</li></ul>`},{tab:'treino',ic:'go',t:'Contagem 3, 2, 1',h:`<ul><li>Antes de <b>correr, caminhar ou pedalar</b> com GPS, aparece uma contagem <b>3, 2, 1</b> para você se preparar.</li><li>Dá para <b>cancelar</b> durante a contagem.</li></ul>`}];
   if(v==='2.5.7')return[{tab:'treino',ic:'run',t:'Corrida de cara nova',h:`<ul><li>O <b>mapa ocupa a tela inteira</b> e os números ficam num cartão embaixo, com o <b>ritmo agora em dourado</b>.</li><li>O <b>botão dourado do meio</b> pausa e retoma. Voz fica à esquerda e Finalizar à direita.</li><li>Toque na <b>setinha do cartão</b> para ver só os números, bem grandes.</li><li>No botão de <b>camadas</b>, escolha o mapa: Padrão, Satélite, Híbrido ou Relevo.</li></ul>`},{tab:'hoje',ic:'hoje',t:'Telas mais limpas',h:`<ul><li>Na aba <b>Hoje</b>, o anel de calorias vem primeiro.</li><li>A bolinha do <b>Coach ATHOS</b> ficou menor e fica no canto de baixo, sem tampar os botões.</li><li>Na <b>Dieta</b>, o botão <b>Gerar plano com IA</b> e os <b>+</b> das refeições ficaram em dourado.</li><li>A tela de <b>entrar</b> também ganhou um visual novo.</li></ul>`}];
@@ -4518,6 +4519,72 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setTimeout(()=>{suppPull();suppPush()},2500);
 let suppDueKey='';setInterval(()=>{if(document.visibilityState!=='visible')return;const k=suppDue().map(s=>s.id).join(',');if(k!==suppDueKey){suppDueKey=k;render()}},60000);
 Object.assign(ACT,{suppEdit:()=>suppEditSheet(),suppTk:el=>{const id=el.dataset.id,on=!suppTaken(today(),id);suppMark(id,on);render();if(on){const s=suppList().find(x=>x.id===id);toast(`${s?s.name:'Suplemento'} tomado`+(s&&num(s.kcal)>0?` · ${fmtN(s.kcal)} kcal na dieta`:''))}}});
+/* ---------- passos do dia (sensor do Android; no iPhone mostra o que veio do Android pela conta) ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.card.stepc{display:flex;flex-direction:row;align-items:center;gap:16px;width:100%;text-align:left;font:inherit;color:var(--fg);cursor:pointer}
+.stepc .ring{position:relative;flex:none;width:78px;height:78px}
+.stepc .ring svg{width:78px;height:78px;transform:rotate(-90deg)}
+.stepc .ring i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:26px}
+.stepc .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.stepc .t small{color:var(--muted);font-size:13.5px}
+.stepc .n{font:800 40px/1 var(--display)}.stepc .n span{font-size:16px;color:var(--muted);font-weight:700;margin-left:6px}
+.stepc .ok{color:var(--accent-tx);font-weight:700}
+.st-bars{display:flex;align-items:flex-end;gap:8px;height:150px;margin:6px 0 4px}
+.st-bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.st-bars i{width:100%;border-radius:8px 8px 3px 3px;background:var(--surface2);min-height:4px}
+.st-bars i.hit{background:var(--accent)}
+.st-bars small{font-size:12px;color:var(--muted)}
+.st-bars b{font-size:11.5px;color:var(--muted);font-weight:600}
+.st-goal{display:flex;gap:8px;flex-wrap:wrap}
+</style>`);
+
+const STEP={info:null,asked:false};
+const stepGoal=()=>Math.max(1000,num(S.profile.stepGoal)||8000);
+const stepYmd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const stepsOn=date=>{const d=S.days[date];return d&&num(d.steps)>0?num(d.steps):0};
+function stepKm(n){const h=num(S.profile.height)||170;return n*h*0.00415/1000}
+function stepKcal(n){const kg=num(curWeight())||75;return Math.round(n*kg*0.0005)}
+const stepAndroid=()=>!!(NATIVE&&NATIVE.stepsGet);
+
+/* lê o sensor (Android) e grava os totais em cada dia, para sincronizar com a conta */
+function stepSync(){
+  if(!stepAndroid())return;
+  try{const o=JSON.parse(NATIVE.stepsGet()||'{}');STEP.info=o;let ch=false;
+    const days=o.days||{},min=stepYmd(new Date(Date.now()-40*864e5));
+    for(const k in days){if(k<min)continue;const n=Math.round(num(days[k]));if(n>stepsOn(k)){const d=ensureDay(k);d.steps=n;store.mark('d-'+k);ch=true}}
+    return ch}catch(e){return false}
+}
+window.stepsPermDone=function(){stepSync();render()};
+
+function stepCard(){
+  const t=today(),n=stepsOn(t),g=stepGoal(),pct=Math.min(1,n/g),hit=n>=g;
+  if(stepAndroid()){
+    const I=STEP.info||{};
+    if(I.sensor===false)return'';
+    if(I.perm===false)return`<button class="card stepc" data-act="stepAsk"><span class="ring"><i aria-hidden="true">👟</i></span><span class="t"><b>Contador de passos</b><small>Toque para permitir que o ATHOS conte seus passos do dia. Ele usa o sensor do celular e quase não gasta bateria.</small></span></button>`;
+  }else if(!Object.values(S.days).some(d=>d&&num(d.steps)>0))return'';
+  const r=34,C=2*Math.PI*r;
+  return`<button class="card stepc" data-act="stepSheet" aria-label="Passos de hoje: ${fmtN(n)} de ${fmtN(g)}"><span class="ring"><svg viewBox="0 0 78 78" aria-hidden="true"><circle cx="39" cy="39" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="8"/><circle cx="39" cy="39" r="${r}" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(C*pct).toFixed(1)} ${C.toFixed(1)}"/></svg><i aria-hidden="true">👟</i></span>
+    <span class="t"><span class="n">${fmtN(n)}<span>passos</span></span><small>${hit?'<span class="ok">Meta batida!</span>':`faltam ${fmtN(g-n)} para ${fmtN(g)}`} · ${fmtD(Math.round(stepKm(n)*10)/10)} km · ${fmtN(stepKcal(n))} kcal</small>${stepAndroid()?'':'<small>Contados pelo app no Android</small>'}</span></button>`;
+}
+{const _vh=VIEWS.hoje;VIEWS.hoje=function(){const h=_vh.apply(this,arguments),sc=stepCard();if(!sc)return h;const kc=kcalCard(today()),i=h.indexOf(kc);return i>=0?h.slice(0,i+kc.length)+sc+h.slice(i+kc.length):sc+h}}
+
+function stepSheet(){
+  const L=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);L.push(stepYmd(d))}
+  const g=stepGoal(),mx=Math.max(g,...L.map(stepsOn)),hits=L.filter(k=>stepsOn(k)>=g).length,avg=Math.round(L.reduce((a,k)=>a+stepsOn(k),0)/7);
+  const wd=['dom','seg','ter','qua','qui','sex','sáb'];
+  openSheet('Passos',`<div class="st-bars" role="img" aria-label="Passos nos últimos 7 dias">${L.map(k=>{const n=stepsOn(k),dt=new Date(k+'T12:00');return`<div><b>${n?(n>=1000?fmtD(Math.round(n/100)/10)+'k':n):''}</b><i class="${n>=g?'hit':''}" style="height:${Math.round(n/mx*100)}%"></i><small>${k===today()?'hoje':wd[dt.getDay()]}</small></div>`}).join('')}</div>
+    <p class="hint">Média de ${fmtN(avg)} passos por dia nos últimos 7 dias. Você bateu a meta em ${hits} ${hits===1?'dia':'dias'}.</p>
+    <p class="eyebrow" style="margin:10px 0 -2px">Meta diária</p>
+    <div class="st-goal">${[6000,8000,10000,12000].map(v=>`<button class="chip" data-g="${v}" aria-pressed="${v===g}">${fmtN(v)}</button>`).join('')}</div>
+    <p class="hint">Distância e calorias são estimativas pela sua altura e pelo seu peso. ${stepAndroid()?'Os passos são contados pelo sensor do celular, mesmo com o app fechado. Ao abrir, o ATHOS atualiza o total.':'Os passos vêm do app no Android, pela sua conta.'}</p>`,(b,el)=>{
+    b.onclick=e=>{const x=e.target.closest('[data-g]');if(!x)return;S.profile.stepGoal=+x.dataset.g;store.mark('profile');closeSheet(el);render();toast('Meta de passos: '+fmtN(+x.dataset.g))}});
+}
+
+Object.assign(ACT,{stepAsk:()=>{try{NATIVE.stepsAsk()}catch(e){}},stepSheet:()=>{stepSync();stepSheet()}});
+setTimeout(()=>{if(stepSync())render();else if(stepAndroid())render()},2000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&stepAndroid()){stepSync();render()}});
+setInterval(()=>{if(document.visibilityState==='visible'&&stepAndroid()&&STEP.info&&STEP.info.perm&&stepSync())render()},120000);
 window.androidBack=function(){if(window.modBack&&window.modBack())return true;if(window.updBlocking&&window.updBlocking())return true;if(window.tourBack&&window.tourBack())return true;if($('#authGate')&&!$('#authGate').hidden){if(/signup|forgot|reset|verify/.test(ACC.view)){setView('login');return true}return false}if(sheets.length){closeSheet();return true}if($('#run')&&!$('#run').hidden){ACT.runMin();return true}if($('#authGate')&&!$('#authGate').hidden){if(/signup|forgot|reset|verify/.test(ACC.view)){setView('login');return true}return false}if(sheets.length){closeSheet();return true}if(!$('#session').hidden){closeActive();return true}if(S.tab!=='hoje'){go('hoje');return true}return false};
 window.androidSaved=function(ok){toast(ok?'Backup salvo':'Backup não foi salvo')};
 /* ---------- início ---------- */
