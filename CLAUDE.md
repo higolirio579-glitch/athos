@@ -29,7 +29,7 @@ App de treino, dieta, corrida e rede social do Higo. Ele é o dono, fala portugu
 O app procura atualização primeiro em `athos-app.github.io` e usa o endereço antigo como reserva. A página de download é https://athos-app.github.io/baixar/.
 
 ## Estado atual
-- **Versão no ar:** 2.5.11 (versionCode 48), com suplementos, painel de moderador, cardio na máquina, contagem 3-2-1, corrida com mapa em tela cheia e tipos de mapa, e correção do sync que apagava o perfil em aparelho novo.
+- **Versão no ar:** 2.5.12 (versionCode 49), com contador de passos, suplementos, painel de moderador, cardio na máquina, contagem 3-2-1, corrida com mapa em tela cheia e tipos de mapa, e correção do sync que apagava o perfil em aparelho novo.
 - **SQL já aplicado:** `moderacao.sql`. A conta do Higo é moderadora.
 - **SQL escrito mas NÃO aplicado:**
   - `db_limites.sql`, com tempos-limite do banco. O Higo preferiu deixar para depois.
